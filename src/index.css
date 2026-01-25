@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: "Geist Mono", "SF Mono", monospace;
+}
+
+:root {
+  /* 🌤 Светлая тема (Slate/Indigo) */
+  --bg-main: #f6f7f9;   /* Общий фон (холодный белый) */
+  --bg-card: #ffffff;   /* Карточки */
+  --bg-hover: #eef1f5;
+  --text-main: #1f2937; /* Почти черный */
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+  --accent: #4f46e5;    /* Индиго */
+  color-scheme: light;
+}
+
+:root.dark {
+  /* 🌑 Тёмная тема (Deep Navy/Slate) */
+  --bg-main: #0f172a;   /* Темно-синий */
+  --bg-card: #111827;   /* Карточки в темной теме */
+  --bg-hover: #1f2937;
+  --text-main: #e5e7eb; /* Мягкий белый */
+  --text-muted: #9ca3af;
+  --border-color: #1f2937;
+  --accent: #6366f1;
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+  margin: 0;
+  min-height: 100vh;
+  /* Мгновенный переход (0.1s) — Димаш не успеет моргнуть */
+  transition: background-color 0.1s ease-out;
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+/* Глобальное применение цветов и быстрой анимации */
+* {
+  border-color: var(--border-color);
+  transition: 
+    background-color 0.1s ease-out, 
+    border-color 0.1s ease-out, 
+    color 0.1s ease-out;
+}
+
+/* Стилизация скроллбара под Slate палитру */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 10px; }
+
+/* Фикс для читаемости Markdown в новых цветах */
+.prose {
+  color: var(--text-main) !important;
+}
+.prose strong {
+  color: var(--accent) !important;
+}
+
+/* Улучшаем внешний вид полей ввода */
+input, select, textarea {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+input:focus {
+  border-bottom-color: var(--accent) !important;
+}
