@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # Наш бэкенд на PHP
+  backend:
+    build: ./backend
+    ports:
+      - "8000:80" # Соединяем порт 8000 твоего ноута с 80-м портом контейнера
+    environment:
+      # Прокидываем те самые переменные Supabase
+      - DB_DSN=pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require
+      - DB_USER=postgres.ywoxdnpfbdgessvhyabz
+      - DB_PASS=!@Asdzxc4017
+    volumes:
+      - ./backend:/var/www/html # Синхронизация: меняешь код на ноуте — он меняется в докере
+
+  # Твой фронтенд на React
+  frontend:
+    image: node:20
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    # Команда для запуска фронта
+    command: sh -c "npm install && npm run dev -- --host"
