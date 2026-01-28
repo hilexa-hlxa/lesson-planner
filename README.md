@@ -1,4 +1,4 @@
-# LESSON.LAB v1.0.1
+# LESSON.LAB v1.0.4
 
 Professional next-generation automated lesson planning system built with React, Vite (Rolldown), and Tailwind CSS 4.
 
@@ -44,14 +44,24 @@ Powershell
 
     setx DB_PASS "!@Asdzxc4017"
 
-!!! close all trerminals then continue !!!
+    *on macOS:
+
+    export DB_DSN="pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
+    
+    export DB_USER="postgres.ywoxdnpfbdgessvhyabz"
+    
+    export DB_PASS="!@Asdzxc4017"
+
+    
+!!! close all terminals and then continue !!!
    
-3. Launch Development Server front-end:
+4. Launch Development Server front-end:
 Bash
 
 
     ```bash
 
+    npm install
     npm run dev
 
 5. Launch Development Server back-end:
@@ -62,8 +72,15 @@ Bash
 
     php -S 127.0.0.1:8000 -t backend/public
 
+6. To launch with docker, use this command:
+
+    ```docker:
+
+    docker-compose up -d --build
+
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
