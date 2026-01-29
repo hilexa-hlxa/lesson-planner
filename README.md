@@ -1,4 +1,4 @@
-# 🎓 LESSON.LAB v1.0.4
+# 🎓 LESSON.LAB v1.0.5
 
 Professional next-generation automated lesson planning system built with **React 18**, **Vite (Rolldown)**, and **Tailwind CSS 4**. Designed for educators who value speed, efficiency, and bold design.
 
@@ -85,6 +85,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
