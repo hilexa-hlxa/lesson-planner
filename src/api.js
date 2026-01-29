@@ -90,8 +90,16 @@ const api = {
       });
       return true;
     }
-  }
+  },
 
+  promptConfig: {
+  get: () => request('/prompt-config', { method: 'GET' }), // ожидаем { config: {...} } или просто {...}
+  set: (config) =>
+    request('/prompt-config', {
+      method: 'PUT',
+      body: JSON.stringify({ config }),
+    }),
+}
 };
 
 export default api;
