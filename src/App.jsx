@@ -351,14 +351,90 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
   const [editValue, setEditValue] = useState("");
   const cur = t[lang] || t.RU;
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!form.subject || !form.topic) return;
-    setLoading(true); setRes("");
-    setTimeout(() => {
-      setRes(`### Plan for ${form.topic}\n\n**Subject:** ${form.subject}\n**Grade:** ${form.grade}`);
-      setHistory(p => [{ id: Date.now(), name: form.topic }, ...p]);
+
+    setLoading(true);
+    setRes(""); // Очищаем для эффекта новой печати
+
+    const promptText = `Ты — профессиональный методист. Составь подробный план урока на языке ${lang}. 
+    Предмет: ${form.subject}, Тема: ${form.topic}, Класс: ${form.grade}, 
+    Время: ${form.duration} мин. Детали: ${form.details}. Используй Markdown.`;
+
+    try {
+      // Твой актуальный ключ из запроса
+      const API_KEY = "AIzaSyBZ61oYbz9VadlP0vsUgGjM7VDZhsM7Fg0";
+      // Используем v1beta для стриминга Gemini 2.0 Flash
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${API_KEY}`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+        }),
+      });
+
+      if (!response.ok) {
+        // ⚠️ иногда body может быть не-JSON, поэтому try/catch
+        let msg = "Ошибка API";
+        try {
+          const errorData = await response.json();
+          msg = errorData?.error?.message || msg;
+        } catch {}
+        throw new Error(msg);
+      }
+
+      // На всякий случай (в некоторых окружениях streaming может быть недоступен)
+      if (!response.body) {
+        const txt = await response.text().catch(() => "");
+        throw new Error(txt || "Streaming response.body is null");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = "";
+
+      // Читаем поток чанков от Gemini
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+
+        // Стриминг возвращает текст внутри JSON-структур. Разбиваем и ищем части текста.
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.includes('"text":')) {
+            const match = line.match(/"text":\s*"(.*)"/);
+            if (match && match[1]) {
+              // Обрабатываем спецсимволы и переносы
+              const cleanChunk = match[1]
+                .replace(/\\n/g, "\n")
+                .replace(/\\"/g, '"')
+                .replace(/\\t/g, "\t");
+
+              accumulatedText += cleanChunk;
+              setRes(accumulatedText); // Обновляем блок "Результат" в реальном времени
+            }
+          }
+        }
+      }
+
+      // Сохраняем в историю после завершения (как было)
+      setHistory((prev) => [{ id: Date.now(), name: form.topic }, ...prev]);
+    } catch (error) {
+      console.error("Ошибка генерации:", error);
+
+      const message = String(error?.message || "");
+      const msg = message.includes("429")
+        ? "Лимиты исчерпаны. Подождите 60 секунд."
+        : message || "Unknown error";
+
+      setRes(`## Ошибка\n${msg}`);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
