@@ -11,6 +11,7 @@ Professional next-generation automated lesson planning system built with **React
 * **Dark/Light Mode**: High-contrast brutalist design that respects your eyes.
 * **AI-Powered**: Ready to integrate with Google Gemini for instant plan generation.
 * **Fullstack Ready**: Backend API integration with PHP 8.1 and Supabase (PostgreSQL).
+* **History**: History of generetions is stored in Database.
 
 ## Tech Stack
 - Framework: React 18
@@ -85,6 +86,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
