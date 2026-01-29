@@ -51,7 +51,7 @@ const LanguageSwitcher = ({ lang, setLang }) => {
 const Footer = () => (
   <footer className="py-12 px-12 border-t border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-md">
     <div className="max-w-7xl mx-auto flex justify-between items-center opacity-40 text-[11px] font-black uppercase tracking-[0.2em]">
-      <div>© 2026 LESSON.LAB / v1.0.5 STABLE VERSION</div>
+      <div>© 2026 LESSON.LAB / v1.0.4 STABLE VERSION</div>
     </div>
   </footer>
 );
@@ -345,26 +345,85 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
   const [form, setForm] = useState({ subject: "", topic: "", details: "", grade: "5", duration: "45" });
   const [res, setRes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState([{ id: 1, name: "Sample Plan" }]);
+  const [history, setHistory] = useState([]);
+  const [activeId, setActiveId] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
   const cur = t[lang] || t.RU;
 
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await api.generations.list(50);
+        if (!alive) return;
+
+        const items = data?.items || [];
+        setHistory(items.map(x => ({
+          id: x.id,
+          name: x.topic || `#${x.id}`,
+          status: x.status,
+          created_at: x.created_at,
+        })));
+
+        // опционально: автоселект первого
+
+        if (items[0]?.id) {
+        setActiveId(items[0].id);
+        try {
+          const r = await api.generations.get(items[0].id);
+          const it = r?.item || r;
+          setRes(it?.result_md || it?.result || it?.prompt || "");
+        } catch (e) {
+          console.error("autoselect load failed", e);
+        }
+      }
+
+      } catch (e) {
+        console.error("history load failed", e);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
   const handleGenerate = async () => {
     if (!form.subject || !form.topic) return;
 
     setLoading(true);
-    setRes(""); // Очищаем для эффекта новой печати
+    setRes("");
 
-    const promptText = `Ты — профессиональный методист. Составь подробный план урока на языке ${lang}. 
-    Предмет: ${form.subject}, Тема: ${form.topic}, Класс: ${form.grade}, 
+    const promptText = `Ты — профессиональный методист. Составь подробный план урока на языке ${lang}.
+    Предмет: ${form.subject}, Тема: ${form.topic}, Класс: ${form.grade},
     Время: ${form.duration} мин. Детали: ${form.details}. Используй Markdown.`;
 
+    let generationId = null;
+
     try {
-      // Твой актуальный ключ из запроса
+      const gen = await api.generations.create({
+        subject: form.subject,
+        topic: form.topic,
+        details: form.details,
+        grade: form.grade,
+        duration: form.duration,
+        lang,
+        prompt: promptText,
+        status: "running", // если бэк не принимает — убери
+      });
+
+      generationId = gen?.id;
+      if (!generationId) throw new Error("No generationId returned from create()");
+
+      setActiveId(generationId);
+
+      // чтобы не плодить дубли — добавляем только если id ещё нет
+      setHistory((prev) => {
+        if (prev.some((x) => x.id === generationId)) return prev;
+        return [{ id: generationId, name: form.topic, status: "running" }, ...prev];
+      });
+
+      // ⚠️ ключ должен быть на бэке, но оставляю как есть для твоего текущего теста
       const API_KEY = "AIzaSyBZ61oYbz9VadlP0vsUgGjM7VDZhsM7Fg0";
-      // Используем v1beta для стриминга Gemini 2.0 Flash
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${API_KEY}`;
 
       const response = await fetch(url, {
@@ -376,7 +435,6 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
       });
 
       if (!response.ok) {
-        // ⚠️ иногда body может быть не-JSON, поэтому try/catch
         let msg = "Ошибка API";
         try {
           const errorData = await response.json();
@@ -385,7 +443,6 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
         throw new Error(msg);
       }
 
-      // На всякий случай (в некоторых окружениях streaming может быть недоступен)
       if (!response.body) {
         const txt = await response.text().catch(() => "");
         throw new Error(txt || "Streaming response.body is null");
@@ -395,34 +452,37 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
       const decoder = new TextDecoder();
       let accumulatedText = "";
 
-      // Читаем поток чанков от Gemini
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-
-        // Стриминг возвращает текст внутри JSON-структур. Разбиваем и ищем части текста.
         const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.includes('"text":')) {
-            const match = line.match(/"text":\s*"(.*)"/);
-            if (match && match[1]) {
-              // Обрабатываем спецсимволы и переносы
-              const cleanChunk = match[1]
-                .replace(/\\n/g, "\n")
-                .replace(/\\"/g, '"')
-                .replace(/\\t/g, "\t");
 
-              accumulatedText += cleanChunk;
-              setRes(accumulatedText); // Обновляем блок "Результат" в реальном времени
-            }
-          }
+        for (const line of lines) {
+          if (!line.includes('"text":')) continue;
+
+          const match = line.match(/"text":\s*"(.*)"/);
+          if (!match?.[1]) continue;
+
+          const cleanChunk = match[1]
+            .replace(/\\n/g, "\n")
+            .replace(/\\"/g, '"')
+            .replace(/\\t/g, "\t");
+
+          accumulatedText += cleanChunk;
+          setRes(accumulatedText);
         }
       }
 
-      // Сохраняем в историю после завершения (как было)
-      setHistory((prev) => [{ id: Date.now(), name: form.topic }, ...prev]);
+      await api.generations.update(generationId, {
+        status: "done",
+        result_md: accumulatedText,
+      });
+
+      setHistory((prev) =>
+        prev.map((x) => (x.id === generationId ? { ...x, status: "done", name: form.topic } : x))
+      );
     } catch (error) {
       console.error("Ошибка генерации:", error);
 
@@ -432,10 +492,26 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
         : message || "Unknown error";
 
       setRes(`## Ошибка\n${msg}`);
+
+      if (generationId) {
+        try {
+          await api.generations.update(generationId, {
+            status: "error",
+            error: String(error?.message || error),
+          });
+        } catch (e) {
+          console.error("failed to save error", e);
+        }
+
+        setHistory((prev) =>
+          prev.map((x) => (x.id === generationId ? { ...x, status: "error" } : x))
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="flex h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-zinc-100 font-sans p-6 gap-6 relative overflow-hidden">
@@ -455,13 +531,38 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
           <div className="text-[10px] font-black opacity-30 mb-8 tracking-[0.3em] uppercase">{cur.h}</div>
           <div className="space-y-4">
             {history.map((item) => (
-              <div key={item.id} className="group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer">
+              <div
+                key={item.id}
+                onClick={async () => {
+                  try {
+                    setActiveId(item.id);
+                    const r = await api.generations.get(item.id);
+                    const it = r?.item || r;
+                    setRes(it?.result_md || it?.result || it?.prompt || "");
+                    setActiveMenu(null);
+                  } catch (e) {
+                    console.error("history item load failed", e);
+                  }
+                }}
+                className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer ${
+                  activeId === item.id ? "ring-4 ring-blue-500/20" : ""
+                }`}
+              >
                 {editingId === item.id ? (
                   <input 
                     autoFocus 
                     value={editValue} 
                     onChange={(e) => setEditValue(e.target.value)} 
-                    onBlur={() => { setHistory(p => p.map(h => h.id === item.id ? { ...h, name: editValue } : h)); setEditingId(null); }} 
+                    onBlur={async () => {
+                      try {
+                        await api.generations.update(item.id, { topic: editValue });
+                        setHistory(p => p.map(h => h.id === item.id ? { ...h, name: editValue } : h));
+                      } catch (e) {
+                        console.error(e);
+                      } finally {
+                        setEditingId(null);
+                      }
+                    }} 
                     className="text-[13px] bg-transparent outline-none w-full font-bold" 
                   />
                 ) : (
@@ -477,7 +578,23 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
                     <button onClick={() => { setEditingId(item.id); setEditValue(item.name); setActiveMenu(null); }} className="flex items-center gap-3 w-full p-4 text-[10px] hover:bg-slate-50 dark:hover:bg-zinc-700 transition font-black uppercase">
                       <Edit3 size={14}/> {cur.edit}
                     </button>
-                    <button onClick={() => { setHistory(h => h.filter(i => i.id !== item.id)); setActiveMenu(null); }} className="flex items-center gap-3 w-full p-4 text-[10px] text-red-500 hover:bg-red-50 transition font-black uppercase">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await api.generations.remove(item.id);
+                          setHistory(h => h.filter(i => i.id !== item.id));
+                          if (activeId === item.id) {
+                            setActiveId(null);
+                            setRes("");
+                          }
+                        } catch (e) {
+                          console.error("delete failed", e);
+                        } finally {
+                          setActiveMenu(null);
+                        }
+                      }}
+                      className="flex items-center gap-3 w-full p-4 text-[10px] text-red-500 hover:bg-red-50 transition font-black uppercase"
+                    >
                       <Trash2 size={14}/> {cur.del}
                     </button>
                   </div>
@@ -578,5 +695,4 @@ export default function App() {
       </Routes>
     </Router>
   );
-
 }
