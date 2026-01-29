@@ -12,30 +12,41 @@ Professional next-generation automated lesson planning system built with **React
 * **AI-Powered**: Ready to integrate with Google Gemini for instant plan generation.
 * **Fullstack Ready**: Backend API integration with PHP 8.1 and Supabase (PostgreSQL).
 
-## 🛠 Tech Stack
-* **Frontend**: React 18, Lucide Icons, ReactMarkdown.
-* **Bundler**: Rolldown/Vite (Experimental high-speed build).
-* **Styling**: Tailwind CSS v4.0.
-* **Backend**: PHP 8.1+.
-* **Database**: PostgreSQL via Supabase.
-* **Infrastructure**: Docker & Docker-compose.
+## Tech Stack
+- Framework: React 18
+- Bundler: Rolldown/Vite (Experimental high-speed build)
+- Styling: Tailwind CSS v4.0
+- Icons: Lucide React
+- Markdown: ReactMarkdown
+- postreSQL via supabase
+- PHP 8.1+ version
+  
 
-## ⚙️ Getting Started
+## Getting Started
 
-### 1. Clone and Install
-```bash
-git clone [https://github.com/hilexa-hlxa/lesson-planner.git](https://github.com/hilexa-hlxa/lesson-planner.git)
-cd lesson-planner
-npm install
-2. Database Connection (Environment Setup)
-Windows (PowerShell):
+1. Clone and Install:
+Bash
 
-PowerShell
-setx DB_DSN "pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
-setx DB_USER "postgres.ywoxdnpfbdgessvhyabz"
-setx DB_PASS "!@Asdzxc4017"
-macOS / Linux (Zsh/Bash):
+   ```bash
+   git clone https://github.com/hilexa-hlxa/lesson-planner.git
+   cd lesson-planner
+   npm install
+   
+3. Database connection:
+Powershell
 
+    ```powershell
+
+
+    setx DB_DSN  "pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
+
+    setx DB_USER "postgres.ywoxdnpfbdgessvhyabz"
+
+    setx DB_PASS "!@Asdzxc4017"
+
+!!! close all trerminals then continue !!!
+   
+3. Launch Development Server front-end:
 Bash
 export DB_DSN="pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
 export DB_USER="postgres.ywoxdnpfbdgessvhyabz"
@@ -45,9 +56,9 @@ export DB_PASS="!@Asdzxc4017"
 3. Launch Development Servers
 Run Frontend:
 
-Bash
-npm run dev
-Run Backend:
+    ```bash
+
+    npm run dev
 
 Bash
 php -S 127.0.0.1:8000 -t backend/public
@@ -61,4 +72,13 @@ docker-compose up -d --build
 
 api.js — Axios-like fetch wrapper for backend communication.
 
-📄 License © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+📄 License
+© 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
+
+
+
+
+
+
+
