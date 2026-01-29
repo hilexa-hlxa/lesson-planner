@@ -48,9 +48,13 @@ Powershell
    
 3. Launch Development Server front-end:
 Bash
-export DB_DSN="pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
-export DB_USER="postgres.ywoxdnpfbdgessvhyabz"
-export DB_PASS="!@Asdzxc4017"
+    ```bash
+    export DB_DSN="pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
+    
+    export DB_USER="postgres.ywoxdnpfbdgessvhyabz"
+    
+    export DB_PASS="!@Asdzxc4017"
+    
 !!! Restart all terminals after setting environment variables !!!
 
 3. Launch Development Servers
@@ -60,11 +64,18 @@ Run Frontend:
 
     npm run dev
 
-Bash
-php -S 127.0.0.1:8000 -t backend/public
+Run backend:
+    ```bash
+    
+    php -S 127.0.0.1:8000 -t backend/public
+    
 4. Docker Deployment (Alternative)
 Bash
-docker-compose up -d --build
+    ```bash
+    
+    docker-compose up -d --build
+
+    
 🏗 Project Structure
 /src — React components (Landing, Hub, Dashboard, Profile).
 
@@ -74,6 +85,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
