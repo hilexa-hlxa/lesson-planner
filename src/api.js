@@ -52,7 +52,46 @@ const api = {
     return request('/auth/logout', {
       method: 'POST'
     });
+  },
+
+  generations: {
+    list: (limit = 50) => {
+      // ожидаем { items: [...] } (как ты писал)
+      return request(`/generations?limit=${encodeURIComponent(limit)}`, {
+        method: 'GET'
+      });
+    },
+
+    get: (id) => {
+      // ожидаем { item: {...} } или что ты вернешь с бэка
+      return request(`/generations/${id}`, {
+        method: 'GET'
+      });
+    },
+
+    create: (payload) => {
+      // ожидаем { id: ... }
+      return request(`/generations`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+    },
+
+    update: (id, payload) => {
+      return request(`/generations/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      });
+    },
+
+    remove: async (id) => {
+      await request(`/generations/${id}`, {
+        method: 'DELETE'
+      });
+      return true;
+    }
   }
+
 };
 
 export default api;
