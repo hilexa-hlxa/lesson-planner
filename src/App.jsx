@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { 
@@ -6,6 +6,112 @@ import {
   ChevronRight, MoreVertical, Edit3, Trash2, Eye, EyeOff, User, LayoutGrid, Gamepad2, LogOut 
 } from 'lucide-react';
 import api from './api';
+import { useLocation } from "react-router-dom";
+
+const DEFAULT_PROMPT_CONFIG = {
+  lesson_plan: {
+    // “глубокие настройки”
+    style: "strict",          // strict | friendly | short
+    includeTiming: true,      // поминутка
+    includeDifferentiation: true,
+    includeAssessment: true,
+    includeHomework: true,
+    detailLevel: "high",      // low | medium | high
+    markdown: true,
+
+    // блоки/секция — юзер их может настраивать не трогая данные урока
+    sections: [
+      "Цели урока",
+      "Оборудование",
+      "Ключевые понятия",
+      "Ход урока по минутам",
+      "Задания",
+      "Дифференциация",
+      "Оценивание",
+      "Домашнее задание",
+    ],
+  },
+
+  tests: {
+    difficulty: "medium",     // easy | medium | hard
+    total: 10,
+
+    mcq: { count: 6, options: 4 },        // A/B/C/D
+    short: { count: 2 },
+    matching: { count: 2 },
+
+    includeAnswers: true,
+    markdown: true,
+    shuffle: false,
+  },
+};
+
+
+function buildPrompt(type, vars, cfg) {
+  if (type === "lesson_plan") {
+    const c = cfg?.lesson_plan || DEFAULT_PROMPT_CONFIG.lesson_plan;
+
+    const sections = (c.sections || []).map(s => `- ${s}`).join("\n");
+
+    return [
+      `Ты — профессиональный методист.`,
+      `Составь план урока на языке ${vars.lang}.`,
+      ``,
+      `Данные урока:`,
+      `- Предмет: ${vars.subject}`,
+      `- Тема: ${vars.topic}`,
+      `- Класс: ${vars.grade}`,
+      `- Время: ${vars.duration} минут`,
+      vars.details ? `- Детали: ${vars.details}` : null,
+      ``,
+      `Настройки плана:`,
+      `- Стиль: ${c.style}`,
+      `- Детализация: ${c.detailLevel}`,
+      `- Поминутка: ${c.includeTiming ? "да" : "нет"}`,
+      `- Дифференциация: ${c.includeDifferentiation ? "да" : "нет"}`,
+      `- Оценивание: ${c.includeAssessment ? "да" : "нет"}`,
+      `- ДЗ: ${c.includeHomework ? "да" : "нет"}`,
+      `- Формат: ${c.markdown ? "Markdown" : "текст"}`,
+      ``,
+      `Структура (строго соблюдай порядок):`,
+      sections,
+      ``,
+      `Пиши конкретно, без воды.`,
+    ].filter(Boolean).join("\n");
+  }
+
+  if (type === "tests") {
+    const c = cfg?.tests || DEFAULT_PROMPT_CONFIG.tests;
+
+    return [
+      `Ты — преподаватель.`,
+      `Сгенерируй тест на языке ${vars.lang}.`,
+      ``,
+      `Данные:`,
+      `- Предмет: ${vars.subject}`,
+      `- Тема: ${vars.topic}`,
+      `- Класс: ${vars.grade}`,
+      vars.details ? `- Детали: ${vars.details}` : null,
+      ``,
+      `Настройки теста:`,
+      `- Сложность: ${c.difficulty}`,
+      `- Всего вопросов: ${c.total}`,
+      `- MCQ: ${c.mcq.count} вопросов, вариантов: ${c.mcq.options} (A/B/C/D)`,
+      `- Короткий ответ: ${c.short.count}`,
+      `- Соответствие: ${c.matching.count}`,
+      `- Перемешать: ${c.shuffle ? "да" : "нет"}`,
+      `- Ответы в конце: ${c.includeAnswers ? "да" : "нет"}`,
+      `- Формат: ${c.markdown ? "Markdown" : "текст"}`,
+      ``,
+      `Требования:`,
+      `- Сначала вопросы, затем отдельный блок "Ответы" (если включено).`,
+      `- Вопросы должны соответствовать теме и классу.`,
+    ].filter(Boolean).join("\n");
+  }
+
+  return "";
+}
+
 
 const t = {
   RU: { 
@@ -13,24 +119,132 @@ const t = {
     lt: { hero: "Планируйте уроки эффективно", sub: "Профессиональная система автоматизации учебных планов нового поколения.", login: "Войти", signup: "Регистрация", join: "Начать работу" },
     hub: { title: "Выберите направление", tools: "Инструменты", games: "Игротека (Скоро)", go: "Открыть" },
     prof: { title: "Мой Профиль", mail: "Почта", stats: "Статистика", back: "Назад в Хаб", edit: "Редактировать", empty: "Пустое пространство", save: "Сохранить", cancel: "Отмена" },
-    auth: { loginTitle: "С возвращением!", signupTitle: "Создать аккаунт", email: "ПОЧТА", pass: "ПАРОЛЬ", enter: "ВОЙТИ", switchL: "Нет аккаунта? Регистрация", switchS: "Уже есть аккаунт? Войти" 
-    }
+    auth: { loginTitle: "С возвращением!", signupTitle: "Создать аккаунт", email: "ПОЧТА", pass: "ПАРОЛЬ", enter: "ВОЙТИ", switchL: "Нет аккаунта? Регистрация", switchS: "Уже есть аккаунт? Войти" },
+    menu: { hub: "Перейти в хаб", dashboard: "Перейти в Dashboard", logout: "Выйти", },
+    prompts: {
+    back: "Назад",
+    title: "Настройки промптов",
+    subtitle: "Здесь настраиваются “глубокие” параметры генерации (стиль, детализация, блоки, ответы и т.д.).",
+
+    lessonTitle: "Настройки плана урока",
+    style: "Стиль",
+    detail: "Уровень детализации",
+
+    strict: "Строгий",
+    friendly: "Дружелюбный",
+    short: "Краткий",
+
+    low: "Низкий",
+    medium: "Средний",
+    high: "Высокий",
+
+    includeTiming: "Поминутное планирование",
+    includeDifferentiation: "Дифференциация",
+    includeAssessment: "Оценивание",
+    includeHomework: "Домашнее задание",
+    markdown: "Формат Markdown",
+
+    testsTitle: "Настройки тестов",
+    difficulty: "Сложность",
+    total: "Количество вопросов",
+
+    easy: "Лёгкая",
+    hard: "Сложная",
+
+    includeAnswers: "Показывать ответы",
+    shuffle: "Перемешивать вопросы",
+
+    reset: "Сбросить",
+    save: "Сохранить",
+  }
   },
   KZ: { 
     h: "ТАРИХ", p: "ПАРАМЕТРЛЕР", r: "НӘТИЖЕ", s: "Пән", t: "Сабақ тақырыбы", d: "Мәліметтер", g: "ҚҰРАСТЫРУ", edit: "Өзгерту", del: "Өшіру", exit: "ШЫҒУ",
     lt: { hero: "Сабақты тиімді жоспарлаңыз", sub: "Оқу жоспарларын автоматты төрде құрастыруға арналған кәсіби жүйе.", login: "Кіру", signup: "Тіркелу", join: "Жұмысты бастау" },
     hub: { title: "Бағытты таңдаңыз", tools: "Құралдар", games: "Ойындар (Жақында)", go: "Ашу" },
     prof: { title: "Менің Профилім", mail: "Пошта", stats: "Статистика", back: "Хабқа қайту", edit: "Өңдеу", empty: "Бос орын", save: "Сақтау", cancel: "Бас тарту" }, 
-    auth: { loginTitle: "Қош келдіңіз!", signupTitle: "Тіркелу", email: "ПОШТА", pass: "ҚҰПИЯ СӨЗ", enter: "КІРУ", switchL: "Тіркелмегенсіз бе? Тіркелу", switchS: "Аккаунтыңыз бар ма? Кіру" 
-    }
+    auth: { loginTitle: "Қош келдіңіз!", signupTitle: "Тіркелу", email: "ПОШТА", pass: "ҚҰПИЯ СӨЗ", enter: "КІРУ", switchL: "Тіркелмегенсіз бе? Тіркелу", switchS: "Аккаунтыңыз бар ма? Кіру" },
+    menu: { hub: "Хабқа өту", dashboard: "Dashboard-қа өту", logout: "Шығу", },
+    prompts: {
+    back: "Артқа",
+    title: "Промпт баптаулары",
+    subtitle: "Мұнда генерацияның “терең” параметрлері бапталады (стиль, егжей-тегжей, блоктар, жауаптар және т.б.).",
+
+    lessonTitle: "Сабақ жоспарының баптаулары",
+    style: "Стиль",
+    detail: "Егжей-тегжей деңгейі",
+
+    strict: "Қатаң",
+    friendly: "Достық",
+    short: "Қысқа",
+
+    low: "Төмен",
+    medium: "Орташа",
+    high: "Жоғары",
+
+    includeTiming: "Минуттық жоспарлау",
+    includeDifferentiation: "Дифференциация",
+    includeAssessment: "Бағалау",
+    includeHomework: "Үй тапсырмасы",
+    markdown: "Markdown форматы",
+
+    testsTitle: "Тест баптаулары",
+    difficulty: "Қиындық деңгейі",
+    total: "Сұрақтар саны",
+
+    easy: "Оңай",
+    hard: "Қиын",
+
+    includeAnswers: "Жауаптарды көрсету",
+    shuffle: "Сұрақтарды араластыру",
+
+    reset: "Қалпына келтіру",
+    save: "Сақтау",
+  }
   },
   EN: { 
     h: "HISTORY", p: "PARAMETERS", r: "RESULT", s: "Subject", t: "Topic", d: "Details", g: "GENERATE", edit: "Edit", del: "Delete", exit: "EXIT",
     lt: { hero: "Plan Lessons Effectively", sub: "Professional next-generation automated lesson planning system.", login: "Sign In", signup: "Sign Up", join: "Get Started" },
     hub: { title: "Choose Direction", tools: "Tools", games: "Games (Soon)", go: "Open" },
     prof: { title: "My Profile", mail: "Email", stats: "Statistics", back: "Back to Hub", edit: "Edit Profile", empty: "Empty Space", save: "Save", cancel: "Cancel" },
-    auth: { loginTitle: "Welcome back!", signupTitle: "Create Account", email: "EMAIL", pass: "PASSWORD", enter: "ENTER", switchL: "Don't have an account? Sign Up", switchS: "Already have an account? Log In" 
-    }
+    auth: { loginTitle: "Welcome back!", signupTitle: "Create Account", email: "EMAIL", pass: "PASSWORD", enter: "ENTER", switchL: "Don't have an account? Sign Up", switchS: "Already have an account? Log In" },
+    menu: { hub: "Go to Hub", dashboard: "Go to Dashboard", logout: "Log out", },
+    prompts: {
+    back: "Back",
+    title: "Prompt Settings",
+    subtitle: "Here you can configure advanced generation parameters (style, detail level, structure, answers, etc.).",
+
+    lessonTitle: "Lesson Plan Settings",
+    style: "Style",
+    detail: "Detail level",
+
+    strict: "Strict",
+    friendly: "Friendly",
+    short: "Short",
+
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+
+    includeTiming: "Minute-by-minute planning",
+    includeDifferentiation: "Differentiation",
+    includeAssessment: "Assessment",
+    includeHomework: "Homework",
+    markdown: "Markdown format",
+
+    testsTitle: "Test Settings",
+    difficulty: "Difficulty",
+    total: "Number of questions",
+
+    easy: "Easy",
+    hard: "Hard",
+
+    includeAnswers: "Show answers",
+    shuffle: "Shuffle questions",
+
+    reset: "Reset",
+    save: "Save",
+  }
   }
 };
 
@@ -226,6 +440,185 @@ const HubPage = ({ lang, setLang, user, setUser }) => {
   );
 };
 
+const PromptsPage = ({ lang, promptConfig, setPromptConfig }) => {
+  const [local, setLocal] = useState(promptConfig);
+  const cur = t[lang]?.prompts || t.RU.prompts;
+
+  useEffect(() => {
+    setLocal(promptConfig);
+  }, [promptConfig]);
+
+  const curLang = t[lang] || t.RU;
+
+  const save = () => setPromptConfig(local);
+
+  const reset = () => {
+    setLocal(DEFAULT_PROMPT_CONFIG);
+    setPromptConfig(DEFAULT_PROMPT_CONFIG);
+  };
+
+  return (
+    
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-10 font-sans">
+      <div className="max-w-5xl mx-auto">
+        <Link to="/dashboard" className="inline-flex items-center gap-2 font-black uppercase text-[10px] hover:text-blue-600 transition tracking-widest mb-8">
+          <ChevronRight size={14} className="rotate-180" /> {cur.back}
+        </Link>
+        <h1 className="text-4xl font-black tracking-tight mb-3">
+          {cur.title}
+        </h1>
+        <p className="opacity-60 font-medium mb-10 whitespace-pre-line">
+          {cur.subtitle}
+        </p>
+        <div className="space-y-10">
+          {/* LESSON PLAN SETTINGS */}
+          <div className="p-8 bg-white/70 dark:bg-zinc-900/60 rounded-[32px] border border-white/20 shadow-xl">
+            <h2 className="font-black uppercase tracking-widest text-[12px] mb-6 text-blue-600">
+              {cur.lessonTitle}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">
+                  {cur.style}
+                </div>
+                <select
+                  value={local.lesson_plan.style}
+                  onChange={(e) => setLocal({
+                    ...local,
+                    lesson_plan: { ...local.lesson_plan, style: e.target.value }
+                  })}
+                  className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
+                >
+                  <option value="strict">{cur.strict}</option>
+                  <option value="friendly">{cur.friendly}</option>
+                  <option value="short">{cur.short}</option>
+                </select>
+              </div>
+
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">
+                  {cur.detail}
+                </div>
+                <select
+                  value={local.lesson_plan.detailLevel}
+                  onChange={(e) => setLocal({
+                    ...local,
+                    lesson_plan: { ...local.lesson_plan, detailLevel: e.target.value }
+                  })}
+                  className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
+                >
+                  <option value="low">{cur.low}</option>
+                  <option value="medium">{cur.medium}</option>
+                  <option value="high">{cur.high}</option>
+                </select>
+              </div>
+
+              {[
+                ["includeTiming", cur.includeTiming],
+                ["includeDifferentiation", cur.includeDifferentiation],
+                ["includeAssessment", cur.includeAssessment],
+                ["includeHomework", cur.includeHomework],
+                ["markdown", cur.markdown],
+              ].map(([key, label]) => (
+                <label key={key} className="flex items-center gap-3 p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!local.lesson_plan[key]}
+                    onChange={(e) => setLocal({
+                      ...local,
+                      lesson_plan: { ...local.lesson_plan, [key]: e.target.checked }
+                    })}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* TESTS SETTINGS */}
+          <div className="p-8 bg-white/70 dark:bg-zinc-900/60 rounded-[32px] border border-white/20 shadow-xl">
+            <h2 className="font-black uppercase tracking-widest text-[12px] mb-6 text-blue-600">
+              {cur.testsTitle}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">
+                  {cur.difficulty}
+                </div>
+                <select
+                  value={local.tests.difficulty}
+                  onChange={(e) => setLocal({
+                    ...local,
+                    tests: { ...local.tests, difficulty: e.target.value }
+                  })}
+                  className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
+                >
+                  <option value="easy">{cur.easy}</option>
+                  <option value="medium">{cur.medium}</option>
+                  <option value="hard">{cur.hard}</option>
+                </select>
+              </div>
+
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">
+                  {cur.total}
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  value={local.tests.total}
+                  onChange={(e) => setLocal({
+                    ...local,
+                    tests: { ...local.tests, total: Math.max(1, Number(e.target.value || 1)) }
+                  })}
+                  className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
+                />
+              </div>
+
+              {[
+                ["includeAnswers", cur.includeAnswers],
+                ["markdown", cur.markdown],
+                ["shuffle", cur.shuffle],
+              ].map(([key, label]) => (
+                <label key={key} className="flex items-center gap-3 p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!local.tests[key]}
+                    onChange={(e) => setLocal({
+                      ...local,
+                      tests: { ...local.tests, [key]: e.target.checked }
+                    })}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+
+          <div className="flex gap-4">
+            <button
+              onClick={reset}
+              className="px-8 py-4 rounded-2xl border-2 border-black dark:border-white font-black uppercase text-[11px] tracking-widest"
+            >
+              {cur.reset}
+            </button>
+            <button
+              onClick={save}
+              className="px-8 py-4 rounded-2xl bg-blue-600 text-white border-2 border-black font-black uppercase text-[11px] tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+            >
+              {cur.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 const ProfilePage = ({ lang, user }) => {
   const cur = t[lang]?.prof || t.RU.prof;
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -299,8 +692,27 @@ const ProfilePage = ({ lang, user }) => {
   );
 };
 
-const LandingPage = ({ lang, setLang, setIsAuthOpen }) => {
+const LandingPage = ({ lang, setLang, setIsAuthOpen, user, setUser }) => {
   const cur = t[lang]?.lt || t.RU.lt;
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const onDown = (e) => {
+      if (!menuOpen) return;
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+    };
+  }, [menuOpen]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans overflow-x-hidden pt-[100px]">
@@ -311,12 +723,68 @@ const LandingPage = ({ lang, setLang, setIsAuthOpen }) => {
         
         <div className="flex gap-10 items-center font-black uppercase text-[13px] tracking-wider">
           <LanguageSwitcher lang={lang} setLang={setLang} />
-          <button onClick={() => setIsAuthOpen(true)} className="hover:text-blue-600 transition">
-            {cur.login}
-          </button>
-          <button onClick={() => setIsAuthOpen(true)} className="px-12 py-5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-500/30 transition-all active:scale-95">
-            {cur.signup}
-          </button>
+
+          {!user ? (
+            <>
+              <button onClick={() => setIsAuthOpen(true)} className="hover:text-blue-600 transition">
+                {cur.login}
+              </button>
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="px-12 py-5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-500/30 transition-all active:scale-95"
+              >
+                {cur.signup}
+              </button>
+            </>
+          ) : (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className="w-12 h-12 rounded-full overflow-hidden border-2 border-black/20 dark:border-white/20 bg-white/60 dark:bg-zinc-900/60 hover:scale-[1.03] transition"
+                title="Account"
+              >
+                <img
+                  src={localStorage.getItem('user_profile')
+                    ? (JSON.parse(localStorage.getItem('user_profile'))?.avatar || "")
+                    : "https://moyashkola.gosuslugi.ru/netcat_files/9/67/avatar_0.png"}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+
+              {menuOpen && (
+                <div
+                  className="absolute right-0 mt-3 w-56 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-white"
+                >
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate("/hub"); }}
+                    className="w-full text-left px-5 py-4 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    {t[lang].menu.hub}
+                  </button>
+
+                  <button
+                    onClick={() => { setMenuOpen(false); navigate("/dashboard"); }}
+                    className="w-full text-left px-5 py-4 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    {t[lang].menu.dashboard}
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      setMenuOpen(false);
+                      await api.logout().catch(() => {});
+                      setUser(null);
+                      navigate("/");
+                    }}
+                    className="w-full text-left px-5 py-4 text-[11px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition"
+                  >
+                    {t[lang].menu.logout}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </nav>
 
@@ -341,7 +809,7 @@ const LandingPage = ({ lang, setLang, setIsAuthOpen }) => {
   );
 };
 
-const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
+const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }) => {
   const [form, setForm] = useState({ subject: "", topic: "", details: "", grade: "5", duration: "45" });
   const [res, setRes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -390,12 +858,19 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
   const handleGenerate = async () => {
     if (!form.subject || !form.topic) return;
 
+    const vars = {
+      lang,
+      subject: form.subject,
+      topic: form.topic,
+      grade: form.grade,
+      duration: form.duration,
+      details: form.details,
+    };
+
     setLoading(true);
     setRes("");
 
-    const promptText = `Ты — профессиональный методист. Составь подробный план урока на языке ${lang}.
-    Предмет: ${form.subject}, Тема: ${form.topic}, Класс: ${form.grade},
-    Время: ${form.duration} мин. Детали: ${form.details}. Используй Markdown.`;
+    const promptText = buildPrompt("lesson_plan", vars, promptConfig);
 
     let generationId = null;
 
@@ -422,7 +897,6 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
         return [{ id: generationId, name: form.topic, status: "running" }, ...prev];
       });
 
-      // ⚠️ ключ должен быть на бэке, но оставляю как есть для твоего текущего теста
       const API_KEY = "AIzaSyBZ61oYbz9VadlP0vsUgGjM7VDZhsM7Fg0";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${API_KEY}`;
 
@@ -611,9 +1085,17 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
         </div>
       </aside>      
       <main className="flex-1 flex gap-6 overflow-hidden">
-        <section className="w-[480px] p-12 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">
+        <section className="w-[480px] p-12 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">    
           <div className="flex justify-between items-center mb-12">
-            <h2 className="text-[12px] font-black uppercase tracking-widest text-blue-600">{cur.p}</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-[12px] font-black uppercase tracking-widest text-blue-600">{cur.p}</h2>
+              <Link
+                to="/prompts"
+                className="px-4 py-2 bg-slate-100 dark:bg-zinc-800 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+              >
+                Prompts
+              </Link>
+            </div>
             <LanguageSwitcher lang={lang} setLang={setLang} />
           </div>
           <div className="space-y-10">
@@ -637,39 +1119,103 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark }) => {
   );
 };
 
+const Protected = ({ authReady, user, children }) => {
+  if (!authReady) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+  return user ? children : <Navigate to="/" replace />;
+};
+
 export default function App() {
+  const location = useLocation();
   const [lang, setLang] = useState(() => localStorage.getItem('app_lang') || "RU");
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [showEmailError, setShowEmailError] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [promptConfig, setPromptConfig] = useState(DEFAULT_PROMPT_CONFIG);
+  const [promptHydrated, setPromptHydrated] = useState(false);
 
   // Сохраняем язык в localStorage при каждом изменении
   useEffect(() => {
     localStorage.setItem('app_lang', lang);
   }, [lang]);
 
+  useEffect(() => {
+    const saved = localStorage.getItem("app_lang");
+    if (saved && saved !== lang) {
+      setLang(saved);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "app_lang" && e.newValue && e.newValue !== lang) {
+        setLang(e.newValue);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [lang]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (!promptHydrated) return;
+
+    const key = `app_prompt_config:${user.id}`;
+    localStorage.setItem(key, JSON.stringify(promptConfig));
+  }, [promptConfig, user, promptHydrated]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const key = `app_prompt_config:${user.id}`;
+    const saved = localStorage.getItem(key);
+
+    if (saved) {
+      try {
+        setPromptConfig(JSON.parse(saved));
+      } catch {
+        setPromptConfig(DEFAULT_PROMPT_CONFIG);
+      }
+    } else {
+      setPromptConfig(DEFAULT_PROMPT_CONFIG);
+    }
+
+    setPromptHydrated(true);
+  }, [user]);
+
   useEffect(() => { 
     document.documentElement.classList.toggle('dark', dark); 
     localStorage.setItem('theme', dark ? 'dark' : 'light'); 
   }, [dark]);
 
-  useEffect(() => { 
-    (async () => { 
-      try { 
-        const r = await api.me(); 
-        setUser(r.user); 
-      } catch { 
-        setUser(null); 
-      } 
-    })(); 
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const r = await api.me();
+        if (!alive) return;
+        setUser(r?.user || null);
+      } catch {
+        if (!alive) return;
+        setUser(null);
+      } finally {
+        if (!alive) return;
+        setAuthReady(true);
+      }
+    })();
+
+    return () => { alive = false; };
   }, []);
 
   return (
-    <Router>
+    <>
       <AuthModal 
         isOpen={isAuthOpen} 
         mode={authMode} 
@@ -679,20 +1225,88 @@ export default function App() {
         setEmail={setEmail} 
         pass={pass} 
         setPass={setPass} 
-        isFormValid={/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && pass.length >= 8} 
+        isFormValid={
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && pass.length >= 8
+        } 
         setUser={setUser} 
         isEmailValid={/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)} 
         showEmailError={showEmailError} 
         setShowEmailError={setShowEmailError} 
         lang={lang} 
       />
-      
+
       <Routes>
-        <Route path="/" element={<LandingPage lang={lang} setLang={setLang} setIsAuthOpen={setIsAuthOpen} />} />
-        <Route path="/hub" element={user ? <HubPage lang={lang} setLang={setLang} user={user} setUser={setUser} /> : <Navigate to="/" />} />
-        <Route path="/dashboard" element={user ? <Dashboard lang={lang} setLang={setLang} user={user} setUser={setUser} dark={dark} setDark={setDark} /> : <Navigate to="/" />} />
-        <Route path="/profile" element={user ? <ProfilePage lang={lang} user={user} /> : <Navigate to="/" />} />
+        <Route
+          path="/"
+          element={
+            <LandingPage
+              lang={lang}
+              setLang={setLang}
+              setIsAuthOpen={setIsAuthOpen}
+              user={user}
+              setUser={setUser}
+            />
+          }
+        />
+
+        <Route
+          path="/hub"
+          element={
+            <Protected authReady={authReady} user={user}>
+              <HubPage
+                lang={lang}
+                setLang={setLang}
+                user={user}
+                setUser={setUser}
+              />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <Protected authReady={authReady} user={user}>
+              <Dashboard
+                lang={lang}
+                setLang={setLang}
+                user={user}
+                setUser={setUser}
+                dark={dark}
+                setDark={setDark}
+                promptConfig={promptConfig}
+              />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <Protected authReady={authReady} user={user}>
+              <ProfilePage lang={lang} user={user} />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="/prompts"
+          element={
+            <Protected authReady={authReady} user={user}>
+              <PromptsPage
+                lang={lang}
+                promptConfig={promptConfig}
+                setPromptConfig={setPromptConfig}
+              />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to={user ? "/hub" : "/"} replace />}
+        />
       </Routes>
-    </Router>
+    </>
   );
 }
