@@ -116,4 +116,9 @@ button:hover {
 
 .animate-hero {
   animation: fadeInUp 0.8s ease-out forwards;
+
 }
+:root[data-font="lg"] { font-size: 18px; }
+:root[data-font="xl"] { font-size: 20px; }
+:root[data-contrast="high"] body { filter: contrast(1.15); }
+:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.8); outline-offset: 3px; }

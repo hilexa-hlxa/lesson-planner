@@ -9,6 +9,7 @@ import api from './api';
 import { cached, invalidate, invalidatePrefixRaw } from "./apiCache";
 
 import { useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 
 const DEFAULT_PROMPT_CONFIG = {
   lesson_plan: {
@@ -814,7 +815,19 @@ const LandingPage = ({ lang, setLang, setIsAuthOpen, user, setUser }) => {
   );
 };
 
-const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }) => {
+const Dashboard = ({
+  lang,
+  setLang,
+  user,
+  setUser,
+  dark,
+  setDark,
+  fontSize,
+  setFontSize,
+  highContrast,
+  setHighContrast,
+  promptConfig
+}) => {
   const [mode, setMode] = useState("lesson_plan");
   const [testUi, setTestUi] = useState(() => ({
     difficulty: (promptConfig?.tests?.difficulty || "medium"),
@@ -1074,9 +1087,19 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
             <Link to="/hub" className="font-black text-xl italic tracking-tighter text-blue-600">
               LESSON.LAB
             </Link>
-            <button onClick={() => setDark(!dark)} className="p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm transition-all hover:scale-110">
-              {dark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setDark(!dark)} className="p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm transition-all hover:scale-110">
+                {dark ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button onClick={() => setHighContrast(!highContrast)} className="px-3 py-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm text-[11px] font-black uppercase tracking-widest hover:scale-105 transition">
+                {highContrast ? "HC ON" : "HC OFF"}
+              </button>
+              <select value={fontSize} onChange={(e) => setFontSize(e.target.value)} className="px-3 py-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm text-[11px] font-black uppercase tracking-widest">
+                <option value="md">A</option>
+                <option value="lg">A+</option>
+                <option value="xl">A++</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -1159,7 +1182,7 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
           </button>
         </div>
       </aside>      
-      <main className="flex-1 flex gap-6 overflow-hidden">
+      <main className="flex-1 flex flex-col xl:flex-row gap-4 md:gap-6 overflow-hidden">
         <section className="w-[480px] p-12 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">    
           <div className="flex justify-between items-center mb-12">
             <div className="flex items-center gap-3">
@@ -1282,6 +1305,17 @@ const Protected = ({ authReady, user, children }) => {
   return user ? children : <Navigate to="/" replace />;
 };
 
+const Page = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 8 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -8 }}
+    transition={{ duration: 0.18 }}
+  >
+    {children}
+  </motion.div>
+);
+
 export default function App() {
   const location = useLocation();
   const [lang, setLang] = useState(() => localStorage.getItem('app_lang') || "RU");
@@ -1293,6 +1327,8 @@ export default function App() {
   const [pass, setPass] = useState("");
   const [showEmailError, setShowEmailError] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [fontSize, setFontSize] = useState(() => localStorage.getItem("a11y_font") || "md");
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem("a11y_contrast") === "high");
   const [promptConfig, setPromptConfig] = useState(DEFAULT_PROMPT_CONFIG);
   const [promptHydrated, setPromptHydrated] = useState(false);
 
@@ -1351,6 +1387,23 @@ export default function App() {
   }, [dark]);
 
   useEffect(() => {
+    if (fontSize === "md") {
+      delete document.documentElement.dataset.font;
+    } else {
+      document.documentElement.dataset.font = fontSize;
+    }
+
+    if (highContrast) {
+      document.documentElement.dataset.contrast = "high";
+    } else {
+      delete document.documentElement.dataset.contrast;
+    }
+
+    localStorage.setItem("a11y_font", fontSize);
+    localStorage.setItem("a11y_contrast", highContrast ? "high" : "normal");
+  }, [fontSize, highContrast]);
+
+  useEffect(() => {
     let cancelled = false;
 
     (async () => {
@@ -1391,38 +1444,39 @@ export default function App() {
         lang={lang} 
       />
 
-      <Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
         <Route
           path="/"
           element={
-            <LandingPage
+            <Page><LandingPage
               lang={lang}
               setLang={setLang}
               setIsAuthOpen={setIsAuthOpen}
               user={user}
               setUser={setUser}
-            />
+            /></Page>
           }
         />
 
         <Route
           path="/hub"
           element={
-            <Protected authReady={authReady} user={user}>
+            <Page><Protected authReady={authReady} user={user}>
               <HubPage
                 lang={lang}
                 setLang={setLang}
                 user={user}
                 setUser={setUser}
               />
-            </Protected>
+            </Protected></Page>
           }
         />
 
         <Route
           path="/dashboard"
           element={
-            <Protected authReady={authReady} user={user}>
+            <Page><Protected authReady={authReady} user={user}>
               <Dashboard
                 lang={lang}
                 setLang={setLang}
@@ -1430,31 +1484,35 @@ export default function App() {
                 setUser={setUser}
                 dark={dark}
                 setDark={setDark}
+                fontSize={fontSize}
+                setFontSize={setFontSize}
+                highContrast={highContrast}
+                setHighContrast={setHighContrast}
                 promptConfig={promptConfig}
               />
-            </Protected>
+            </Protected></Page>
           }
         />
 
         <Route
           path="/profile"
           element={
-            <Protected authReady={authReady} user={user}>
+            <Page><Protected authReady={authReady} user={user}>
               <ProfilePage lang={lang} user={user} />
-            </Protected>
+            </Protected></Page>
           }
         />
 
         <Route
           path="/prompts"
           element={
-            <Protected authReady={authReady} user={user}>
+            <Page><Protected authReady={authReady} user={user}>
               <PromptsPage
                 lang={lang}
                 promptConfig={promptConfig}
                 setPromptConfig={setPromptConfig}
               />
-            </Protected>
+            </Protected></Page>
           }
         />
 
@@ -1462,7 +1520,8 @@ export default function App() {
           path="*"
           element={<Navigate to={user ? "/hub" : "/"} replace />}
         />
-      </Routes>
+        </Routes>
+      </AnimatePresence>
     </>
   );
 }
