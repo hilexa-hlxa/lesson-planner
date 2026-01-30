@@ -16,6 +16,8 @@
     "react-dom": "^18.x.x",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.30.3"
+    "framer-motion": "^11.0.0"
+
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -36,3 +38,4 @@
     "vite": "npm:rolldown-vite@7.2.5"
   }
 }
+
