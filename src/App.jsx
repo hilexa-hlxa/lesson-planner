@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { 
   GraduationCap, FileText, Sun, Moon, 
   ChevronRight, MoreVertical, Edit3, Trash2, Eye, EyeOff, User, LayoutGrid, Gamepad2, LogOut 
 } from 'lucide-react';
 import api from './api';
+import { cached, invalidate, invalidatePrefixRaw } from "./apiCache";
+
 import { useLocation } from "react-router-dom";
 
 const DEFAULT_PROMPT_CONFIG = {
@@ -284,7 +286,8 @@ const AuthModal = ({ isOpen, mode, setMode, onClose, email, setEmail, pass, setP
     try {
       if (mode === "signup") await api.signup(email, pass, null);
       await api.login(email, pass);
-      const me = await api.me();
+      invalidate("me");
+      const me = await cached("me", () => api.me(), {}, 60_000)
       setUser(me.user);
       onClose();
       navigate("/hub");
@@ -387,7 +390,7 @@ const HubPage = ({ lang, setLang, user, setUser }) => {
             <User size={20} />
             <span className="font-black uppercase text-[11px] tracking-widest">Account</span>
           </Link>
-          <button onClick={async () => { await api.logout().catch(()=>{}); setUser(null); navigate("/"); }} className="p-3 text-red-500 hover:bg-red-50 rounded-2xl transition">
+          <button onClick={async () => { await api.logout().catch(()=>{}); invalidate("me"); invalidatePrefixRaw("generations."); setUser(null); navigate("/"); }} className="p-3 text-red-500 hover:bg-red-50 rounded-2xl transition">
             <LogOut size={24} />
           </button>
         </div>
@@ -774,6 +777,8 @@ const LandingPage = ({ lang, setLang, setIsAuthOpen, user, setUser }) => {
                     onClick={async () => {
                       setMenuOpen(false);
                       await api.logout().catch(() => {});
+                      invalidate("me");
+                      invalidatePrefixRaw("generations.");
                       setUser(null);
                       navigate("/");
                     }}
@@ -810,6 +815,13 @@ const LandingPage = ({ lang, setLang, setIsAuthOpen, user, setUser }) => {
 };
 
 const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }) => {
+  const [mode, setMode] = useState("lesson_plan");
+  const [testUi, setTestUi] = useState(() => ({
+    difficulty: (promptConfig?.tests?.difficulty || "medium"),
+    total: (promptConfig?.tests?.total || 10),
+    includeAnswers: (promptConfig?.tests?.includeAnswers ?? true),
+    shuffle: (promptConfig?.tests?.shuffle ?? false),
+  }));
   const [form, setForm] = useState({ subject: "", topic: "", details: "", grade: "5", duration: "45" });
   const [res, setRes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -818,42 +830,75 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
   const [activeMenu, setActiveMenu] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const navigate = useNavigate();
+  const activeIdRef = useRef(null);
   const cur = t[lang] || t.RU;
+
+  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
 
   useEffect(() => {
     let alive = true;
+
     (async () => {
       try {
-        const data = await api.generations.list(50);
+        // 1) грузим список ОДИН раз и держим "пока не logout"
+        const list = await cached(
+          "generations.list",
+          () => api.generations.list(500),
+          { limit: 500 },
+          1000 * 60 * 60 * 24 * 365 // 1 год
+        );
         if (!alive) return;
 
-        const items = data?.items || [];
-        setHistory(items.map(x => ({
-          id: x.id,
-          name: x.topic || `#${x.id}`,
-          status: x.status,
-          created_at: x.created_at,
-        })));
+        const items = list?.items || [];
 
-        // опционально: автоселект первого
+        // 2) прелоадим все детали параллельно и тоже кладём в кэш "пока не logout"
+        const full = await Promise.all(
+          items.map(async (x) => {
+            const r = await cached(
+              "generations.get",
+              () => api.generations.get(x.id),
+              { id: x.id },
+              1000 * 60 * 60 * 24 * 365 // 1 год
+            );
+            const it = r?.item || r;
 
-        if (items[0]?.id) {
-        setActiveId(items[0].id);
-        try {
-          const r = await api.generations.get(items[0].id);
-          const it = r?.item || r;
-          setRes(it?.result_md || it?.result || it?.prompt || "");
-        } catch (e) {
-          console.error("autoselect load failed", e);
+            return {
+              id: x.id,
+              name: x.topic || `#${x.id}`,
+              status: x.status,
+              created_at: x.created_at,
+              content: it?.result_md || it?.result || it?.prompt || "",
+            };
+          })
+        );
+
+        if (!alive) return;
+
+        setHistory(full);
+
+        // 3) автоселект первого без доп. сетевых запросов
+        if (full[0]?.id) {
+          setActiveId(full[0].id);
+          setRes(full[0].content || "");
         }
-      }
-
       } catch (e) {
-        console.error("history load failed", e);
+        console.error("history preload failed", e);
       }
     })();
+
     return () => { alive = false; };
   }, []);
+
+  useEffect(() => {
+    setTestUi((p) => ({
+      ...p,
+      difficulty: promptConfig?.tests?.difficulty || p.difficulty,
+      total: promptConfig?.tests?.total ?? p.total,
+      includeAnswers: promptConfig?.tests?.includeAnswers ?? p.includeAnswers,
+      shuffle: promptConfig?.tests?.shuffle ?? p.shuffle,
+    }));
+  }, [promptConfig]);
 
   const handleGenerate = async () => {
     if (!form.subject || !form.topic) return;
@@ -870,7 +915,12 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
     setLoading(true);
     setRes("");
 
-    const promptText = buildPrompt("lesson_plan", vars, promptConfig);
+    const mergedCfg =
+      mode === "tests"
+        ? { ...promptConfig, tests: { ...promptConfig.tests, ...testUi } }
+        : promptConfig;
+
+    const promptText = buildPrompt(mode, vars, mergedCfg);
 
     let generationId = null;
 
@@ -889,12 +939,15 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
       generationId = gen?.id;
       if (!generationId) throw new Error("No generationId returned from create()");
 
+      invalidate("generations.list");
+
       setActiveId(generationId);
+      activeIdRef.current = generationId;
 
       // чтобы не плодить дубли — добавляем только если id ещё нет
       setHistory((prev) => {
         if (prev.some((x) => x.id === generationId)) return prev;
-        return [{ id: generationId, name: form.topic, status: "running" }, ...prev];
+        return [{ id: generationId, name: form.topic, status: "running", content: "" }, ...prev];
       });
 
       const API_KEY = "AIzaSyBZ61oYbz9VadlP0vsUgGjM7VDZhsM7Fg0";
@@ -936,7 +989,7 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
         for (const line of lines) {
           if (!line.includes('"text":')) continue;
 
-          const match = line.match(/"text":\s*"(.*)"/);
+          const match = line.match(/"text":\s*"([^"]*)"/);
           if (!match?.[1]) continue;
 
           const cleanChunk = match[1]
@@ -945,7 +998,9 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
             .replace(/\\t/g, "\t");
 
           accumulatedText += cleanChunk;
-          setRes(accumulatedText);
+          if (activeIdRef.current === generationId) {
+            setRes(accumulatedText);
+          }
         }
       }
 
@@ -954,8 +1009,29 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
         result_md: accumulatedText,
       });
 
+      // кладём свежий результат в кэш навсегда (до logout)
+      await cached(
+        "generations.get",
+        async () => ({
+          item: {
+            id: generationId,
+            topic: form.topic,
+            status: "done",
+            result_md: accumulatedText,
+          }
+        }),
+        { id: generationId },
+        1000 * 60 * 60 * 24 * 365
+      );
+
+      invalidate("generations.list");
+
       setHistory((prev) =>
-        prev.map((x) => (x.id === generationId ? { ...x, status: "done", name: form.topic } : x))
+        prev.map((x) =>
+          x.id === generationId
+            ? { ...x, status: "done", name: form.topic, content: accumulatedText }
+            : x
+        )
       );
     } catch (error) {
       console.error("Ошибка генерации:", error);
@@ -973,6 +1049,9 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
             status: "error",
             error: String(error?.message || error),
           });
+
+          invalidate("generations.list");
+
         } catch (e) {
           console.error("failed to save error", e);
         }
@@ -1007,16 +1086,10 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
             {history.map((item) => (
               <div
                 key={item.id}
-                onClick={async () => {
-                  try {
-                    setActiveId(item.id);
-                    const r = await api.generations.get(item.id);
-                    const it = r?.item || r;
-                    setRes(it?.result_md || it?.result || it?.prompt || "");
-                    setActiveMenu(null);
-                  } catch (e) {
-                    console.error("history item load failed", e);
-                  }
+                onClick={() => {
+                  setActiveId(item.id);
+                  setRes(item.content || "");
+                  setActiveMenu(null);
                 }}
                 className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer ${
                   activeId === item.id ? "ring-4 ring-blue-500/20" : ""
@@ -1030,6 +1103,7 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
                     onBlur={async () => {
                       try {
                         await api.generations.update(item.id, { topic: editValue });
+                        invalidate("generations.list");
                         setHistory(p => p.map(h => h.id === item.id ? { ...h, name: editValue } : h));
                       } catch (e) {
                         console.error(e);
@@ -1056,6 +1130,7 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
                       onClick={async () => {
                         try {
                           await api.generations.remove(item.id);
+                          invalidate("generations.list");
                           setHistory(h => h.filter(i => i.id !== item.id));
                           if (activeId === item.id) {
                             setActiveId(null);
@@ -1079,7 +1154,7 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
         </div>
 
         <div className="p-10 border-t border-slate-100 dark:border-zinc-800">
-          <button onClick={async () => { await api.logout().catch(()=>{}); setUser(null); }} className="flex items-center gap-3 w-full p-4 bg-red-50 text-red-500 rounded-2xl font-black uppercase text-[10px] hover:bg-red-500 hover:text-white transition-all">
+          <button onClick={async () => { await api.logout().catch(()=>{}); invalidate("me"); invalidatePrefixRaw("generations."); setUser(null); navigate("/");}} className="flex items-center gap-3 w-full p-4 bg-red-50 text-red-500 rounded-2xl font-black uppercase text-[10px] hover:bg-red-500 hover:text-white transition-all">
             <LogOut size={16}/> {cur.exit}
           </button>
         </div>
@@ -1098,17 +1173,98 @@ const Dashboard = ({ lang, setLang, user, setUser, dark, setDark, promptConfig }
             </div>
             <LanguageSwitcher lang={lang} setLang={setLang} />
           </div>
+          <div className="flex gap-3 mb-8">
+            <button
+              type="button"
+              onClick={() => setMode("lesson_plan")}
+              className={`flex-1 py-4 rounded-2xl border-2 border-black dark:border-white font-black uppercase text-[10px] tracking-widest transition
+                ${mode === "lesson_plan"
+                  ? "bg-blue-600 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                  : "bg-slate-100 dark:bg-zinc-800/60 opacity-70 hover:opacity-100"}`}
+            >
+              План урока
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMode("tests")}
+              className={`flex-1 py-4 rounded-2xl border-2 border-black dark:border-white font-black uppercase text-[10px] tracking-widest transition
+                ${mode === "tests"
+                  ? "bg-blue-600 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                  : "bg-slate-100 dark:bg-zinc-800/60 opacity-70 hover:opacity-100"}`}
+            >
+              Тест
+            </button>
+          </div>
           <div className="space-y-10">
-            <div className="grid grid-cols-2 gap-8">
-              <select value={form.grade} onChange={e => setForm({...form, grade: e.target.value})} className="w-full p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm appearance-none cursor-pointer">
+            <div className={`grid gap-8 ${mode === "tests" ? "grid-cols-1" : "grid-cols-2"}`}>
+              <select value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })} className="w-full p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm appearance-none cursor-pointer">
                 {[...Array(11)].map((_, i) => <option key={i+1} value={i+1}>{i+1}</option>)}
               </select>
-              <select value={form.duration} onChange={e => setForm({...form, duration: e.target.value})} className="w-full p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm appearance-none cursor-pointer"><option>45</option><option>60</option><option>90</option></select>
+
+              {mode === "lesson_plan" && (
+                <select value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} className="w-full p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm appearance-none cursor-pointer">
+                  <option>45</option><option>60</option><option>90</option>
+                </select>
+              )}
             </div>
             <input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder={cur.s} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-blue-500/10 transition-all" />
             <input value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} placeholder={cur.t} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-blue-500/10 transition-all" />
             <textarea value={form.details} onChange={e => setForm({...form, details: e.target.value})} placeholder={cur.d} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold h-52 resize-none focus:ring-4 ring-blue-500/10 transition-all" />
-            <button onClick={handleGenerate} disabled={loading || !form.subject || !form.topic} className={`w-full py-7 rounded-[28px] text-[15px] font-black uppercase tracking-[0.3em] transition-all border-[4px] border-black dark:border-white shadow-2xl ${!loading && form.subject && form.topic ? 'bg-blue-600 text-white hover:scale-[1.02] active:scale-95' : 'bg-slate-200 dark:bg-zinc-800 opacity-50 cursor-not-allowed'}`}>{loading ? "..." : cur.g}</button>
+            {mode === "tests" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">
+                      {t[lang]?.prompts?.difficulty || "Difficulty"}
+                    </div>
+                    <select
+                      value={testUi.difficulty}
+                      onChange={(e) => setTestUi(p => ({ ...p, difficulty: e.target.value }))}
+                      className="w-full p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm appearance-none cursor-pointer"
+                    >
+                      <option value="easy">{cur.prompts.easy}</option>
+                      <option value="medium">{cur.prompts.medium}</option>
+                      <option value="hard">{cur.prompts.hard}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">
+                      {t[lang]?.prompts?.total || "Total"}
+                    </div>
+                    <input
+                      type="number"
+                      min={1}
+                      value={testUi.total}
+                      onChange={(e) =>
+                        setTestUi(p => ({ ...p, total: Math.max(1, Number(e.target.value || 1)) }))
+                      }
+                      className="w-full p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm"
+                    />
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-3 p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!testUi.includeAnswers}
+                    onChange={(e) => setTestUi(p => ({ ...p, includeAnswers: e.target.checked }))}
+                  />
+                  {t[lang]?.prompts?.includeAnswers || "Show answers"}
+                </label>
+
+                <label className="flex items-center gap-3 p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm">
+                  <input
+                    type="checkbox"
+                    checked={!!testUi.shuffle}
+                    onChange={(e) => setTestUi(p => ({ ...p, shuffle: e.target.checked }))}
+                  />
+                  {t[lang]?.prompts?.shuffle || "Shuffle questions"}
+                </label>
+              </div>
+            )}
+            <button onClick={handleGenerate} disabled={loading || !form.subject || !form.topic} className={`w-full py-7 rounded-[28px] text-[15px] font-black uppercase tracking-[0.3em] transition-all border-[4px] border-black dark:border-white shadow-2xl ${!loading && form.subject && form.topic ? 'bg-blue-600 text-white hover:scale-[1.02] active:scale-95' : 'bg-slate-200 dark:bg-zinc-800 opacity-50 cursor-not-allowed'}`}>{loading ? "..." : (mode === "lesson_plan" ? "СОЗДАТЬ ПЛАН" : "СОЗДАТЬ ТЕСТ")}</button>
           </div>
         </section>
         <section className="flex-1 p-14 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">
@@ -1195,23 +1351,23 @@ export default function App() {
   }, [dark]);
 
   useEffect(() => {
-    let alive = true;
+    let cancelled = false;
 
     (async () => {
       try {
-        const r = await api.me();
-        if (!alive) return;
+        const r = await cached("me", () => api.me(), {}, 60_000)
+        if (cancelled) return;
         setUser(r?.user || null);
       } catch {
-        if (!alive) return;
+        if (cancelled) return;
         setUser(null);
       } finally {
-        if (!alive) return;
+        if (cancelled) return;
         setAuthReady(true);
       }
     })();
 
-    return () => { alive = false; };
+    return () => { cancelled = true; };
   }, []);
 
   return (
