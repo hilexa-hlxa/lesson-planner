@@ -162,57 +162,21 @@ export default function Dashboard ({
         return [{ id: generationId, name: form.topic, status: "running", content: "" }, ...prev];
       });
 
-      const API_KEY = "AIzaSyBZ61oYbz9VadlP0vsUgGjM7VDZhsM7Fg0";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${API_KEY}`;
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-        }),
-      });
-
-      if (!response.ok) {
-        let msg = "Ошибка API";
-        try {
-          const errorData = await response.json();
-          msg = errorData?.error?.message || msg;
-        } catch {}
-        throw new Error(msg);
-      }
-
-      if (!response.body) {
-        const txt = await response.text().catch(() => "");
-        throw new Error(txt || "Streaming response.body is null");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
       let accumulatedText = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      for await (const evt of api.generateStream({ prompt: promptText })) {
+        // api.generateStream может отдавать либо строку-дельту, либо объект {type,text}
+        const delta =
+          typeof evt === "string"
+            ? evt
+            : (evt?.type === "delta" ? (evt.text || "") : "");
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        if (!delta) continue;
 
-        for (const line of lines) {
-          if (!line.includes('"text":')) continue;
+        accumulatedText += delta;
 
-          const match = line.match(/"text":\s*"([^"]*)"/);
-          if (!match?.[1]) continue;
-
-          const cleanChunk = match[1]
-            .replace(/\\n/g, "\n")
-            .replace(/\\"/g, '"')
-            .replace(/\\t/g, "\t");
-
-          accumulatedText += cleanChunk;
-          if (activeIdRef.current === generationId) {
-            setRes(accumulatedText);
-          }
+        if (activeIdRef.current === generationId) {
+          setRes(accumulatedText);
         }
       }
 

@@ -30,6 +30,7 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Max-Age: 600");
 
+// ВАЖНО: OPTIONS нужно обработать ДО любых роутов
 if ($method === 'OPTIONS') {
   http_response_code(204);
   exit;
@@ -40,7 +41,6 @@ function readJsonBodyOrFail(): array {
   $raw = file_get_contents('php://input') ?: '';
   if ($raw === '') return [];
 
-  // optional: защитимся от слишком больших тел
   if (strlen($raw) > 1024 * 1024) {
     Response::error('Payload too large', 413);
   }
@@ -53,6 +53,16 @@ function readJsonBodyOrFail(): array {
 }
 
 $body = in_array($method, ['POST','PUT','PATCH'], true) ? readJsonBodyOrFail() : [];
+
+// ---- SSE route: /api/generate/stream ----
+// ставим ДО остальных роутов, чтобы php://input не читался ещё раз
+if ($method === 'POST' && preg_match('#^/api/generate/stream/?$#', $path)) {
+  require __DIR__ . '/../src/GenerateStream.php';
+
+  // config уже загружен выше, НЕ надо require config второй раз
+  \App\GenerateStream::handle($config, $body); // <-- ВАЖНО: прокидываем $body
+  exit;
+}
 
 try {
   // ---- routes ----

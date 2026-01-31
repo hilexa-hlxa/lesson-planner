@@ -54,6 +54,51 @@ const api = {
     });
   },
 
+  generateStream: async function* ({ prompt }) {
+    const res = await fetch(`/api/generate/stream`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(txt || `HTTP ${res.status}`);
+    }
+    if (!res.body) throw new Error("No response body");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buf += decoder.decode(value, { stream: true });
+
+      // SSE события разделены \n\n
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) !== -1) {
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+
+        // Ищем строку data:
+        const line = chunk.split("\n").find((l) => l.startsWith("data: "));
+        if (!line) continue;
+
+        const payload = line.slice(6);
+        let evt;
+        try { evt = JSON.parse(payload); } catch { continue; }
+
+        if (evt.type === "delta") yield (evt.text || "");
+        if (evt.type === "done") return;
+        if (evt.type === "error") throw new Error(evt.message || "stream error");
+      }
+    }
+  },
+
   generations: {
     list: (limit = 50) => {
       // ожидаем { items: [...] } (как ты писал)

@@ -1,21 +1,11 @@
 <?php
 declare(strict_types=1);
 
-$dbDsn  = getenv('DB_DSN');
-$dbUser = getenv('DB_USER');
-$dbPass = getenv('DB_PASS');
-
-if (!$dbDsn || !$dbUser || !$dbPass) {
-  throw new RuntimeException(
-    'Database env vars are not set. Required: DB_DSN, DB_USER, DB_PASS'
-  );
-}
-
-return [
+$cfg = [
   'db' => [
-    'dsn'  => $dbDsn,
-    'user' => $dbUser,
-    'pass' => $dbPass,
+    'dsn'  => null,
+    'user' => null,
+    'pass' => null,
   ],
   'auth' => [
     'cookie_name' => 'lp_session',
@@ -23,4 +13,37 @@ return [
     'cookie_secure' => false,     // true на https
     'cookie_samesite' => 'Lax',
   ],
+  'gemini' => [
+    'api_key' => null,
+    'model'   => 'gemini-2.0-flash',
+  ],
+  'ssl' => [
+   'cafile' => __DIR__ . '/extras/ssl/cacert.pem',
+  ],
 ];
+
+// 1) local override (секреты здесь)
+$local = __DIR__ . '/config.local.php';
+if (is_file($local)) {
+  $override = require $local;
+  if (is_array($override)) {
+    $cfg = array_replace_recursive($cfg, $override);
+  }
+}
+
+// 2) env fallback (если в local нет — берём из env)
+$cfg['db']['dsn']  = $cfg['db']['dsn']  ?: (getenv('DB_DSN')  ?: null);
+$cfg['db']['user'] = $cfg['db']['user'] ?: (getenv('DB_USER') ?: null);
+$cfg['db']['pass'] = $cfg['db']['pass'] ?: (getenv('DB_PASS') ?: null);
+
+$cfg['gemini']['api_key'] = $cfg['gemini']['api_key'] ?: (getenv('GEMINI_API_KEY') ?: null);
+$cfg['gemini']['model']   = $cfg['gemini']['model']   ?: (getenv('GEMINI_MODEL') ?: 'gemini-2.0-flash');
+
+// 3) validate DB (строго обязательно)
+if (!$cfg['db']['dsn'] || !$cfg['db']['user'] || !$cfg['db']['pass']) {
+  throw new RuntimeException(
+    'Database config is not set. Provide in config.local.php or env vars: DB_DSN, DB_USER, DB_PASS'
+  );
+}
+
+return $cfg;
