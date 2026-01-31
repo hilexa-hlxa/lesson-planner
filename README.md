@@ -34,14 +34,14 @@ Bash
    cd lesson-planner
    npm install
 
-3. Launch Development Servers
+2. Launch Development Servers
 Run Frontend:
 
     ```bash
 
     npm run dev
 
-Run backend:
+3. Run backend:
     ```bash
     
     php -S 127.0.0.1:8000 -t backend/public
@@ -62,6 +62,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
