@@ -33,31 +33,6 @@ Bash
    git clone https://github.com/hilexa-hlxa/lesson-planner.git
    cd lesson-planner
    npm install
-   
-3. Database connection:
-Powershell
-
-    ```powershell
-
-
-    setx DB_DSN  "pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
-
-    setx DB_USER "postgres.ywoxdnpfbdgessvhyabz"
-
-    setx DB_PASS "!@Asdzxc4017"
-
-!!! close all trerminals then continue !!!
-   
-3. Launch Development Server front-end:
-Bash
-    ```bash
-    export DB_DSN="pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require"
-    
-    export DB_USER="postgres.ywoxdnpfbdgessvhyabz"
-    
-    export DB_PASS="!@Asdzxc4017"
-    
-!!! Restart all terminals after setting environment variables !!!
 
 3. Launch Development Servers
 Run Frontend:
@@ -87,6 +62,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
