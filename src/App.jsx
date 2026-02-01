@@ -31,7 +31,6 @@ const Page = ({ children }) => (
 export default function App() {
   const location = useLocation();
 
-  // ===== Global state =====
   const [lang, setLang] = useState(() => localStorage.getItem("app_lang") || "RU");
 
   const [user, setUser] = useState(null);
@@ -44,79 +43,9 @@ export default function App() {
   const [showEmailError, setShowEmailError] = useState(false);
 
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
-  const [fontSize, setFontSize] = useState(() => localStorage.getItem("a11y_font") || "md");
-  const [highContrast, setHighContrast] = useState(() => localStorage.getItem("a11y_contrast") === "high");
 
   const [promptConfig, setPromptConfig] = useState(DEFAULT_PROMPT_CONFIG);
   const [promptHydrated, setPromptHydrated] = useState(false);
-
-  // ===== Lang persist =====
-  useEffect(() => {
-    localStorage.setItem("app_lang", lang);
-  }, [lang]);
-
-  // (опционально) синхронизация при смене роутов/вкладок
-  useEffect(() => {
-    const saved = localStorage.getItem("app_lang");
-    if (saved && saved !== lang) setLang(saved);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === "app_lang" && e.newValue && e.newValue !== lang) {
-        setLang(e.newValue);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [lang]);
-
-  // ===== Prompt config per-user =====
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const key = `app_prompt_config:${user.id}`;
-    const saved = localStorage.getItem(key);
-
-    if (saved) {
-      try {
-        setPromptConfig(JSON.parse(saved));
-      } catch {
-        setPromptConfig(DEFAULT_PROMPT_CONFIG);
-      }
-    } else {
-      setPromptConfig(DEFAULT_PROMPT_CONFIG);
-    }
-
-    setPromptHydrated(true);
-  }, [user]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    if (!promptHydrated) return;
-
-    const key = `app_prompt_config:${user.id}`;
-    localStorage.setItem(key, JSON.stringify(promptConfig));
-  }, [promptConfig, user, promptHydrated]);
-
-  // ===== Theme / a11y =====
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("theme", dark ? "dark" : "light");
-  }, [dark]);
-
-  useEffect(() => {
-    if (fontSize === "md") delete document.documentElement.dataset.font;
-    else document.documentElement.dataset.font = fontSize;
-
-    if (highContrast) document.documentElement.dataset.contrast = "high";
-    else delete document.documentElement.dataset.contrast;
-
-    localStorage.setItem("a11y_font", fontSize);
-    localStorage.setItem("a11y_contrast", highContrast ? "high" : "normal");
-  }, [fontSize, highContrast]);
-
-  // ===== Auth bootstrap (me) =====
   useEffect(() => {
     let cancelled = false;
 
@@ -203,11 +132,7 @@ export default function App() {
                     setUser={setUser}
                     dark={dark}
                     setDark={setDark}
-                    fontSize={fontSize}
-                    setFontSize={setFontSize}
-                    highContrast={highContrast}
-                    setHighContrast={setHighContrast}
-                    promptConfig={promptConfig}
+promptConfig={promptConfig}
                   />
                 </Protected>
               </Page>
