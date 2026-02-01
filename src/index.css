@@ -5,43 +5,43 @@
 }
 
 :root {
-  /* Тот самый "воздушный" фон из примера */
-  --bg-app: #f8fafc; 
-  --bg-card: rgba(255, 255, 255, 0.8); /* Эффект стекла */
-  --primary: #3b82f6; 
+
+  --bg-app: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.88);
+
+  --primary: #3b82f6;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-color: rgba(226, 232, 240, 0.8);
-  --radius: 1.25rem; /* Мягкие скругления (20px) */
-  --glass-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --radius: 1.25rem;
+  --glass-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .dark {
-  --bg-app: #020617; 
-  --bg-card: rgba(15, 23, 42, 0.7);
-  --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
-  --border-color: rgba(30, 41, 59, 0.5);
-  --glass-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  --bg-app: #0b1220;
+  --bg-card: rgba(17, 24, 39, 0.88);
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --border-color: rgba(148, 163, 184, 0.18);
+  --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
 }
 
 body {
   background-color: var(--bg-app) !important;
-  /* Делаем градиент "глубже" и заметнее */
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 55%), 
+
+  background-image:
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 55%),
     radial-gradient(at 100% 0%, rgba(147, 51, 234, 0.07) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(59, 130, 246, 0.06) 0px, transparent 50%);
-  
+
   color: var(--text-main) !important;
   margin: 0;
   min-height: 100vh;
   transition: background-color 0.1s ease-out;
-  /* Убираем лишние скроллы, если они вылезают */
+
   overflow-x: hidden;
 }
 
-/* Глобальный стиль панелей (Тот самый "приятный" интерфейс) */
 .glass-panel {
   background: var(--bg-card);
   backdrop-filter: blur(12px);
@@ -49,6 +49,9 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
   box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  background-clip: padding-box;
+  isolation: isolate;
 }
 
 @variant dark (&:where(.dark, .dark *));
@@ -58,12 +61,10 @@ body {
   transition: background-color 0.1s ease-out, border-color 0.1s ease-out, color 0.1s ease-out;
 }
 
-/* Скроллбар в стиле Slate */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 10px; opacity: 0.5; }
 
-/* Инпуты как на проф. платформах */
 input, select, textarea {
   background-color: var(--bg-card) !important;
   border: 1px solid var(--border-color) !important;
@@ -79,7 +80,6 @@ input:focus {
   ring: 2px var(--primary);
 }
 
-/* Кнопки теперь мягкие и объемные */
 button {
   border-radius: 0.75rem !important;
   font-weight: 500;
@@ -92,13 +92,13 @@ button:hover {
 }
 
 .btn-primary-large {
-  @apply px-10 py-5 text-base font-bold uppercase tracking-widest rounded-2xl 
-         bg-blue-600 text-white shadow-xl shadow-blue-500/20 
+  @apply px-10 py-5 text-base font-bold uppercase tracking-widest rounded-2xl
+         bg-blue-600 text-white shadow-xl shadow-blue-500/20
          transition-all duration-300 hover:scale-[1.02] hover:bg-blue-700 active:scale-95;
 }
 
 .glass-nav {
-  @apply sticky top-0 z-50 bg-white/70 dark:bg-black/70 backdrop-blur-md 
+  @apply sticky top-0 z-50 bg-white/70 dark:bg-black/70 backdrop-blur-md
          border-b border-slate-200/50 dark:border-zinc-800/50;
 }
 
@@ -118,7 +118,5 @@ button:hover {
   animation: fadeInUp 0.8s ease-out forwards;
 
 }
-:root[data-font="lg"] { font-size: 18px; }
-:root[data-font="xl"] { font-size: 20px; }
-:root[data-contrast="high"] body { filter: contrast(1.15); }
 :focus-visible { outline: 3px solid rgba(37, 99, 235, 0.8); outline-offset: 3px; }
+
