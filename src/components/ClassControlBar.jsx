@@ -1,134 +1,156 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Book, X, Trophy, Play, Square, GripVertical, FerrisWheel } from 'lucide-react';
-
-// Укажи здесь базовый URL твоего API
-// Если используешь Vite proxy, можно оставить просто '/api'
-const API_URL = 'http://localhost:8000/api'; 
+import { Book, X, Trophy, Play, Square, GripVertical, FerrisWheel, Mic, MicOff, Volume2, AlertTriangle } from 'lucide-react';
+import FortuneWheel from './FortuneWheel'; // Импортируем твое новое колесо!
+import api from '../api'; // Используем наш api wrapper для чистоты
 
 const ClassControlBar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPollOpen, setIsPollOpen] = useState(false);
   
-  // --- ЛОГИКА МОНЕТ ---
+  // --- COINS LOGIC ---
   const [coins, setCoins] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingCoins, setLoadingCoins] = useState(true);
 
-  useEffect(() => {
-    const fetchCoins = async () => {
-      try {
-        setLoading(true);
-        
-        // ВАЖНО: Мы должны отправлять credentials (куки), чтобы бэкенд узнал юзера
-        const response = await fetch(`${API_URL}/coins`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // <--- ЭТО ОБЯЗАТЕЛЬНО ДЛЯ АВТОРИЗАЦИИ
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          // Backend returns { status: 'ok', data: { coins: 123 } } via Response::ok
-          // Проверяем структуру твоего Response.php. Обычно это data.data.coins или data.coins
-          // Судя по Response::ok(['coins' => $coins]), это будет data.data.coins
-          const serverCoins = data.data ? data.data.coins : data.coins;
-          
-          if (serverCoins !== undefined) {
-            setCoins(serverCoins);
-            localStorage.setItem('l_coins', serverCoins);
-          }
-        }
-      } catch (error) {
-        console.error("API Error:", error);
-        // Fallback to local storage
-        const saved = Number(localStorage.getItem('l_coins'));
-        if (saved) setCoins(saved);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const refreshCoins = async () => {
+    try {
+      const res = await api.request('/coins'); // Используем api.js (он сам подставит credentials)
+      const val = res.data?.coins ?? res.coins;
+      if (val !== undefined) setCoins(val);
+    } catch (e) {
+      console.error("Coin fetch error", e);
+    } finally {
+      setLoadingCoins(false);
+    }
+  };
 
-    fetchCoins();
-  }, []);
+  useEffect(() => { refreshCoins(); }, []);
 
-  // Остальной код таймера и рендера без изменений...
+  const handleWinCoin = async () => {
+    try {
+       // Добавляем 10 монет за победу в колесе
+       await api.request('/coins/add', { method: 'POST', body: JSON.stringify({ amount: 10 }) });
+       refreshCoins(); // Обновляем баланс
+    } catch (e) { console.error(e); }
+  };
+
+  // --- TIMER LOGIC ---
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
     let interval = null;
-    if (isActive) {
-      interval = setInterval(() => setSeconds(s => s + 1), 1000);
-    } else {
-      clearInterval(interval);
-    }
+    if (isActive) interval = setInterval(() => setSeconds(s => s + 1), 1000);
+    else clearInterval(interval);
     return () => clearInterval(interval);
   }, [isActive]);
 
+  // --- NOISE METER LOGIC (Вернул!) ---
+  const [isListening, setIsListening] = useState(false);
+  const [noiseLevel, setNoiseLevel] = useState(0);
+  const [isTooLoud, setIsTooLoud] = useState(false);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const sourceRef = useRef(null);
+  const frameRef = useRef(null);
+
+  const toggleMicrophone = async () => {
+    if (isListening) stopListening();
+    else await startListening();
+  };
+
+  const startListening = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+      sourceRef.current.connect(analyserRef.current);
+      analyserRef.current.fftSize = 256;
+      setIsListening(true);
+      detectVolume();
+    } catch (err) {
+      alert("Microphone access needed for Noise Meter");
+    }
+  };
+
+  const stopListening = () => {
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    if (audioContextRef.current) audioContextRef.current.close();
+    setIsListening(false);
+    setNoiseLevel(0);
+    setIsTooLoud(false);
+  };
+
+  const detectVolume = () => {
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const update = () => {
+      analyserRef.current.getByteFrequencyData(dataArray);
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+      const average = sum / bufferLength;
+      const normalized = Math.min(100, Math.round(average * 1.5));
+      setNoiseLevel(normalized);
+      setIsTooLoud(normalized > 75);
+      if (isListening) frameRef.current = requestAnimationFrame(update);
+    };
+    update();
+  };
+
+  useEffect(() => { return () => stopListening(); }, []);
+
   return (
     <>
-      <motion.div drag dragMomentum={false} style={{ position: 'fixed', bottom: '80px', right: '40px', zIndex: 99999 }}>
+      <motion.div drag dragMomentum={false} style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 9999 }}>
         {!isExpanded ? (
-          <motion.button layoutId="panel" onClick={() => setIsExpanded(true)} className="bg-black text-white p-6 rounded-3xl border-[5px] border-white shadow-2xl">
-            <Book size={40} />
+          <motion.button layoutId="panel" onClick={() => setIsExpanded(true)} className="bg-black text-white p-5 rounded-3xl border-[4px] border-white shadow-xl hover:scale-110 transition">
+            <Book size={32} />
           </motion.button>
         ) : (
-          <motion.div layoutId="panel" className="bg-white border-[4px] border-black p-5 rounded-[35px] shadow-[12px_12px_0_0_#000] flex items-center gap-6 text-black">
-            <div className="opacity-30 cursor-grab scale-110"><GripVertical size={24} /></div>
+          <motion.div layoutId="panel" className="bg-white border-[4px] border-black p-4 rounded-[30px] shadow-[10px_10px_0_0_#000] flex items-center gap-4 text-black">
+            <div className="opacity-30 cursor-grab active:cursor-grabbing"><GripVertical size={20} /></div>
 
-            <button onClick={() => setIsPollOpen(true)} className="p-2.5 bg-yellow-400 border-[3px] border-black rounded-xl shadow-[3px_3px_0_0_#000] hover:-translate-y-1 transition-transform">
-              <FerrisWheel size={24} />
+            {/* Wheel Button */}
+            <button onClick={() => setIsPollOpen(true)} className="p-2.5 bg-yellow-400 border-2 border-black rounded-xl hover:-translate-y-1 transition shadow-[2px_2px_0_0_#000]">
+              <FerrisWheel size={20} />
             </button>
 
-            <div className="flex items-center gap-3 border-x-[2px] border-black/10 px-4">
-              <span className="font-mono font-black text-2xl italic min-w-[70px]">
+            {/* Noise Meter */}
+            <button onClick={toggleMicrophone} className={`p-2.5 border-2 border-black rounded-xl hover:-translate-y-1 transition shadow-[2px_2px_0_0_#000] ${isTooLoud ? 'bg-red-500 text-white animate-pulse' : 'bg-blue-100'}`}>
+                {isListening ? (isTooLoud ? <AlertTriangle size={20}/> : <Volume2 size={20}/>) : <MicOff size={20}/>}
+            </button>
+
+            {/* Timer */}
+            <div className="flex items-center gap-2 border-l-2 border-r-2 border-gray-100 px-3">
+              <span className="font-mono font-black text-xl italic min-w-[50px]">
                 {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
               </span>
-              <button onClick={() => setIsActive(!isActive)} className={`p-2 rounded-xl border-[2px] border-black ${isActive ? 'bg-red-400' : 'bg-green-400'}`}>
-                {isActive ? <Square size={18} fill="black" /> : <Play size={18} fill="black" />}
+              <button onClick={() => setIsActive(!isActive)} className={`p-1.5 rounded-lg border-2 border-black ${isActive ? 'bg-red-400' : 'bg-green-400'}`}>
+                {isActive ? <Square size={14} fill="black" /> : <Play size={14} fill="black" />}
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Trophy size={24} className="text-orange-500" />
-              <span className="font-black text-xl">
-                {loading ? "..." : (coins ?? 120)}
+            {/* Coins */}
+            <div className="flex items-center gap-2 pr-2">
+              <Trophy size={20} className="text-orange-500 fill-orange-500" />
+              <span className="font-black text-lg">
+                {loadingCoins ? "..." : (coins ?? 0)}
               </span>
             </div>
 
-            <button onClick={() => setIsExpanded(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><X size={22} /></button>
+            <button onClick={() => setIsExpanded(false)} className="p-1 hover:bg-gray-100 rounded-full"><X size={20} /></button>
           </motion.div>
         )}
       </motion.div>
 
-      {/* IFRAME КОЛЕСА */}
+      {/* RENDER NEW WHEEL COMPONENT */}
       <AnimatePresence>
         {isPollOpen && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100000] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} 
-              className="bg-white border-[6px] border-black rounded-[40px] shadow-[20px_20px_0_0_#000] w-full max-w-6xl h-[90vh] relative overflow-hidden flex items-center justify-center"
-            >
-              <button onClick={() => setIsPollOpen(false)} className="absolute top-4 right-4 z-50 bg-black text-white p-2 rounded-full hover:bg-red-600 transition-colors border-2 border-white shadow-lg">
-                <X size={24} />
-              </button>
-              
-              <div className="absolute inset-0 flex items-center justify-center -z-10">
-                 <span className="font-bold text-gray-400 animate-pulse">Загрузка Wheel of Names...</span>
-              </div>
-
-              <iframe 
-                src="https://wheelofnames.com/fdc19e3f-ea3b-457b-9bf1-6d4c79e88dc3"
-                title="Wheel of Names"
-                className="w-full h-full border-none relative z-10"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-
-            </motion.div>
-          </div>
+          <FortuneWheel 
+            onClose={() => setIsPollOpen(false)} 
+            onWin={handleWinCoin} 
+          />
         )}
       </AnimatePresence>
     </>
