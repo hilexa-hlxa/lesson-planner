@@ -30,13 +30,60 @@ final class GenerateStream
     self::sseHeaders();
     header('X-Accel-Buffering: no');
 
+    // --- [НАЧАЛО ЗАГЛУШКИ] ---
+    // Если ключа нет (или он пустой), включаем режим симуляции
     if ($apiKey === '') {
-      self::sendEvent(['type' => 'error', 'message' => 'No gemini.api_key in config']);
+      
+      // Текст фейкового теста в формате Markdown
+      $mockResponse = "## Тест: Веб-разработка (Демо режим)
+
+1. **Что означает аббревиатура HTML?**
+   - [ ] Hyper Text Make Link
+   - [x] Hyper Text Markup Language
+   - [ ] High Tech Modern Language
+   - [ ] Home Tool Markup Language
+
+2. **Какой тег используется для создания ссылки?**
+   - [x] <a>
+   - [ ] <link>
+   - [ ] <href>
+   - [ ] <url>
+
+3. **Какое свойство CSS меняет цвет текста?**
+   - [ ] text-color
+   - [ ] font-color
+   - [x] color
+   - [ ] background-color
+
+4. **Что такое React?**
+   - [ ] База данных
+   - [ ] Язык программирования
+   - [x] JavaScript-библиотека для интерфейсов
+   - [ ] Операционная система
+";
+
+      // Эмулируем "мышление" ИИ (пауза перед стартом)
+      usleep(500000); // 0.5 сек
+
+      // Разбиваем текст на кусочки по 15 символов, чтобы было похоже на печатание
+      $chunks = mb_str_split($mockResponse, 15);
+
+      foreach ($chunks as $chunk) {
+          self::sendEvent(['type' => 'delta', 'text' => $chunk]);
+          self::flushNow();
+          
+          // Случайная задержка между "ударами по клавишам" (от 0.03 до 0.1 сек)
+          usleep(rand(30000, 100000)); 
+      }
+
+      // Сообщаем, что генерация завершена
       self::sendEvent(['type' => 'done']);
       self::flushNow();
-      return;
+      return; 
     }
+    // --- [КОНЕЦ ЗАГЛУШКИ] ---
 
+    // Дальше идет старый код для реального Gemini (он сработает, если ты потом добавишь ключ)
     $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
       . rawurlencode($model)
       . ':streamGenerateContent?key='
@@ -51,7 +98,6 @@ final class GenerateStream
     $cafile = (string)($config['ssl']['cafile'] ?? '');
 
     $buf = '';
-
     $ch = curl_init($url);
 
     $opts = [
@@ -62,20 +108,14 @@ final class GenerateStream
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_TIMEOUT        => 0,
       CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf): int {
-        // Gemini присылает json-объекты кусками/строками. Буферизуем и пытаемся парсить.
         $buf .= $chunk;
-
-        // Часто это line-delimited JSON, но не гарантировано.
-        // Будем извлекать из буфера последовательные JSON-объекты.
         while (true) {
           $start = strpos($buf, '{');
           if ($start === false) {
-            // нет начала json
             $buf = '';
             break;
           }
 
-          // пробуем найти конец объекта грубо: по балансировке скобок
           $level = 0;
           $inStr = false;
           $esc = false;
@@ -84,7 +124,6 @@ final class GenerateStream
           $len = strlen($buf);
           for ($i = $start; $i < $len; $i++) {
             $c = $buf[$i];
-
             if ($inStr) {
               if ($esc) { $esc = false; continue; }
               if ($c === '\\') { $esc = true; continue; }
@@ -100,10 +139,7 @@ final class GenerateStream
             }
           }
 
-          if ($endPos === null) {
-            // объект ещё не доехал
-            break;
-          }
+          if ($endPos === null) break;
 
           $jsonStr = substr($buf, $start, $endPos - $start + 1);
           $buf = substr($buf, $endPos + 1);
@@ -117,15 +153,12 @@ final class GenerateStream
             self::flushNow();
           }
         }
-
         return strlen($chunk);
       },
     ];
 
-    // SSL CA bundle
     if ($cafile !== '' && is_file($cafile)) {
       $opts[CURLOPT_CAINFO] = $cafile;
-      // иногда помогает для некоторых сборок
       @putenv('SSL_CERT_FILE=' . $cafile);
     }
 
@@ -158,12 +191,9 @@ final class GenerateStream
     header('Content-Type: text/event-stream; charset=utf-8');
     header('Cache-Control: no-cache, no-transform');
     header('Connection: keep-alive');
-
-    // выключаем буферы
     @ini_set('output_buffering', 'off');
     @ini_set('zlib.output_compression', '0');
     @ini_set('implicit_flush', '1');
-
     while (ob_get_level() > 0) {
       @ob_end_flush();
     }

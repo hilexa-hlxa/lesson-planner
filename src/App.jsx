@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,8 +13,11 @@ import HubPage from "./pages/HubPage";
 import Dashboard from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
 import PromptsPage from "./pages/PromptsPage";
+import StudentJoinPage from "./pages/StudentJoinPage";
+import CreateTestPage from "./pages/CreateTestPage"; // <--- Твоя страница
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
+import ClassControlBar from './components/ClassControlBar';
 
 const Page = ({ children }) => (
   <motion.div
@@ -45,7 +47,7 @@ export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
 
   const [promptConfig, setPromptConfig] = useState(DEFAULT_PROMPT_CONFIG);
-  const [promptHydrated, setPromptHydrated] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -67,6 +69,9 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  const activeRoutes = ["/hub", "/dashboard"];
+  const isWidgetVisible = user && activeRoutes.includes(location.pathname);
 
   return (
     <>
@@ -132,8 +137,36 @@ export default function App() {
                     setUser={setUser}
                     dark={dark}
                     setDark={setDark}
-promptConfig={promptConfig}
+                    promptConfig={promptConfig}
                   />
+                </Protected>
+              </Page>
+            }
+          />
+
+          {/* --- ИСПРАВЛЕНИЕ ЗДЕСЬ --- */}
+          {/* Мы передаем lang и promptConfig, чтобы генерация работала */}
+          <Route
+            path="/create-test"
+            element={
+              <Page>
+                <Protected authReady={authReady} user={user}>
+                  <CreateTestPage 
+                    lang={lang} 
+                    promptConfig={promptConfig} 
+                  />
+                </Protected>
+              </Page>
+            }
+          />
+          {/* ------------------------- */}
+
+          <Route
+            path="/join-test"
+            element={
+              <Page>
+                <Protected authReady={authReady} user={user}>
+                  <StudentJoinPage />
                 </Protected>
               </Page>
             }
@@ -168,6 +201,8 @@ promptConfig={promptConfig}
           <Route path="*" element={<Navigate to={user ? "/hub" : "/"} replace />} />
         </Routes>
       </AnimatePresence>
+      
+      {isWidgetVisible && <ClassControlBar />}
     </>
   );
 }

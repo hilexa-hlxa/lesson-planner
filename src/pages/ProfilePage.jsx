@@ -1,12 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react"; // <-- Добавил useRef
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { I18N as t } from "../lib/i18n";
 import Footer from "../components/Footer";
+import AchievementToast from "../components/AchievementToast";
+
+const API_URL = 'http://localhost:8000/api'; 
+const ACHIEVEMENT_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3';
 
 export default function ProfilePage({ lang, user }) {
   const cur = t[lang]?.prof || t.RU.prof;
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [toast, setToast] = useState({ show: false, reward: 0 });
+
+  // 1. СОЗДАЕМ АУДИО ЗАРАНЕЕ (через useRef, чтобы не пересоздавалось)
+  const audioRef = useRef(new Audio(ACHIEVEMENT_SOUND));
 
   const [profileData, setProfileData] = useState(() => {
     const saved = localStorage.getItem("user_profile");
@@ -22,6 +30,47 @@ export default function ProfilePage({ lang, user }) {
 
   const [tempData, setTempData] = useState(profileData);
 
+  useEffect(() => {
+    // 2. ПРИНУДИТЕЛЬНО ГРУЗИМ ЗВУК ПРИ ВХОДЕ НА СТРАНИЦУ
+    // Это уберет задержку перед воспроизведением
+    audioRef.current.preload = 'auto';
+    audioRef.current.volume = 0.5;
+    audioRef.current.load(); // Команда браузеру: "Качай прямо сейчас!"
+
+    const checkAchievement = async () => {
+      try {
+        const response = await fetch(`${API_URL}/achievements/grant`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ key: 'visit_profile' })
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          const result = json.data || json; 
+
+          if (result.new) {
+            // 3. ТЕПЕРЬ ОН СРАБОТАЕТ МГНОВЕННО (файл уже в памяти)
+            // .catch нужен, если браузер блокирует авто-аудио (бывает в Chrome)
+            audioRef.current.play().catch(e => console.log("Audio blocked:", e));
+            
+            setToast({ show: true, reward: result.reward });
+
+            if (result.coins !== undefined) {
+               localStorage.setItem('l_coins', result.coins);
+               window.dispatchEvent(new Event('storage'));
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Achievement check failed:", e);
+      }
+    };
+
+    checkAchievement();
+  }, []);
+
   const handleSave = () => {
     setProfileData(tempData);
     localStorage.setItem("user_profile", JSON.stringify(tempData));
@@ -29,7 +78,17 @@ export default function ProfilePage({ lang, user }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-10 font-sans">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-10 font-sans relative">
+      
+      <AchievementToast 
+        show={toast.show} 
+        onClose={() => setToast(prev => ({ ...prev, show: false }))}
+        title="Achievement Unlocked!"
+        reward={toast.reward}
+        description="You visited your profile page for the first time."
+      />
+
+      {/* ОСТАЛЬНОЙ КОД БЕЗ ИЗМЕНЕНИЙ */}
       <div className="max-w-[1300px] mx-auto mb-10">
         <Link to="/hub" className="inline-flex items-center gap-2 font-black uppercase text-[10px] hover:text-blue-600 transition tracking-widest">
           <ChevronRight size={14} className="rotate-180" /> {cur.back}

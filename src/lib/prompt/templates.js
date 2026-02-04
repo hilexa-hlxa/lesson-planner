@@ -1,11 +1,10 @@
 import { DEFAULT_PROMPT_CONFIG } from "./defaults";
 import { I18N as t, langWord } from "../i18n";
 
-
 export function buildPrompt(type, vars, cfg) {
+  // 1. ГЕНЕРАЦИЯ ПЛАНА УРОКА
   if (type === "lesson_plan") {
     const c = cfg?.lesson_plan || DEFAULT_PROMPT_CONFIG.lesson_plan;
-
     const pack = t[vars.lang] || t.RU;
     const secMap = pack?.doc?.sections || t.RU.doc.sections;
 
@@ -15,7 +14,7 @@ export function buildPrompt(type, vars, cfg) {
 
     return [
       `Ты — профессиональный методист.`,
-      `Составь план урока строго на ${langWord(vars.lang)}.`,
+      `Составь план урока строго на языке: ${langWord(vars.lang)}.`,
       ``,
       `Данные урока:`,
       `- Предмет: ${vars.subject}`,
@@ -24,48 +23,44 @@ export function buildPrompt(type, vars, cfg) {
       `- Время: ${vars.duration} минут`,
       vars.details ? `- Детали: ${vars.details}` : null,
       ``,
-      `Настройки плана:`,
-      `- Стиль: ${c.style}`,
+      `Настройки:`,
       `- Детализация: ${c.detailLevel}`,
-      `- Поминутка: ${c.includeTiming ? "да" : "нет"}`,
-      `- Дифференциация: ${c.includeDifferentiation ? "да" : "нет"}`,
-      `- Оценивание: ${c.includeAssessment ? "да" : "нет"}`,
-      `- ДЗ: ${c.includeHomework ? "да" : "нет"}`,
-      `- Формат: ${c.markdown ? "Markdown" : "текст"}`,
+      `- Структура (соблюдай порядок):\n${sections}`,
       ``,
-      `Структура (строго соблюдай порядок):`,
-      sections,
-      ``,
-      `Пиши конкретно, без воды.`,
+      `Пиши конкретно, используй Markdown (жирный шрифт для заголовков).`,
     ].filter(Boolean).join("\n");
   }
 
+  // 2. ГЕНЕРАЦИЯ ТЕСТА (ИСПРАВЛЕНИЕ ДУБЛИКАТОВ)
   if (type === "tests") {
     const c = cfg?.tests || DEFAULT_PROMPT_CONFIG.tests;
+    const totalQ = c.total || 10;
 
     return [
-      `Ты — преподаватель.`,
-      `Сгенерируй тест строго на ${langWord(vars.lang)}.`,
+      `Роль: Генератор тестов.`,
+      `Задача: Создать тест на языке: ${langWord(vars.lang)}.`,
       ``,
-      `Данные:`,
+      `Вводные данные:`,
       `- Предмет: ${vars.subject}`,
       `- Тема: ${vars.topic}`,
       `- Класс: ${vars.grade}`,
-      vars.details ? `- Детали: ${vars.details}` : null,
-      ``,
-      `Настройки теста:`,
+      `- Количество вопросов: ${totalQ}`,
       `- Сложность: ${c.difficulty}`,
-      `- Всего вопросов: ${c.total}`,
-      `- MCQ: ${c.mcq.count} вопросов, вариантов: ${c.mcq.options} (A/B/C/D)`,
-      `- Короткий ответ: ${c.short.count}`,
-      `- Соответствие: ${c.matching.count}`,
-      `- Перемешать: ${c.shuffle ? "да" : "нет"}`,
-      `- Ответы в конце: ${c.includeAnswers ? "да" : "нет"}`,
-      `- Формат: ${c.markdown ? "Markdown" : "текст"}`,
+      vars.details ? `- Контекст: ${vars.details}` : null,
       ``,
-      `Требования:`,
-      `- Сначала вопросы, затем отдельный блок "Ответы" (если включено).`,
-      `- Вопросы должны соответствовать теме и классу.`,
+      `КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА ФОРМАТА:`,
+      `1. Не пиши никаких вступлений. Сразу начинай с вопросов.`,
+      `2. Правильный ответ помечай СРАЗУ внутри вопроса (крестиком [x]).`,
+      `3. Используй строго этот формат Markdown:`,
+      ``,
+      `## Текст вопроса?`,
+      `- [ ] Неправильный вариант`,
+      `- [x] Правильный вариант`,
+      `- [ ] Неправильный вариант`,
+      ``,
+      `4. Вопросов должно быть ровно ${totalQ}.`,
+      `5. ВАЖНО: Все варианты ответов внутри одного вопроса должны быть РАЗНЫМИ (УНИКАЛЬНЫМИ). Дубликаты запрещены!`,
+      `6. Если вопрос математический, убедись, что правильный ответ только один.`,
     ].filter(Boolean).join("\n");
   }
 
