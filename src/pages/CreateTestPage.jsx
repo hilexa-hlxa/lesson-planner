@@ -10,7 +10,7 @@ import api from '../api';
 const API_URL = 'http://localhost:8000/api';
 
 const CreateTestPage = ({ lang, promptConfig }) => {
-  // --- STATES ---
+  // --- State Management ---
   const [topic, setTopic] = useState('');
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState('5');
@@ -24,12 +24,12 @@ const CreateTestPage = ({ lang, promptConfig }) => {
   const [showLibrary, setShowLibrary] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  // States for AI Report
+  // AI Report States
   const [showReportModal, setShowReportModal] = useState(false);
   const [aiReport, setAiReport] = useState("");
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [lessonContext, setLessonContext] = useState("");
-  const [copied, setCopied] = useState(false); // Для анимации копирования
+  const [copied, setCopied] = useState(false);
 
   const [testUi, setTestUi] = useState({
     difficulty: "medium",
@@ -40,7 +40,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
 
   const cur = t[lang] || t.RU;
 
-  // --- EFFECTS ---
+  // --- Effects ---
   useEffect(() => { loadLibrary(); }, []);
 
   const loadLibrary = async () => {
@@ -51,7 +51,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
     } catch (e) { console.error(e); }
   };
 
-  // --- HANDLERS ---
+  // --- Handlers ---
   const handleSelectOldTest = (test) => {
       setGeneratedTest(test);
       setAccessCode(test.access_code); 
@@ -85,7 +85,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
         setGeneratedTest(newTest);
         loadLibrary();
 
-    } catch (e) { console.error(e); alert("Ошибка при генерации."); } finally { setLoading(false); }
+    } catch (e) { console.error(e); alert("Generation Error"); } finally { setLoading(false); }
   };
 
   const handleStartSession = async () => {
@@ -97,14 +97,14 @@ const CreateTestPage = ({ lang, promptConfig }) => {
             body: JSON.stringify({ id: generatedTest.id }),
             credentials: 'include'
          });
-         if (!res.ok) { alert("Ошибка сервера"); return; }
+         if (!res.ok) { alert("Server Error"); return; }
          const data = await res.json();
          const code = data.data?.code || data.code;
          if (code) {
              setAccessCode(code);
              setGeneratedTest(prev => ({...prev, access_code: code}));
          }
-     } catch(e) { console.error(e); alert("Ошибка сети."); }
+     } catch(e) { console.error(e); alert("Network Error"); }
   };
 
   const fetchReport = async (forceId = null) => {
@@ -134,7 +134,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
       return [];
   };
 
-  // --- КОПИРОВАНИЕ ОТЧЕТА ---
+  // --- Copy Logic ---
   const copyToClipboard = () => {
       if (!aiReport) return;
       navigator.clipboard.writeText(aiReport);
@@ -142,63 +142,64 @@ const CreateTestPage = ({ lang, promptConfig }) => {
       setTimeout(() => setCopied(false), 2000);
   };
 
-  // --- ГЕНЕРАЦИЯ AI ОТЧЕТА ---
+  // --- AI Report Logic ---
   const generateAiReport = async (type) => {
     if (!report || report.length === 0) {
-        alert("Нет данных для анализа. Сначала ученики должны пройти тест.");
+        alert("No data available. Students must finish the test first.");
         return;
     }
     setIsGeneratingReport(true);
     setAiReport(""); 
 
     try {
-        // Подготовка данных. Для "Для себя" собираем больше деталей.
+        // Prepare summary data
         const summaryData = report.map(r => ({
             name: r.student_name,
             score: `${r.score}/${r.total_questions}`,
             time: `${r.duration_seconds}s`,
-            // Если отчет для тренера - добавляем маркеры ошибок, если они есть
             status: type === 'coach' 
-                ? (r.percentage === 100 ? "Отлично" : `Ошибки: ${getDetailsSafe(r).filter(d => !d.isCorrect).length} шт.`) 
+                ? (r.percentage === 100 ? "Perfect" : `Mistakes: ${getDetailsSafe(r).filter(d => !d.isCorrect).length}`) 
                 : `${r.percentage}%`
         }));
 
         const contextInfo = lessonContext 
-            ? `Контекст урока: "${lessonContext}".` 
-            : `Тема: ${topic}.`;
+            ? `Lesson Context: "${lessonContext}".` 
+            : `Topic: ${topic}.`;
 
         let promptSystem = "";
         
         if (type === 'judge') {
-            // ОТЧЕТ ДЛЯ РУКОВОДСТВА
+            // OFFICIAL REPORT PROMPT
             promptSystem = `
-            Роль: Школьный методист.
-            Задача: Составь ОФИЦИАЛЬНЫЙ ОТЧЕТ для директора.
+            Role: School Administrator.
+            Task: Write an OFFICIAL REPORT for the school director.
+            Language: Russian (Strictly).
             ${contextInfo}
-            Данные: ${JSON.stringify(summaryData)}.
+            Data: ${JSON.stringify(summaryData)}.
             
-            Требования:
-            1. Стиль: Сухой, деловой.
-            2. Структура:
-               - Общая статистика (Успеваемость %, Качество %).
-               - Таблица результатов.
-               - Список отстающих (<50%).
-            3. Без советов. Markdown.
+            Requirements:
+            1. Style: Formal, professional.
+            2. Structure:
+               - General Statistics (Pass rate %, Quality %).
+               - Results Table.
+               - List of students lagging behind (<50%).
+            3. No advice, just facts. Use Markdown.
             `;
         } else {
-            // ОТЧЕТ ДЛЯ СЕБЯ (Упростил промпт для надежности)
+            // COACHING REPORT PROMPT
             promptSystem = `
-            Роль: Опытный педагог-наставник.
-            Задача: Напиши АНАЛИТИЧЕСКУЮ ЗАПИСКУ учителю по итогам теста.
+            Role: Senior Teacher Mentor.
+            Task: Write an ANALYTICAL NOTE for the teacher.
+            Language: Russian (Strictly).
             ${contextInfo}
-            Данные учеников: ${JSON.stringify(summaryData)}.
+            Student Data: ${JSON.stringify(summaryData)}.
             
-            Требования:
-            1. Оцени общее понимание темы классом (на основе баллов).
-            2. Выдели группы риска (кто сдал хуже всех или решал слишком быстро/медленно).
-            3. Дай 3 конкретных методических совета: что повторить на следующем уроке.
-            4. Напиши краткие рекомендации для слабых учеников.
-            Стиль: Полезный, без воды. Markdown.
+            Requirements:
+            1. Assess general class understanding.
+            2. Identify at-risk groups (low scores or too fast/slow).
+            3. Provide 3 specific teaching tips for the next lesson.
+            4. Brief recommendations for struggling students.
+            Style: Helpful, concise. Use Markdown.
             `;
         }
 
@@ -211,7 +212,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
 
     } catch (e) {
         console.error(e);
-        alert("Ошибка генерации AI отчета");
+        alert("AI Report Generation Failed");
     } finally {
         setIsGeneratingReport(false);
     }
@@ -220,10 +221,10 @@ const CreateTestPage = ({ lang, promptConfig }) => {
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-6 md:p-10 font-sans flex flex-col md:flex-row gap-8">
       
-      {/* ЛЕВАЯ ЧАСТЬ */}
+      {/* Left Column: Test Creation & Management */}
       <div className="flex-1 max-w-4xl mx-auto w-full">
         <Link to="/hub" className="inline-flex items-center gap-2 font-black uppercase text-xs mb-8 text-gray-500 hover:text-black dark:hover:text-white">
-            <ChevronLeft size={16} /> {cur.back || "Назад"}
+            <ChevronLeft size={16} /> {cur.back || "Back"}
         </Link>
         
         <div className="flex justify-between items-end mb-8">
@@ -233,59 +234,59 @@ const CreateTestPage = ({ lang, promptConfig }) => {
             </button>
         </div>
 
-        {/* ПАНЕЛЬ СОЗДАНИЯ */}
+        {/* Creation Panel */}
         <div className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0_0_#000] mb-8">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                <div>
-                   <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{cur.s || "Предмет"}</label>
-                   <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Математика" className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none" />
+                   <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{cur.s || "Subject"}</label>
+                   <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Math" className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none" />
                </div>
                <div>
-                   <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">Класс</label>
+                   <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">Grade</label>
                    <select value={grade} onChange={e => setGrade(e.target.value)} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none appearance-none cursor-pointer">
                         {[...Array(11)].map((_, i) => <option key={i+1} value={i+1}>{i+1}</option>)}
                    </select>
                </div>
            </div>
-           <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{cur.t || "Тема"}</label>
-           <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Тема теста..." className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none mb-6" />
+           <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{cur.t || "Topic"}</label>
+           <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Topic..." className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none mb-6" />
            
            <button onClick={handleGenerate} disabled={loading || !topic} className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-white transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 ${loading || !topic ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600'}`}>
-                {loading ? "ГЕНЕРАЦИЯ..." : "СОЗДАТЬ ТЕСТ"}
+                {loading ? "GENERATING..." : "CREATE QUIZ"}
            </button>
         </div>
 
-        {/* АКТИВНЫЙ ТЕСТ */}
+        {/* Active Test View */}
         {generatedTest && (
            <div className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[40px] border-[4px] border-blue-600 shadow-[8px_8px_0_0_#2563eb] animate-in fade-in slide-in-from-bottom-4">
               <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4 border-b border-gray-100 dark:border-zinc-800 pb-6">
                  <div>
-                    <h2 className="text-2xl font-black text-blue-600 uppercase mb-1">{generatedTest.subject || "Тест"}</h2>
-                    <p className="font-bold opacity-60 text-sm">Тема: {generatedTest.topic}</p>
+                    <h2 className="text-2xl font-black text-blue-600 uppercase mb-1">{generatedTest.subject || "Quiz"}</h2>
+                    <p className="font-bold opacity-60 text-sm">Topic: {generatedTest.topic}</p>
                  </div>
                  
                  {!accessCode ? (
                     <button onClick={handleStartSession} className="w-full md:w-auto py-3 px-6 bg-green-500 text-white rounded-xl font-black uppercase shadow-[4px_4px_0_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition border-2 border-black flex items-center justify-center gap-2">
-                       <Play size={20} /> Запустить Сессию
+                       <Play size={20} /> Start Session
                     </button>
                  ) : (
                     <div className="w-full md:w-auto text-right bg-black text-white p-4 rounded-2xl animate-in zoom-in">
-                       <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Код доступа</p>
+                       <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Access Code</p>
                        <p className="text-5xl font-black tracking-[0.2em] font-mono text-yellow-400 leading-none text-center md:text-right">{accessCode}</p>
                     </div>
                  )}
               </div>
 
-              {/* ТАБЛИЦА СТУДЕНТОВ */}
+              {/* Student Results Table */}
               <div className="mb-8 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl border-2 border-slate-100 dark:border-zinc-700 overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-700">
-                        <h3 className="font-black text-sm uppercase flex items-center gap-2">📊 Успеваемость</h3>
+                        <h3 className="font-black text-sm uppercase flex items-center gap-2">📊 Class Performance</h3>
                         <div className="flex gap-2">
                              <button 
                                 onClick={() => setShowReportModal(true)}
                                 className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg text-xs font-black uppercase shadow-sm hover:bg-purple-700 transition"
                             >
-                                <Sparkles size={14} /> AI Отчет
+                                <Sparkles size={14} /> AI Report
                             </button>
                             <button onClick={() => fetchReport()} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 rounded-lg text-xs font-black uppercase shadow-sm hover:text-blue-600 transition">
                                 <RefreshCw size={12}/>
@@ -298,10 +299,10 @@ const CreateTestPage = ({ lang, promptConfig }) => {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="text-[10px] font-black uppercase text-gray-400 border-b border-gray-200 dark:border-zinc-700">
-                                        <th className="p-3">Ученик</th>
-                                        <th className="p-3">Баллы</th>
-                                        <th className="p-3">Время</th>
-                                        <th className="p-3">Действие</th>
+                                        <th className="p-3">Student</th>
+                                        <th className="p-3">Score</th>
+                                        <th className="p-3">Time</th>
+                                        <th className="p-3">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="font-bold text-sm">
@@ -313,10 +314,10 @@ const CreateTestPage = ({ lang, promptConfig }) => {
                                                     {r.score}/{r.total_questions}
                                                 </span>
                                             </td>
-                                            <td className="p-3 text-gray-500">{r.duration_seconds}с</td>
+                                            <td className="p-3 text-gray-500">{r.duration_seconds}s</td>
                                             <td className="p-3">
                                                 <button onClick={() => setSelectedStudent(r)} className="px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition text-[10px] font-black uppercase">
-                                                    <Eye size={14} /> Детали
+                                                    <Eye size={14} /> Details
                                                 </button>
                                             </td>
                                         </tr>
@@ -326,7 +327,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
                         </div>
                     ) : (
                         <div className="text-center py-8 text-gray-400 text-xs font-bold uppercase tracking-widest">
-                            {accessCode ? "Ждем результаты..." : "Запустите сессию"}
+                            {accessCode ? "Waiting for results..." : "Start session to join"}
                         </div>
                     )}
               </div>
@@ -338,10 +339,10 @@ const CreateTestPage = ({ lang, promptConfig }) => {
         )}
       </div>
 
-      {/* ПРАВАЯ ЧАСТЬ - БИБЛИОТЕКА */}
+      {/* Right Column: Library */}
       <div className={`fixed inset-y-0 right-0 w-80 bg-white dark:bg-zinc-950 shadow-2xl p-6 transform transition-transform duration-300 z-40 md:static md:transform-none md:w-80 md:shadow-none md:bg-transparent md:block ${showLibrary ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
         <div className="flex justify-between items-center mb-6">
-            <h3 className="font-black text-sm uppercase tracking-widest text-gray-500">Библиотека</h3>
+            <h3 className="font-black text-sm uppercase tracking-widest text-gray-500">History</h3>
             <button onClick={() => setShowLibrary(false)} className="md:hidden"><X size={20}/></button>
         </div>
         <div className="space-y-3 overflow-y-auto h-[calc(100vh-100px)]">
@@ -357,40 +358,40 @@ const CreateTestPage = ({ lang, promptConfig }) => {
         </div>
       </div>
 
-      {/* МОДАЛКА: AI ОТЧЕТ */}
+      {/* Modal: AI Report */}
       {showReportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
             <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-[30px] p-6 md:p-8 shadow-2xl border-[4px] border-purple-600 max-h-[90vh] overflow-y-auto flex flex-col">
-                <h3 className="text-2xl font-black uppercase mb-2 flex-shrink-0">Генерация Отчета</h3>
+                <h3 className="text-2xl font-black uppercase mb-2 flex-shrink-0">Report Generator</h3>
                 
                 {!aiReport ? (
                     <div className="grid grid-cols-1 gap-4 overflow-y-auto">
                         <div>
                             <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                                Что проходили на уроке? (Опционально)
+                                Lesson Context (Optional)
                             </label>
                             <textarea 
                                 value={lessonContext}
                                 onChange={(e) => setLessonContext(e.target.value)}
-                                placeholder="Например: Разбирали дискриминант и формулу корней..."
+                                placeholder="E.g., We studied discriminants..."
                                 className="w-full p-3 bg-slate-50 dark:bg-zinc-800 rounded-xl border-2 border-gray-200 dark:border-zinc-700 focus:border-purple-500 outline-none text-sm font-bold min-h-[80px]"
                             />
                         </div>
 
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Тип отчета:</p>
+                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Report Type:</p>
 
                         <button onClick={() => generateAiReport('coach')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-left transition group">
-                            <div className="font-black text-lg uppercase group-hover:text-purple-600">🎓 Отчет для себя</div>
-                            <p className="text-xs text-gray-400 font-bold mt-1">Анализ ошибок, советы, контекст урока.</p>
+                            <div className="font-black text-lg uppercase group-hover:text-purple-600">🎓 Teacher's Note</div>
+                            <p className="text-xs text-gray-400 font-bold mt-1">Mistakes analysis, teaching tips, context.</p>
                         </button>
 
                         <button onClick={() => generateAiReport('judge')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left transition group">
-                            <div className="font-black text-lg uppercase group-hover:text-blue-600">⚖️ Отчет для руководства</div>
-                            <p className="text-xs text-gray-400 font-bold mt-1">Официальная сводка, таблица, факты.</p>
+                            <div className="font-black text-lg uppercase group-hover:text-blue-600">⚖️ Official Report</div>
+                            <p className="text-xs text-gray-400 font-bold mt-1">Dry facts, statistics, table for administration.</p>
                         </button>
                         
-                        {isGeneratingReport && <div className="text-center font-black animate-pulse mt-4 text-purple-600">ИИ АНАЛИЗИРУЕТ ДАННЫЕ...</div>}
-                        {!isGeneratingReport && <button onClick={() => setShowReportModal(false)} className="mt-2 w-full py-3 font-bold text-gray-400 hover:text-red-500">Отмена</button>}
+                        {isGeneratingReport && <div className="text-center font-black animate-pulse mt-4 text-purple-600">AI IS ANALYZING...</div>}
+                        {!isGeneratingReport && <button onClick={() => setShowReportModal(false)} className="mt-2 w-full py-3 font-bold text-gray-400 hover:text-red-500">Cancel</button>}
                     </div>
                 ) : (
                     <div className="animate-in zoom-in flex flex-col h-full">
@@ -398,16 +399,16 @@ const CreateTestPage = ({ lang, promptConfig }) => {
                             <ReactMarkdown>{aiReport}</ReactMarkdown>
                         </div>
                         <div className="flex gap-4 flex-shrink-0">
-                            <button onClick={() => setAiReport("")} className="flex-1 py-3 font-bold text-gray-400 hover:text-black">Назад</button>
-                            {/* КНОПКА КОПИРОВАТЬ */}
+                            <button onClick={() => setAiReport("")} className="flex-1 py-3 font-bold text-gray-400 hover:text-black">Back</button>
+                            {/* Copy Button */}
                             <button 
                                 onClick={copyToClipboard} 
                                 className={`flex-1 py-3 ${copied ? 'bg-green-500' : 'bg-purple-600'} text-white rounded-xl font-bold uppercase flex items-center justify-center gap-2 transition-all`}
                             >
                                 {copied ? <Check size={18} /> : <Copy size={18} />}
-                                {copied ? "Скопировано!" : "Копия"}
+                                {copied ? "Copied!" : "Copy"}
                             </button>
-                            <button onClick={() => setShowReportModal(false)} className="flex-1 py-3 bg-black text-white rounded-xl font-bold uppercase">Закрыть</button>
+                            <button onClick={() => setShowReportModal(false)} className="flex-1 py-3 bg-black text-white rounded-xl font-bold uppercase">Close</button>
                         </div>
                     </div>
                 )}
@@ -415,7 +416,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
         </div>
       )}
 
-      {/* МОДАЛКА: ДЕТАЛИ СТУДЕНТА */}
+      {/* Modal: Student Details */}
       {selectedStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in zoom-in duration-200">
             <div className="bg-white dark:bg-zinc-900 w-full max-w-lg max-h-[80vh] overflow-hidden rounded-[30px] shadow-2xl flex flex-col border-[4px] border-black dark:border-gray-700">
@@ -423,7 +424,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
                     <div>
                         <h3 className="text-xl font-black uppercase">{selectedStudent.student_name}</h3>
                         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                            Детальный разбор
+                            Detailed Breakdown
                         </p>
                     </div>
                     <button onClick={() => setSelectedStudent(null)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-700 transition">
@@ -436,16 +437,16 @@ const CreateTestPage = ({ lang, promptConfig }) => {
                             {getDetailsSafe(selectedStudent).map((detail, idx) => (
                                 <div key={idx} className="p-5 bg-white dark:bg-zinc-900 flex items-center justify-between">
                                     <div className="flex flex-col gap-1">
-                                        <span className="font-black text-xs uppercase text-gray-400">Вопрос {idx + 1}</span>
+                                        <span className="font-black text-xs uppercase text-gray-400">Question {idx + 1}</span>
                                         <div className="flex items-center gap-2">
                                             {detail.isCorrect ? (
-                                                <span className="text-green-600 font-black text-sm uppercase">✅ Правильно</span>
+                                                <span className="text-green-600 font-black text-sm uppercase">✅ Correct</span>
                                             ) : (
-                                                <span className="text-red-500 font-black text-sm uppercase">❌ Неправильно</span>
+                                                <span className="text-red-500 font-black text-sm uppercase">❌ Wrong</span>
                                             )}
                                             <span className="text-gray-300">|</span>
                                             <span className="font-bold text-sm text-black dark:text-white">
-                                                Потрачено: {detail.time}с
+                                                Time: {detail.time}s
                                             </span>
                                         </div>
                                     </div>
@@ -455,7 +456,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
                         </div>
                     ) : (
                         <div className="p-10 text-center text-gray-400 italic font-bold">
-                            Нет детальных данных (возможно, старая запись)
+                            No details available.
                         </div>
                     )}
                 </div>

@@ -2,25 +2,24 @@ export const parseMarkdownQuiz = (markdown) => {
   if (!markdown) return [];
 
   const questions = [];
-  // Разбиваем текст по заголовкам "## " (это начало вопроса)
+  // Split content by "## " headers (Markdown h2 indicates a new question)
   const blocks = markdown.split(/^## /m).filter(b => b.trim());
 
   blocks.forEach(block => {
-    // Первая строка блока — это сам вопрос
+    // First line of the block is the question text
     const lines = block.split('\n').filter(line => line.trim());
-    if (lines.length < 2) return; // Если нет вопроса или ответов — пропускаем
+    if (lines.length < 2) return; 
 
     const questionText = lines[0].trim();
     const options = [];
     let correctIndex = 0;
     let currentOptionIndex = 0;
 
-    // Ищем строки, начинающиеся с тире или звездочки (варианты ответов)
-    // Формат: "- [ ] Ответ" или "- [x] Ответ"
+    // Iterate through lines to find options (starting with - or *)
+    // Regex matches format: "- [ ] Answer" or "- [x] Answer"
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Регулярка ищет: (дефис/звезда) [пробел или x] (текст)
       const match = line.match(/^[-*]\s*\[([ xX])\]\s*(.+)$/);
       
       if (match) {
@@ -35,7 +34,7 @@ export const parseMarkdownQuiz = (markdown) => {
       }
     }
 
-    // Добавляем вопрос только если есть минимум 2 варианта ответа
+    // Only add valid questions with at least 2 options
     if (options.length >= 2) {
       questions.push({
         question: questionText,
