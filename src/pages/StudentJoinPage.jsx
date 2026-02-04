@@ -1,106 +1,99 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import QuizPlayer from '../components/QuizPlayer';
+import { ArrowRight, Hash, User } from 'lucide-react';
+import api from '../api';
 
 const StudentJoinPage = () => {
   const [code, setCode] = useState('');
-  const [name, setName] = useState(''); // Имя ученика
-  const [quizData, setQuizData] = useState(null);
-  const [error, setError] = useState('');
-  const [step, setStep] = useState('login'); // 'login' | 'name' | 'playing' | 'done'
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleJoin = async () => {
-    if (code.length !== 4) return;
-    setError('');
+  const handleJoin = async (e) => {
+    e.preventDefault();
+    if (!code || !name) return;
 
+    setLoading(true);
     try {
+      // Validate session code
       const res = await fetch('http://localhost:8000/api/quiz/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ code: code.trim() })
       });
 
-      if (res.status === 410) throw new Error('Срок действия кода истек (4 часа)');
-      if (!res.ok) throw new Error('Тест не найден');
-      
       const data = await res.json();
-      const quiz = data.data || data.quiz || data;
-      
-      // Проверка: сдавал ли уже?
-      const attemptKey = `quiz_attempt_${quiz.id}`;
-      if (localStorage.getItem(attemptKey)) {
-          throw new Error('Ты уже сдавал этот тест!');
+
+      if (!res.ok) {
+        alert(data.error || 'Session not found');
+        return;
       }
 
-      setQuizData(quiz);
-      setStep('name'); // Переходим к вводу имени
-    } catch (e) {
-      setError(e.message);
+      // Cache student session data
+      localStorage.setItem('student_quiz_session', JSON.stringify({
+        quiz: data.data?.quiz || data.quiz,
+        studentName: name.trim(),
+        startTime: Date.now()
+      }));
+
+      // Redirect to game interface
+      navigate('/play');
+
+    } catch (err) {
+      console.error(err);
+      alert('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const startQuiz = () => {
-      if (!name.trim()) { setError('Введи имя!'); return; }
-      setStep('playing');
-  };
-
-  if (step === 'login') {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-[40px] p-8 border-[4px] border-white text-center shadow-2xl">
-          <h1 className="text-4xl font-black mb-2 uppercase">Join Quiz</h1>
-          <p className="text-gray-500 font-bold mb-8">Введи 4 цифры с доски</p>
-          
-          <input 
-            type="text" maxLength={4} value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g,''))} 
-            className="w-full text-center text-6xl font-black tracking-[1rem] border-b-[4px] border-black outline-none mb-8 placeholder-gray-200 uppercase"
-            placeholder="0000"
-          />
-          {error && <p className="text-red-600 font-bold mb-4">{error}</p>}
-          <button onClick={handleJoin} disabled={code.length !== 4} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-xl hover:bg-blue-700 disabled:opacity-50 transition mb-4">
-            ДАЛЕЕ
-          </button>
-          <button onClick={() => navigate('/hub')} className="text-gray-400 font-bold text-sm hover:text-black">← Назад</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 'name') {
-    return (
-      <div className="min-h-screen bg-blue-600 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-[40px] p-8 border-[4px] border-black text-center shadow-[10px_10px_0_0_#000]">
-          <h2 className="text-2xl font-black mb-6 uppercase">Представься</h2>
-          <input 
-            type="text" value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-4 bg-gray-100 rounded-xl border-2 border-transparent focus:border-blue-600 font-bold outline-none mb-6 text-center text-xl"
-            placeholder="Фамилия Имя"
-          />
-          <button onClick={startQuiz} className="w-full py-4 bg-black text-white rounded-2xl font-black text-xl hover:scale-105 transition">
-            НАЧАТЬ ТЕСТ
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-       <div className="bg-white p-4 border-b-2 border-black flex justify-between items-center">
-          <span className="font-black truncate max-w-[200px]">{name}</span>
-          <span className="bg-black text-white px-3 py-1 rounded font-mono">CODE: {code}</span>
-       </div>
-       <div className="flex-1 p-4">
-          <QuizPlayer 
-             markdownContent={quizData.result_md} 
-             quizId={quizData.id}
-             studentName={name}
-             onClose={() => navigate('/hub')}
-          />
-       </div>
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-900 p-8 rounded-[40px] shadow-[8px_8px_0_0_#000] border-[4px] border-black dark:border-gray-700">
+        <h1 className="text-3xl font-black uppercase text-center mb-2">Join Quiz</h1>
+        <p className="text-center text-gray-500 font-bold text-xs uppercase tracking-widest mb-8">
+          Enter code & name to start
+        </p>
+
+        <form onSubmit={handleJoin} className="space-y-6">
+          <div>
+            <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">Access Code</label>
+            <div className="relative">
+              <Hash className="absolute left-4 top-4 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                maxLength={4}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="0000" 
+                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-black text-2xl tracking-[0.2em] outline-none focus:ring-4 ring-blue-500/20 transition text-center"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">Your Name</label>
+            <div className="relative">
+              <User className="absolute left-4 top-4 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe" 
+                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-500/20 transition"
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading || code.length !== 4 || !name}
+            className="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Checking...' : 'Start Quiz'} <ArrowRight size={20} />
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

@@ -1,52 +1,41 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { Trophy, X } from 'lucide-react';
 
-const AchievementToast = ({ show, onClose, title, reward, description }) => {
-  // Авто-закрытие через 5 секунд
+const AchievementToast = ({ achievement, onClose }) => {
+  const [visible, setVisible] = useState(false);
+
   useEffect(() => {
-    if (show) {
-      const timer = setTimeout(onClose, 5000);
+    if (achievement) {
+      setVisible(true);
+      // Auto-hide after 5 seconds
+      const timer = setTimeout(() => {
+        setVisible(false);
+        setTimeout(onClose, 300); // Wait for exit animation
+      }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [show, onClose]);
+  }, [achievement, onClose]);
+
+  if (!achievement) return null;
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed top-24 right-5 z-[100000] w-80 bg-white border-[4px] border-black rounded-[20px] shadow-[8px_8px_0_0_#000] overflow-hidden"
-        >
-          {/* Желтая шапка */}
-          <div className="bg-yellow-400 p-3 border-b-[3px] border-black flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Trophy className="text-black fill-white" size={20} />
-              <span className="font-black uppercase italic tracking-tighter text-sm">Achievement!</span>
-            </div>
-            <button onClick={onClose} className="hover:bg-black/10 rounded-full p-1 transition-colors">
-              <X size={16} />
-            </button>
-          </div>
+    <div className={`fixed bottom-6 right-6 z-50 transition-all duration-500 transform ${visible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+      <div className="bg-yellow-400 text-black p-4 rounded-2xl shadow-[6px_6px_0_0_#000] border-[3px] border-black flex items-center gap-4 max-w-sm">
+        <div className="bg-white p-3 rounded-xl border-2 border-black">
+           <Trophy size={24} className="text-yellow-500 fill-yellow-500 animate-bounce" />
+        </div>
+        
+        <div className="flex-1">
+           <h4 className="font-black uppercase text-xs tracking-widest opacity-60">Achievement Unlocked!</h4>
+           <p className="font-black text-lg leading-none mt-1">{achievement.title || "First Steps"}</p>
+           <p className="text-xs font-bold mt-1">+ {achievement.reward || 100} Coins</p>
+        </div>
 
-          {/* Контент */}
-          <div className="p-4 flex flex-col gap-2">
-            <h3 className="font-black text-xl leading-none">{title}</h3>
-            
-            <div className="self-start bg-green-100 text-green-700 font-black px-3 py-1 rounded-lg border-2 border-green-700 text-sm transform -rotate-2">
-               +{reward} Coins
-            </div>
-            
-            <p className="text-gray-500 font-bold text-xs leading-tight">
-              {description}
-            </p>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        <button onClick={() => setVisible(false)} className="p-1 hover:bg-black/10 rounded-full transition">
+           <X size={16} />
+        </button>
+      </div>
+    </div>
   );
 };
 

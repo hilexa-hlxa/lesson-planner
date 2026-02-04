@@ -1,218 +1,222 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Timer, CheckCircle, XCircle, Trophy } from 'lucide-react';
+import ReactConfetti from 'react-confetti';
 import { parseMarkdownQuiz } from '../lib/quizParser';
-import { CheckCircle, XCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 
-const QuizPlayer = ({ markdownContent, onClose, quizId, studentName }) => {
+const API_URL = 'http://localhost:8000/api';
+
+const QuizPlayer = () => {
+  const navigate = useNavigate();
+  
+  // Game State
+  const [session, setSession] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [score, setScore] = useState(0);
+  const [quizFinished, setQuizFinished] = useState(false);
   
-  const [startTime, setStartTime] = useState(null);
-  const [questionStartTime, setQuestionStartTime] = useState(null);
-  const [details, setDetails] = useState([]); 
+  // Detailed tracking for analytics
+  const [answersLog, setAnswersLog] = useState([]); 
 
+  // Timer State
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [questionTime, setQuestionTime] = useState(0);
+  const timerRef = useRef(null);
+
+  // --- Initialization ---
   useEffect(() => {
-    if (markdownContent) {
-      try {
-          const parsed = parseMarkdownQuiz(markdownContent);
-          
-          if (!parsed || parsed.length === 0) {
-              console.error("Парсер вернул пустой массив вопросов!");
-              return;
-          }
-
-          // === БЕЗОПАСНОЕ ПЕРЕМЕШИВАНИЕ ===
-          const shuffledQuestions = parsed.map(q => {
-              // Если опций нет или это не массив — возвращаем вопрос как есть (чтобы не сломать)
-              if (!q.options || !Array.isArray(q.options) || q.options.length === 0) {
-                  console.warn("В вопросе нет вариантов ответов:", q.question);
-                  return q; 
-              }
-
-              try {
-                  const originalOptions = q.options.map((opt, i) => ({ text: opt, isCorrect: i === q.correctIndex }));
-                  // Алгоритм Фишера-Йетса
-                  for (let i = originalOptions.length - 1; i > 0; i--) {
-                      const j = Math.floor(Math.random() * (i + 1));
-                      [originalOptions[i], originalOptions[j]] = [originalOptions[j], originalOptions[i]];
-                  }
-                  
-                  const newCorrectIndex = originalOptions.findIndex(o => o.isCorrect);
-                  
-                  return {
-                      ...q,
-                      options: originalOptions.map(o => o.text),
-                      correctIndex: newCorrectIndex
-                  };
-              } catch (err) {
-                  console.error("Ошибка при перемешивании вопроса:", err);
-                  return q; // Если ошибка — возвращаем оригинал
-              }
-          });
-
-          setQuestions(shuffledQuestions);
-          const now = Date.now();
-          setStartTime(now);
-          setQuestionStartTime(now);
-
-      } catch (e) {
-          console.error("Критическая ошибка при разборе теста:", e);
-      }
+    const raw = localStorage.getItem('student_quiz_session');
+    if (!raw) {
+      navigate('/join');
+      return;
     }
-  }, [markdownContent]);
+    const data = JSON.parse(raw);
+    setSession(data);
 
-  const handleOptionClick = (index) => {
-    if (isAnswered) return; 
+    // Parse questions from Markdown
+    const parsed = parseMarkdownQuiz(data.quiz.result_md);
+    setQuestions(parsed);
+  }, [navigate]);
 
-    const now = Date.now();
-    const timeSpent = Math.round((now - questionStartTime) / 1000);
+  // --- Timer Logic ---
+  useEffect(() => {
+    if (quizFinished) return;
+    
+    timerRef.current = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+      setQuestionTime(prev => prev + 1);
+    }, 1000);
 
-    setSelectedOption(index);
+    return () => clearInterval(timerRef.current);
+  }, [quizFinished]);
+
+  // --- Handlers ---
+  const handleAnswer = (optionIndex) => {
+    if (isAnswered) return;
+
+    setSelectedOption(optionIndex);
     setIsAnswered(true);
 
     const currentQ = questions[currentIndex];
-    // Защита: если индекс выходит за пределы (редкий баг)
-    if (!currentQ || !currentQ.options) return;
+    const isCorrect = optionIndex === currentQ.correctIndex;
 
-    const isCorrect = index === currentQ.correctIndex;
-
-    const newDetail = {
-        question: currentQ.question,
-        selected: currentQ.options[index] || "Ошибка",
-        isCorrect: isCorrect,
-        time: timeSpent || 1
-    };
-    
-    setDetails(prev => [...prev, newDetail]);
-    
     if (isCorrect) {
-      setScore(s => s + 1);
-      new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3').play().catch(()=>{});
-    } else {
-      new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3').play().catch(()=>{});
+      setScore(prev => prev + 1);
     }
+
+    // Log detail for AI report
+    setAnswersLog(prev => [
+        ...prev, 
+        {
+            questionId: currentIndex,
+            isCorrect,
+            time: questionTime,
+            selected: optionIndex
+        }
+    ]);
   };
 
-  const nextQuestion = () => {
-    if (currentIndex < questions.length - 1) {
+  const handleNext = () => {
+    if (currentIndex + 1 < questions.length) {
       setCurrentIndex(prev => prev + 1);
       setSelectedOption(null);
       setIsAnswered(false);
-      setQuestionStartTime(Date.now());
+      setQuestionTime(0); // Reset question timer
     } else {
       finishQuiz();
     }
   };
 
   const finishQuiz = async () => {
-    setShowResult(true);
-    const endTime = Date.now();
-    const durationSeconds = Math.round((endTime - startTime) / 1000);
+    setQuizFinished(true);
+    clearInterval(timerRef.current);
 
-    if (quizId) {
-        localStorage.setItem(`quiz_attempt_${quizId}`, 'true');
-        try {
-            await fetch('http://localhost:8000/api/quiz/submit', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    quiz_id: quizId,
-                    student_name: studentName,
-                    score: score,
-                    total: questions.length,
-                    duration: durationSeconds,
-                    details: details 
-                })
-            });
-        } catch (e) { console.error(e); }
-    }
+    // Final calculation including the last answer
+    // Note: 'score' state might be stale in this closure if updated immediately before, 
+    // but React handles batching. For safety, we trust the current state flow or use refs.
     
-    const reward = score * 10;
-    if (reward > 0) {
-        fetch('http://localhost:8000/api/coins/add', {
+    // Submit to server
+    try {
+        await fetch(`${API_URL}/quiz/submit`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ amount: reward }),
-            credentials: 'include'
-        }).catch(()=>{});
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                quiz_id: session.quiz.id,
+                student_name: session.studentName,
+                score: score + (questions[currentIndex].correctIndex === selectedOption ? 1 : 0), // Add last point if correct
+                total: questions.length,
+                duration: elapsedTime,
+                details: answersLog
+            })
+        });
+    } catch (e) {
+        console.error("Submission failed", e);
     }
   };
 
-  if (questions.length === 0) return <div className="p-10 text-center font-bold animate-pulse">Загрузка вопросов...</div>;
+  const handleExit = () => {
+    localStorage.removeItem('student_quiz_session');
+    navigate('/join');
+  };
 
-  // РЕЗУЛЬТАТ
-  if (showResult) {
-    const percentage = Math.round((score / questions.length) * 100);
+  if (!session || questions.length === 0) return <div className="p-10 text-center font-bold">Loading...</div>;
+
+  // --- Results Screen ---
+  if (quizFinished) {
+    const finalScore = score + (questions[currentIndex].correctIndex === selectedOption ? 1 : 0);
+    const percentage = Math.round((finalScore / questions.length) * 100);
+
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center animate-in zoom-in">
-        <div className={`w-32 h-32 rounded-full flex items-center justify-center border-[6px] border-black text-white text-4xl font-black mb-6 ${percentage >= 50 ? 'bg-green-500' : 'bg-red-500'}`}>
-           {percentage}%
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex items-center justify-center p-6 text-center font-sans">
+        <ReactConfetti recycle={false} numberOfPieces={500} />
+        <div className="max-w-md w-full bg-white dark:bg-zinc-900 p-10 rounded-[40px] shadow-2xl border-[4px] border-black dark:border-white animate-in zoom-in">
+           <div className="mb-6 flex justify-center">
+               <Trophy size={64} className="text-yellow-400 fill-yellow-400 animate-bounce" />
+           </div>
+           <h1 className="text-4xl font-black uppercase mb-2">Quiz Finished!</h1>
+           <p className="text-gray-500 font-bold uppercase tracking-widest mb-8">{session.studentName}</p>
+           
+           <div className="bg-slate-100 dark:bg-zinc-800 p-6 rounded-2xl mb-8">
+              <div className="text-6xl font-black text-blue-600 mb-2">{percentage}%</div>
+              <p className="font-bold text-sm text-gray-400 uppercase">Correct: {finalScore} / {questions.length}</p>
+              <p className="font-bold text-sm text-gray-400 uppercase mt-1">Time: {elapsedTime}s</p>
+           </div>
+
+           <button onClick={handleExit} className="w-full py-4 bg-black text-white rounded-xl font-black uppercase tracking-widest hover:scale-105 transition">
+              Back to Menu
+           </button>
         </div>
-        <h2 className="text-4xl font-black mb-2 uppercase">ТЕСТ ЗАВЕРШЕН</h2>
-        <p className="text-xl font-bold text-gray-500 mb-8">Результаты отправлены учителю</p>
-        <button onClick={onClose} className="px-8 py-4 bg-black text-white rounded-xl font-bold">В МЕНЮ</button>
       </div>
     );
   }
 
+  // --- Game Screen ---
   const currentQ = questions[currentIndex];
 
-  // ЗАЩИТА ОТ ПУСТОГО ВОПРОСА
-  if (!currentQ) return <div className="p-10 text-center text-red-500 font-bold">Ошибка: Вопрос не найден</div>;
-
   return (
-    <div className="max-w-3xl mx-auto h-full flex flex-col justify-center p-6">
-      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-8">
-        <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}></div>
-      </div>
-      
-      <h2 className="text-3xl font-black mb-8 leading-tight">{currentIndex + 1}. {currentQ.question}</h2>
-
-      {/* ЕСЛИ ОПЦИЙ НЕТ — ПОКАЗЫВАЕМ ПРЕДУПРЕЖДЕНИЕ */}
-      {(!currentQ.options || currentQ.options.length === 0) ? (
-          <div className="p-6 bg-red-50 border-2 border-red-200 rounded-2xl flex items-center gap-4 text-red-600 font-bold">
-              <AlertTriangle size={32} />
-              <div>
-                  <p>У этого вопроса нет вариантов ответа.</p>
-                  <p className="text-xs opacity-70">Возможно, ошибка генерации AI. Нажмите "Далее", чтобы пропустить.</p>
-              </div>
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] p-6 md:p-10 font-sans flex flex-col max-w-3xl mx-auto">
+       
+       {/* Header */}
+       <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-2 bg-white dark:bg-zinc-800 px-4 py-2 rounded-full shadow-sm border border-gray-200 dark:border-zinc-700">
+             <Timer size={18} className="text-blue-500" />
+             <span className="font-black font-mono text-lg">{elapsedTime}s</span>
           </div>
-      ) : (
-          <div className="space-y-4">
-            {currentQ.options.map((option, idx) => {
-              let btnClass = "w-full p-6 text-left text-lg font-bold border-[3px] rounded-2xl transition-all transform ";
-              if (!isAnswered) {
-                 btnClass += "bg-white border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer hover:translate-x-2";
-              } else {
-                 if (idx === currentQ.correctIndex) btnClass += "bg-green-100 border-green-500 text-green-800";
-                 else if (idx === selectedOption) btnClass += "bg-red-100 border-red-500 text-red-800";
-                 else btnClass += "bg-gray-50 border-gray-100 opacity-50";
-              }
-              return (
-                <button key={idx} disabled={isAnswered} onClick={() => handleOptionClick(idx)} className={btnClass}>
-                  <div className="flex items-center justify-between">
-                    <span>{option}</span>
-                    {isAnswered && idx === currentQ.correctIndex && <CheckCircle className="text-green-600" />}
-                    {isAnswered && idx === selectedOption && idx !== currentQ.correctIndex && <XCircle className="text-red-600" />}
-                  </div>
-                </button>
-              );
-            })}
+          <div className="font-black text-gray-400 text-xs uppercase tracking-widest">
+             Question {currentIndex + 1} of {questions.length}
           </div>
-      )}
+       </div>
 
-      {/* КНОПКА ДАЛЕЕ (Появляется если ответили ИЛИ если нет вариантов ответа) */}
-      {(isAnswered || !currentQ.options || currentQ.options.length === 0) && (
-        <div className="mt-8 flex justify-end">
-            <button onClick={nextQuestion} className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition animate-bounce">
-                Далее <ArrowRight size={20}/>
-            </button>
-        </div>
-      )}
+       {/* Progress Bar */}
+       <div className="w-full h-3 bg-gray-200 dark:bg-zinc-800 rounded-full mb-8 overflow-hidden">
+          <div 
+            className="h-full bg-blue-600 transition-all duration-500 ease-out"
+            style={{ width: `${((currentIndex) / questions.length) * 100}%` }}
+          />
+       </div>
+
+       {/* Question Card */}
+       <div className="bg-white dark:bg-zinc-900 p-6 md:p-10 rounded-[30px] border-[3px] border-black dark:border-gray-600 shadow-[6px_6px_0_0_#000] mb-6 flex-1">
+          <h2 className="text-2xl font-black mb-8 leading-tight">{currentQ.question}</h2>
+
+          <div className="space-y-3">
+             {currentQ.options.map((opt, idx) => {
+                let stateClass = "border-gray-200 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800";
+                
+                if (isAnswered) {
+                    if (idx === currentQ.correctIndex) stateClass = "bg-green-100 border-green-500 text-green-700";
+                    else if (idx === selectedOption) stateClass = "bg-red-100 border-red-500 text-red-700";
+                    else stateClass = "opacity-50 border-gray-100";
+                }
+
+                return (
+                   <button
+                     key={idx}
+                     onClick={() => handleAnswer(idx)}
+                     disabled={isAnswered}
+                     className={`w-full text-left p-5 rounded-xl border-2 font-bold transition-all duration-200 flex justify-between items-center ${stateClass}`}
+                   >
+                      <span>{opt}</span>
+                      {isAnswered && idx === currentQ.correctIndex && <CheckCircle size={20} className="text-green-600"/>}
+                      {isAnswered && idx === selectedOption && idx !== currentQ.correctIndex && <XCircle size={20} className="text-red-500"/>}
+                   </button>
+                );
+             })}
+          </div>
+       </div>
+
+       {/* Next Button */}
+       <div className="h-20 flex items-center justify-end">
+          {isAnswered && (
+             <button onClick={handleNext} className="px-8 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-lg hover:translate-y-1 hover:shadow-none transition animate-in fade-in slide-in-from-bottom-2">
+                {currentIndex + 1 === questions.length ? "Finish Quiz" : "Next Question"}
+             </button>
+          )}
+       </div>
+
     </div>
   );
 };
