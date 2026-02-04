@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"; // <-- Добавил useRef
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { I18N as t } from "../lib/i18n";
@@ -13,7 +13,7 @@ export default function ProfilePage({ lang, user }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, reward: 0 });
 
-  // 1. СОЗДАЕМ АУДИО ЗАРАНЕЕ (через useRef, чтобы не пересоздавалось)
+  // Preload audio instance
   const audioRef = useRef(new Audio(ACHIEVEMENT_SOUND));
 
   const [profileData, setProfileData] = useState(() => {
@@ -31,11 +31,10 @@ export default function ProfilePage({ lang, user }) {
   const [tempData, setTempData] = useState(profileData);
 
   useEffect(() => {
-    // 2. ПРИНУДИТЕЛЬНО ГРУЗИМ ЗВУК ПРИ ВХОДЕ НА СТРАНИЦУ
-    // Это уберет задержку перед воспроизведением
+    // Audio configuration (force load for low latency)
     audioRef.current.preload = 'auto';
     audioRef.current.volume = 0.5;
-    audioRef.current.load(); // Команда браузеру: "Качай прямо сейчас!"
+    audioRef.current.load();
 
     const checkAchievement = async () => {
       try {
@@ -51,9 +50,7 @@ export default function ProfilePage({ lang, user }) {
           const result = json.data || json; 
 
           if (result.new) {
-            // 3. ТЕПЕРЬ ОН СРАБОТАЕТ МГНОВЕННО (файл уже в памяти)
-            // .catch нужен, если браузер блокирует авто-аудио (бывает в Chrome)
-            audioRef.current.play().catch(e => console.log("Audio blocked:", e));
+            audioRef.current.play().catch(e => console.warn("Audio autoplay blocked", e));
             
             setToast({ show: true, reward: result.reward });
 
@@ -88,7 +85,6 @@ export default function ProfilePage({ lang, user }) {
         description="You visited your profile page for the first time."
       />
 
-      {/* ОСТАЛЬНОЙ КОД БЕЗ ИЗМЕНЕНИЙ */}
       <div className="max-w-[1300px] mx-auto mb-10">
         <Link to="/hub" className="inline-flex items-center gap-2 font-black uppercase text-[10px] hover:text-blue-600 transition tracking-widest">
           <ChevronRight size={14} className="rotate-180" /> {cur.back}

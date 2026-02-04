@@ -22,11 +22,11 @@ export default function Dashboard ({
   setDark,
   promptConfig
 }) {
-  // --- ЛОКАЛЬНЫЕ НАСТРОЙКИ ИНТЕРФЕЙСА (Вернул их сюда) ---
+  // --- UI Preferences ---
   const [fontSize, setFontSize] = useState("md");
   const [highContrast, setHighContrast] = useState(false);
 
-  // Основной стейт
+  // --- Main State ---
   const [form, setForm] = useState({ subject: "", topic: "", details: "", grade: "5", duration: "45" });
   const [res, setRes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -148,14 +148,14 @@ export default function Dashboard ({
         prev.map((x) => x.id === generationId ? { ...x, status: "done", name: form.topic, content: accumulatedText } : x)
       );
     } catch (error) {
-      console.error("Ошибка:", error);
-      setRes(`## Ошибка\n${String(error?.message || error)}`);
+      console.error("Error:", error);
+      setRes(`## Error\n${String(error?.message || error)}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Применяем классы для контраста и шрифта
+  // Apply UI preference classes
   const containerClass = highContrast ? "grayscale contrast-125" : "";
   const fontClass = fontSize === "lg" ? "text-lg" : fontSize === "xl" ? "text-xl" : "text-base";
 
@@ -170,7 +170,7 @@ export default function Dashboard ({
               LESSON.LAB
             </Link>
             
-            {/* --- ВЕРНУЛ КНОПКИ СЮДА --- */}
+            {/* UI Toggle Controls */}
             <div className="flex items-center gap-2">
               <button onClick={() => setDark(!dark)} className="p-2 bg-white dark:bg-zinc-800 rounded-xl shadow-sm transition-all hover:scale-110">
                 {dark ? <Sun size={16} /> : <Moon size={16} />}
@@ -188,7 +188,6 @@ export default function Dashboard ({
                 <option value="xl">A++</option>
               </select>
             </div>
-            {/* ------------------------- */}
           </div>
         </div>
 

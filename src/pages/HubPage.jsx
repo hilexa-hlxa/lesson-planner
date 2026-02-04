@@ -76,9 +76,9 @@ export default function HubPage({ lang, setLang, user, setUser }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
-          {/* === КОЛОНКА УЧИТЕЛЯ === */}
+          {/* TEACHER COLUMN */}
           <div className="flex flex-col gap-4">
-            {/* Старая большая карта (Инструменты) */}
+            {/* Main Tool Card */}
             <Link
               to="/dashboard"
               className="group relative p-12 bg-white dark:bg-zinc-900 rounded-[50px] border-[4px] border-black dark:border-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all flex-1 text-left"
@@ -101,7 +101,7 @@ export default function HubPage({ lang, setLang, user, setUser }) {
               </div>
             </Link>
 
-            {/* НОВАЯ КНОПКА: Создать Тест */}
+            {/* Quick Action: Create Test */}
             <Link 
               to="/create-test"
               className="bg-blue-600 text-white p-6 rounded-[30px] border-[4px] border-black shadow-[8px_8px_0_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-between group"
@@ -114,9 +114,9 @@ export default function HubPage({ lang, setLang, user, setUser }) {
             </Link>
           </div>
 
-          {/* === КОЛОНКА УЧЕНИКА === */}
+          {/* STUDENT COLUMN */}
           <div className="flex flex-col gap-4">
-            {/* Старая большая карта (Игротека - неактивная) */}
+            {/* Gamification Card (Inactive) */}
             <div className="relative p-12 bg-slate-100 dark:bg-zinc-950 rounded-[50px] border-[4px] border-dashed border-slate-300 dark:border-zinc-800 opacity-60 flex-1 text-left">
               <div className="absolute -top-6 left-10 px-6 py-2 bg-slate-300 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 font-black text-xs rounded-full border-2 border-dashed border-slate-400 uppercase tracking-widest">
                 {hubT.student}
@@ -131,7 +131,7 @@ export default function HubPage({ lang, setLang, user, setUser }) {
               <p className="text-slate-400 font-bold leading-relaxed mb-8 max-w-[280px]">{hubT.studentDesc}</p>
             </div>
 
-            {/* НОВАЯ КНОПКА: Войти в Тест */}
+            {/* Quick Action: Join Test */}
             <Link 
               to="/join-test"
               className="bg-black text-white dark:bg-white dark:text-black p-6 rounded-[30px] border-[4px] border-transparent hover:scale-[1.02] transition-all flex items-center justify-between group shadow-xl"

@@ -14,7 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
 import PromptsPage from "./pages/PromptsPage";
 import StudentJoinPage from "./pages/StudentJoinPage";
-import CreateTestPage from "./pages/CreateTestPage"; // <--- Твоя страница
+import CreateTestPage from "./pages/CreateTestPage"; 
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
 import ClassControlBar from './components/ClassControlBar';
@@ -144,8 +144,7 @@ export default function App() {
             }
           />
 
-          {/* --- ИСПРАВЛЕНИЕ ЗДЕСЬ --- */}
-          {/* Мы передаем lang и promptConfig, чтобы генерация работала */}
+          {/* Pass config for prompt generation */}
           <Route
             path="/create-test"
             element={
@@ -159,7 +158,6 @@ export default function App() {
               </Page>
             }
           />
-          {/* ------------------------- */}
 
           <Route
             path="/join-test"
