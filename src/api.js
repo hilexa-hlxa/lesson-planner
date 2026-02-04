@@ -1,9 +1,9 @@
 const API_PREFIX = '/api';
 
-// Вспомогательная функция "Ждун"
+// Utility helper for delay (Exponential Backoff)
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Основная функция запросов с защитой от 429
+// Wrapper for fetch with retry logic for HTTP 429 errors
 async function request(path, options = {}, retries = 3) {
   const url = `${API_PREFIX}${path}`;
   const fetchOptions = {
@@ -19,22 +19,22 @@ async function request(path, options = {}, retries = 3) {
     try {
       const res = await fetch(url, fetchOptions);
 
-      // --- ЛОВИМ 429 (Too Many Requests) ---
+      // Handle Rate Limiting (HTTP 429)
       if (res.status === 429) {
         if (i === retries) {
-            // Если попытки кончились
-            const err = new Error("Gemini HTTP 429: Слишком много запросов. Подождите.");
+            const err = new Error("API Rate Limit Exceeded. Please try again later.");
             err.status = 429;
             throw err;
         }
-        // Ждем: 2с, потом 4с, потом 6с
-        const delay = 2000 * (i + 1);
-        console.warn(`⚠️ 429 Detected. Retrying in ${delay}ms...`);
+        
+        // Exponential backoff: 5s, 10s, 15s
+        const delay = 5000 * (i + 1); 
+        console.warn(`[API] 429 Too Many Requests. Retrying in ${delay / 1000}s...`);
+        
         await wait(delay);
-        continue; // Идем на следующий круг
+        continue;
       }
 
-      // Обработка обычного ответа
       let data = null;
       try {
         data = await res.json();
@@ -52,12 +52,9 @@ async function request(path, options = {}, retries = 3) {
       return data;
 
     } catch (err) {
-      // Если это наша ошибка 429 или 4xx/5xx от сервера (после всех попыток) - выкидываем
-      if (err.status) throw err;
-      
-      // Если ошибка сети (интернет пропал), пробуем еще раз
-      if (i === retries) throw err;
-      await wait(1000);
+      if (err.status) throw err; // Re-throw strict API errors
+      if (i === retries) throw err; // Re-throw network errors on last attempt
+      await wait(2000); // Small delay for network jitters
     }
   }
 }
@@ -89,12 +86,11 @@ const api = {
     });
   },
 
-  // Стрим тоже защищаем от 429
+  // Stream generation with retry support
   generateStream: async function* ({ prompt }) {
     let res;
     const retries = 3;
 
-    // Цикл повторов только для подключения
     for (let i = 0; i <= retries; i++) {
         res = await fetch(`/api/generate/stream`, {
             method: "POST",
@@ -104,12 +100,14 @@ const api = {
         });
 
         if (res.status === 429) {
-            if (i === retries) throw new Error("HTTP 429: Server Busy");
-            console.warn(`⚠️ Stream 429. Retrying...`);
-            await wait(2000 * (i + 1));
+            if (i === retries) throw new Error("HTTP 429: Service Busy");
+            
+            const delay = 5000 * (i + 1);
+            console.warn(`[Stream] 429 Detected. Retrying in ${delay / 1000}s...`);
+            await wait(delay);
             continue;
         }
-        break; // Если не 429, выходим из цикла и читаем поток
+        break;
     }
 
     if (!res.ok) {
@@ -128,13 +126,11 @@ const api = {
 
       buf += decoder.decode(value, { stream: true });
 
-      // SSE события разделены \n\n
       let idx;
       while ((idx = buf.indexOf("\n\n")) !== -1) {
         const chunk = buf.slice(0, idx);
         buf = buf.slice(idx + 2);
 
-        // Ищем строку data:
         const line = chunk.split("\n").find((l) => l.startsWith("data: "));
         if (!line) continue;
 
@@ -150,47 +146,16 @@ const api = {
   },
 
   generations: {
-    list: (limit = 50) => {
-      return request(`/generations?limit=${encodeURIComponent(limit)}`, {
-        method: 'GET'
-      });
-    },
-
-    get: (id) => {
-      return request(`/generations/${id}`, {
-        method: 'GET'
-      });
-    },
-
-    create: (payload) => {
-      return request(`/generations`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-    },
-
-    update: (id, payload) => {
-      return request(`/generations/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(payload)
-      });
-    },
-
-    remove: async (id) => {
-      await request(`/generations/${id}`, {
-        method: 'DELETE'
-      });
-      return true;
-    }
+    list: (limit = 50) => request(`/generations?limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
+    get: (id) => request(`/generations/${id}`, { method: 'GET' }),
+    create: (payload) => request(`/generations`, { method: 'POST', body: JSON.stringify(payload) }),
+    update: (id, payload) => request(`/generations/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+    remove: async (id) => { await request(`/generations/${id}`, { method: 'DELETE' }); return true; }
   },
 
   promptConfig: {
     get: () => request('/prompt-config', { method: 'GET' }),
-    set: (config) =>
-      request('/prompt-config', {
-        method: 'PUT',
-        body: JSON.stringify({ config }),
-      }),
+    set: (config) => request('/prompt-config', { method: 'PUT', body: JSON.stringify({ config }) }),
   }
 };
 
