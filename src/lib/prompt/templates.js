@@ -2,7 +2,7 @@ import { DEFAULT_PROMPT_CONFIG } from "./defaults";
 import { I18N as t, langWord } from "../i18n";
 
 export function buildPrompt(type, vars, cfg) {
-  // 1. ГЕНЕРАЦИЯ ПЛАНА УРОКА
+  // 1. Lesson Plan Generation
   if (type === "lesson_plan") {
     const c = cfg?.lesson_plan || DEFAULT_PROMPT_CONFIG.lesson_plan;
     const pack = t[vars.lang] || t.RU;
@@ -13,54 +13,56 @@ export function buildPrompt(type, vars, cfg) {
       .join("\n");
 
     return [
-      `Ты — профессиональный методист.`,
-      `Составь план урока строго на языке: ${langWord(vars.lang)}.`,
+      `Role: Professional Methodologist.`,
+      `Task: Create a lesson plan strictly in language: ${langWord(vars.lang)}.`,
       ``,
-      `Данные урока:`,
-      `- Предмет: ${vars.subject}`,
-      `- Тема: ${vars.topic}`,
-      `- Класс: ${vars.grade}`,
-      `- Время: ${vars.duration} минут`,
-      vars.details ? `- Детали: ${vars.details}` : null,
+      `Lesson Data:`,
+      `- Subject: ${vars.subject}`,
+      `- Topic: ${vars.topic}`,
+      `- Grade: ${vars.grade}`,
+      `- Duration: ${vars.duration} minutes`,
+      vars.details ? `- Details: ${vars.details}` : null,
       ``,
-      `Настройки:`,
-      `- Детализация: ${c.detailLevel}`,
-      `- Структура (соблюдай порядок):\n${sections}`,
+      `Configuration:`,
+      `- Detail Level: ${c.detailLevel}`,
+      `- Structure (follow order):\n${sections}`,
       ``,
-      `Пиши конкретно, используй Markdown (жирный шрифт для заголовков).`,
+      `Instructions:`,
+      `- Be specific, avoid fluff.`,
+      `- Use Markdown (bold for headers).`,
     ].filter(Boolean).join("\n");
   }
 
-  // 2. ГЕНЕРАЦИЯ ТЕСТА (ИСПРАВЛЕНИЕ ДУБЛИКАТОВ)
+  // 2. Quiz Generation (Strict Format & Unique Answers)
   if (type === "tests") {
     const c = cfg?.tests || DEFAULT_PROMPT_CONFIG.tests;
     const totalQ = c.total || 10;
 
     return [
-      `Роль: Генератор тестов.`,
-      `Задача: Создать тест на языке: ${langWord(vars.lang)}.`,
+      `Role: Professional Quiz Generator.`,
+      `Task: Create a multiple-choice quiz strictly in language: ${langWord(vars.lang)}.`,
       ``,
-      `Вводные данные:`,
-      `- Предмет: ${vars.subject}`,
-      `- Тема: ${vars.topic}`,
-      `- Класс: ${vars.grade}`,
-      `- Количество вопросов: ${totalQ}`,
-      `- Сложность: ${c.difficulty}`,
-      vars.details ? `- Контекст: ${vars.details}` : null,
+      `Input Data:`,
+      `- Subject: ${vars.subject}`,
+      `- Topic: ${vars.topic}`,
+      `- Grade: ${vars.grade}`,
+      `- Question Count: ${totalQ}`,
+      `- Difficulty: ${c.difficulty}`,
+      vars.details ? `- Context: ${vars.details}` : null,
       ``,
-      `КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА ФОРМАТА:`,
-      `1. Не пиши никаких вступлений. Сразу начинай с вопросов.`,
-      `2. Правильный ответ помечай СРАЗУ внутри вопроса (крестиком [x]).`,
-      `3. Используй строго этот формат Markdown:`,
+      `CRITICAL OUTPUT RULES (STRICT MARKDOWN):`,
+      `1. No introduction or conclusion. Start directly with questions.`,
+      `2. Mark the correct answer IMMEDIATELY within the options using [x].`,
+      `3. Use this EXACT format:`,
       ``,
-      `## Текст вопроса?`,
-      `- [ ] Неправильный вариант`,
-      `- [x] Правильный вариант`,
-      `- [ ] Неправильный вариант`,
+      `## Question Text Here?`,
+      `- [ ] Wrong Option`,
+      `- [x] Correct Option`,
+      `- [ ] Wrong Option`,
       ``,
-      `4. Вопросов должно быть ровно ${totalQ}.`,
-      `5. ВАЖНО: Все варианты ответов внутри одного вопроса должны быть РАЗНЫМИ (УНИКАЛЬНЫМИ). Дубликаты запрещены!`,
-      `6. Если вопрос математический, убедись, что правильный ответ только один.`,
+      `4. Total questions must be exactly: ${totalQ}.`,
+      `5. CRITICAL: All options within a single question must be UNIQUE. No duplicates allowed.`,
+      `6. For math questions, ensure there is only one correct answer.`,
     ].filter(Boolean).join("\n");
   }
 
