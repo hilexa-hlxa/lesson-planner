@@ -43,36 +43,67 @@ export default function Dashboard ({
 
   useEffect(() => {
     let alive = true;
+
     (async () => {
       try {
-        const list = await cached("generations.list", () => api.generations.list(500), { limit: 500 }, 1000 * 60 * 60 * 24 * 365);
-        if (!alive) return;
-        const items = list?.items || [];
-        const full = await Promise.all(
-          items.map(async (x) => {
-            const r = await cached("generations.get", () => api.generations.get(x.id), { id: x.id }, 1000 * 60 * 60 * 24 * 365);
-            const it = r?.item || r;
-            return {
-              id: x.id,
-              name: x.topic || `#${x.id}`,
-              status: x.status,
-              created_at: x.created_at,
-              content: it?.result_md || it?.result || it?.prompt || "",
-            };
-          })
+        const list = await cached(
+          "generations.list",
+          () => api.generations.list(50),
+          { limit: 50 },
+          1000 * 60 * 5 // 5 минут, не год
         );
+
         if (!alive) return;
-        setHistory(full);
-        if (full[0]?.id) {
-          setActiveId(full[0].id);
-          setRes(full[0].content || "");
-        }
+
+        const items = list?.items || [];
+
+        // Сайдбар = легкие данные из list (БЕЗ result_md)
+        const sidebar = items.map((x) => ({
+          id: x.id,
+          name: x.topic || `#${x.id}`,
+          status: x.status,
+          created_at: x.created_at,
+        }));
+
+        setHistory(sidebar);
+
+        const firstId = sidebar[0]?.id ?? null;
+        if (!activeIdRef.current && firstId) setActiveId(firstId);
       } catch (e) {
-        console.error("history preload failed", e);
+        console.error("list preload failed", e);
       }
     })();
+
     return () => { alive = false; };
   }, []);
+
+  useEffect(() => {
+    if (!activeId) return;
+
+    let alive = true;
+
+    (async () => {
+      try {
+        const r = await cached(
+          "generations.get",
+          () => api.generations.get(activeId),
+          { id: activeId },
+          1000 * 60 * 30 // 30 минут
+        );
+
+        if (!alive) return;
+
+        const it = r?.item || r;
+        const content = it?.result_md || it?.result || it?.prompt || "";
+        setRes(content);
+      } catch (e) {
+        console.error("active get failed", e);
+        if (alive) setRes("");
+      }
+    })();
+
+    return () => { alive = false; };
+  }, [activeId]);
 
   const handleGenerate = async () => {
     if (!form.subject || !form.topic) return;
@@ -108,13 +139,12 @@ export default function Dashboard ({
       generationId = gen?.id;
       if (!generationId) throw new Error("No generationId");
 
-      invalidate("generations.list");
       setActiveId(generationId);
       activeIdRef.current = generationId;
 
       setHistory((prev) => {
         if (prev.some((x) => x.id === generationId)) return prev;
-        return [{ id: generationId, name: form.topic, status: "running", content: "" }, ...prev];
+        return [{ id: generationId, name: form.topic, status: "running", created_at: new Date().toISOString() }, ...prev];
       });
 
       let accumulatedText = "";
@@ -132,20 +162,12 @@ export default function Dashboard ({
         status: "done",
         result_md: accumulatedText,
       });
-
-      await cached(
-        "generations.get",
-        async () => ({
-          item: { id: generationId, topic: form.topic, status: "done", result_md: accumulatedText }
-        }),
-        { id: generationId },
-        1000 * 60 * 60 * 24 * 365
-      );
-
+      
+      invalidatePrefixRaw("generations.get:");
       invalidate("generations.list");
 
       setHistory((prev) =>
-        prev.map((x) => x.id === generationId ? { ...x, status: "done", name: form.topic, content: accumulatedText } : x)
+        prev.map((x) => x.id === generationId ? { ...x, status: "done", name: form.topic } : x)
       );
     } catch (error) {
       console.error("Error:", error);
@@ -197,13 +219,13 @@ export default function Dashboard ({
             {history.map((item) => (
               <div
                 key={item.id}
-                onClick={() => { setActiveId(item.id); setRes(item.content || ""); setActiveMenu(null); }}
+                onClick={() => { setActiveId(item.id); setActiveMenu(null); }}
                 className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer ${
                   activeId === item.id ? "ring-4 ring-blue-500/20" : ""
                 }`}
               >
                 {editingId === item.id ? (
-                  <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={async () => { try { await api.generations.update(item.id, { topic: editValue }); invalidate("generations.list"); setHistory(p => p.map(h => h.id === item.id ? { ...h, name: editValue } : h)); } catch (e) { console.error(e); } finally { setEditingId(null); } }} className="text-[13px] bg-transparent outline-none w-full font-bold" />
+                  <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={async () => { try { await api.generations.update(item.id, { topic: editValue }); invalidate("generations.list"); invalidatePrefixRaw("generations.get:"); setHistory(p => p.map(h => h.id === item.id ? { ...h, name: editValue } : h)); } catch (e) { console.error(e); } finally { setEditingId(null); } }} className="text-[13px] bg-transparent outline-none w-full font-bold" />
                 ) : (
                   <div className="flex justify-between items-center">
                     <span className="text-[13px] font-bold opacity-80 group-hover:opacity-100 truncate w-40">{item.name}</span>
@@ -213,7 +235,7 @@ export default function Dashboard ({
                 {activeMenu === item.id && (
                   <div className="absolute right-4 top-14 bg-white dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 rounded-2xl shadow-2xl z-50 overflow-hidden text-black dark:text-white">
                     <button onClick={() => { setEditingId(item.id); setEditValue(item.name); setActiveMenu(null); }} className="flex items-center gap-3 w-full p-4 text-[10px] hover:bg-slate-50 dark:hover:bg-zinc-700 transition font-black uppercase"><Edit3 size={14}/> {cur.edit}</button>
-                    <button onClick={async () => { try { await api.generations.remove(item.id); invalidate("generations.list"); setHistory(h => h.filter(i => i.id !== item.id)); if (activeId === item.id) { setActiveId(null); setRes(""); } } catch (e) { console.error("delete failed", e); } finally { setActiveMenu(null); } }} className="flex items-center gap-3 w-full p-4 text-[10px] text-red-500 hover:bg-red-50 transition font-black uppercase"><Trash2 size={14}/> {cur.del}</button>
+                    <button onClick={async () => { try { await api.generations.remove(item.id); invalidate("generations.list"); invalidatePrefixRaw("generations.get:"); setHistory(h => { const next = h.filter(i => i.id !== item.id); if (activeId === item.id) { const nextId = next[0]?.id ?? null; setActiveId(nextId); if (!nextId) setRes(""); } return next; }); } catch (e) { console.error("delete failed", e); } finally { setActiveMenu(null); } }} className="flex items-center gap-3 w-full p-4 text-[10px] text-red-500 hover:bg-red-50 transition font-black uppercase"><Trash2 size={14}/> {cur.del}</button>
                   </div>
                 )}
               </div>

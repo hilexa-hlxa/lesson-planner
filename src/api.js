@@ -69,10 +69,11 @@ const api = {
     });
   },
 
-  signup(email, password, displayName) {
+  signup(email, password, payload = null) {
+    const extra = (payload && typeof payload === "object") ? payload : { displayName: payload };
     return request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password, displayName })
+      body: JSON.stringify({ email, password, ...extra })
     });
   },
 

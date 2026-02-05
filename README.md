@@ -21,7 +21,7 @@ Professional next-generation automated lesson planning system built with **React
 - Icons: Lucide React
 - Markdown: ReactMarkdown
 - postreSQL via supabase
-- PHP 8.5 version
+- PHP 8.1+ version
   
 
 ## Getting Started
@@ -62,7 +62,6 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
-
 
 
 

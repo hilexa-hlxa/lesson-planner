@@ -52,7 +52,13 @@ final class AuthService {
     }
   }
 
-  public function register(string $email, string $password, ?string $displayName = null): int {
+  public function register(
+    string $email,
+    string $password,
+    ?string $firstName = null,
+    ?string $lastName = null,
+    string $roleCode = 'teacher'
+  ): int {
     $email = trim(mb_strtolower($email));
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -63,33 +69,75 @@ final class AuthService {
       throw new \DomainException('Password must be >= 8 chars');
     }
 
-    $hash = password_hash($password, PASSWORD_BCRYPT);
+    $firstName = $firstName !== null ? trim($firstName) : null;
+    $lastName  = $lastName  !== null ? trim($lastName)  : null;
 
-    $stmt = $this->pdo->prepare("
-      insert into users(email, password_hash, display_name)
-      values(:email, :phash, :name)
-      on conflict (email) do nothing
-      returning id
-    ");
-    $stmt->execute([
-      ':email' => $email,
-      ':phash' => $hash,
-      ':name'  => $displayName
-    ]);
+    // (опционально) чуть-чуть валидации
+    if ($firstName !== null && mb_strlen($firstName) > 80) throw new \DomainException('First name too long');
+    if ($lastName  !== null && mb_strlen($lastName)  > 80) throw new \DomainException('Last name too long');
 
-    $userId = $stmt->fetchColumn();
-
-    if (!$userId) {
-      // удобно маппить на 409 на уровне роутинга
-      throw new \RuntimeException('Email already exists');
+    $roleCode = trim(mb_strtolower($roleCode));
+    $allowedRoles = ['teacher', 'student', 'parent']; // на реге только эти 3
+    if (!in_array($roleCode, $allowedRoles, true)) {
+      throw new \DomainException('Invalid role');
     }
 
-    $userId = (int)$userId;
+    $displayName = trim(($firstName ?? '') . ' ' . ($lastName ?? ''));
+    if ($displayName === '') $displayName = null;
 
-    // роль user по умолчанию
-    $this->assignRole($userId, 'user');
+    $hash = password_hash($password, PASSWORD_BCRYPT);
 
-    return $userId;
+    $this->pdo->beginTransaction();
+    try {
+      $stmt = $this->pdo->prepare("
+        insert into users(email, password_hash, display_name, first_name, last_name)
+        values(:email, :phash, :dname, :fname, :lname)
+        on conflict (email) do nothing
+        returning id
+      ");
+      $stmt->execute([
+        ':email' => $email,
+        ':phash' => $hash,
+        ':dname' => $displayName,
+        ':fname' => $firstName,
+        ':lname' => $lastName,
+      ]);
+
+      $userId = $stmt->fetchColumn();
+
+      if (!$userId) {
+        throw new \RuntimeException('Email already exists');
+      }
+
+      $userId = (int)$userId;
+
+      // ВАЖНО: ставим ровно одну роль
+      $this->setSingleRole($userId, $roleCode);
+
+      $this->pdo->commit();
+      return $userId;
+    } catch (\Throwable $e) {
+      $this->pdo->rollBack();
+      throw $e;
+    }
+  }
+
+  private function setSingleRole(int $userId, string $roleCode): void {
+    $st = $this->pdo->prepare("select id from roles where code = :code limit 1");
+    $st->execute([':code' => $roleCode]);
+    $roleId = $st->fetchColumn();
+
+    if (!$roleId) {
+      throw new \RuntimeException('Role not found');
+    }
+
+    // очищаем все роли пользователя
+    $del = $this->pdo->prepare("delete from user_roles where user_id = :uid");
+    $del->execute([':uid' => $userId]);
+
+    // ставим одну роль
+    $ins = $this->pdo->prepare("insert into user_roles(user_id, role_id) values(:uid, :rid)");
+    $ins->execute([':uid' => $userId, ':rid' => (int)$roleId]);
   }
 
   private function assignRole(int $userId, string $roleCode): void {

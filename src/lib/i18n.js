@@ -14,7 +14,23 @@ export const I18N = {
     lt: { hero: "Планируйте уроки эффективно", sub: "Профессиональная система автоматизации учебных планов нового поколения.", login: "Войти", signup: "Регистрация", join: "Начать работу" },
     hub: { title: "Выберите направление", tools: "Инструменты", games: "Игротека (Скоро)", go: "Открыть" },
     prof: { title: "Мой Профиль", mail: "Почта", stats: "Статистика", back: "Назад в Хаб", edit: "Редактировать", empty: "Пустое пространство", save: "Сохранить", cancel: "Отмена" },
-    auth: { loginTitle: "С возвращением!", signupTitle: "Создать аккаунт", email: "ПОЧТА", pass: "ПАРОЛЬ", enter: "ВОЙТИ", switchL: "Нет аккаунта? Регистрация", switchS: "Уже есть аккаунт? Войти" },
+    auth: {
+      loginTitle: "С возвращением!",
+      signupTitle: "Создать аккаунт",
+      email: "ПОЧТА",
+      pass: "ПАРОЛЬ",
+      enter: "ВОЙТИ",
+      switchL: "Нет аккаунта? Регистрация",
+      switchS: "Уже есть аккаунт? Войти",
+
+      firstName: "ИМЯ",
+      lastName: "ФАМИЛИЯ",
+      role: "РОЛЬ",
+      roleTeacher: "Учитель",
+      roleParent: "Родитель",
+      roleStudent: "Ученик",
+      signupEnter: "СОЗДАТЬ АККАУНТ"
+    },
     menu: { hub: "Перейти в хаб", dashboard: "Перейти в Dashboard", logout: "Выйти" },
 
     prompts: {
@@ -72,7 +88,23 @@ export const I18N = {
     lt: { hero: "Сабақты тиімді жоспарлаңыз", sub: "Оқу жоспарларын автоматты төрде құрастыруға арналған кәсіби жүйе.", login: "Кіру", signup: "Тіркелу", join: "Жұмысты бастау" },
     hub: { title: "Бағытты таңдаңыз", tools: "Құралдар", games: "Ойындар (Жақында)", go: "Ашу" },
     prof: { title: "Менің Профилім", mail: "Пошта", stats: "Статистика", back: "Хабқа қайту", edit: "Өңдеу", empty: "Бос орын", save: "Сақтау", cancel: "Бас тарту" },
-    auth: { loginTitle: "Қош келдіңіз!", signupTitle: "Тіркелу", email: "ПОШТА", pass: "ҚҰПИЯ СӨЗ", enter: "КІРУ", switchL: "Тіркелмегенсіз бе? Тіркелу", switchS: "Аккаунтыңыз бар ма? Кіру" },
+    auth: {
+      loginTitle: "Қош келдіңіз!",
+      signupTitle: "Тіркелу",
+      email: "ПОШТА",
+      pass: "ҚҰПИЯ СӨЗ",
+      enter: "КІРУ",
+      switchL: "Тіркелмегенсіз бе? Тіркелу",
+      switchS: "Аккаунтыңыз бар ма? Кіру",
+
+      firstName: "АТЫ",
+      lastName: "ТЕГІ",
+      role: "РОЛЬ",
+      roleTeacher: "Мұғалім",
+      roleParent: "Ата-ана",
+      roleStudent: "Оқушы",
+      signupEnter: "ТІРКЕЛУ"
+    },
     menu: { hub: "Хабқа өту", dashboard: "Dashboard-қа өту", logout: "Шығу" },
 
     prompts: {
@@ -129,7 +161,23 @@ export const I18N = {
     lt: { hero: "Plan Lessons Effectively", sub: "Professional next-generation automated lesson planning system.", login: "Sign In", signup: "Sign Up", join: "Get Started" },
     hub: { title: "Choose Direction", tools: "Tools", games: "Games (Soon)", go: "Open" },
     prof: { title: "My Profile", mail: "Email", stats: "Statistics", back: "Back to Hub", edit: "Edit Profile", empty: "Empty Space", save: "Save", cancel: "Cancel" },
-    auth: { loginTitle: "Welcome back!", signupTitle: "Create Account", email: "EMAIL", pass: "PASSWORD", enter: "ENTER", switchL: "Don't have an account? Sign Up", switchS: "Already have an account? Log In" },
+    auth: {
+      loginTitle: "Welcome back!",
+      signupTitle: "Create Account",
+      email: "EMAIL",
+      pass: "PASSWORD",
+      enter: "ENTER",
+      switchL: "Don't have an account? Sign Up",
+      switchS: "Already have an account? Log In",
+
+      firstName: "FIRST NAME",
+      lastName: "LAST NAME",
+      role: "ROLE",
+      roleTeacher: "Teacher",
+      roleParent: "Parent",
+      roleStudent: "Student",
+      signupEnter: "CREATE ACCOUNT"
+    },
     menu: { hub: "Go to Hub", dashboard: "Go to Dashboard", logout: "Log out" },
 
     prompts: {

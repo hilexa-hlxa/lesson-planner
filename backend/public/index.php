@@ -240,8 +240,11 @@ try {
       $userId = $auth->register(
         (string)($body['email'] ?? ''),
         (string)($body['password'] ?? ''),
-        isset($body['displayName']) ? (string)$body['displayName'] : null
+        array_key_exists('first_name', $body) ? (string)$body['first_name'] : null,
+        array_key_exists('last_name',  $body) ? (string)$body['last_name']  : null,
+        (string)($body['role'] ?? 'teacher')
       );
+
       Response::ok(['userId' => $userId]);
     } catch (\DomainException $e) {
       Response::error($e->getMessage(), 400);
@@ -392,7 +395,7 @@ try {
 
     $id = (int)$m[1];
 
-    $allowed = ['status', 'result_md', 'error'];
+    $allowed = ['status', 'result_md', 'error', 'topic'];
     $set = [];
     $params = [':id' => $id, ':uid' => $u['id']];
 

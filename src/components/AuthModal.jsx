@@ -25,22 +25,47 @@ export default function AuthModal({
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState("teacher"); // default
+
+  const closeModal = () => {
+    setFirstName("");
+    setLastName("");
+    setRole("teacher");
+    onClose();
+  };
+
+
   const currentLangData = t[lang] || t.RU;
   const authT = currentLangData.auth;
 
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    setLoading(true);
     try {
-      if (mode === "signup") await api.signup(email, pass, null);
+      setLoading(true);
+
+      if (mode === "signup") {
+        if (!firstName.trim() || !lastName.trim()) {
+          alert("Enter first and last name");
+          return;
+        }
+
+        await api.signup(email, pass, {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          role,
+        });
+      }
+
       await api.login(email, pass);
 
       invalidate("me");
       const me = await cached("me", () => api.me(), {}, 60_000);
 
       setUser(me.user);
-      onClose();
+      closeModal();
       navigate("/hub");
     } catch {
       alert("Auth Error");
@@ -52,7 +77,7 @@ export default function AuthModal({
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-white/80 dark:bg-black/90 backdrop-blur-md p-4">
       <div className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-12 rounded-[44px] shadow-2xl relative">
-        <button onClick={onClose} className="absolute top-8 right-8 opacity-30 hover:opacity-100 font-bold text-2xl">
+        <button onClick={closeModal} className="absolute top-8 right-8 opacity-30 hover:opacity-100 font-bold text-2xl">
           ✕
         </button>
 
@@ -61,6 +86,35 @@ export default function AuthModal({
         </h2>
 
         <div className="space-y-6">
+          {mode === "signup" && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder={authT.firstName}
+                  className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
+                />
+                <input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder={authT.lastName}
+                  className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
+                />
+              </div>
+
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500 cursor-pointer"
+              >
+                <option value="teacher">{authT.roleTeacher}</option>
+                <option value="parent">{authT.roleParent}</option>
+                <option value="student">{authT.roleStudent}</option>
+              </select>
+            </>
+          )}
+
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -94,7 +148,7 @@ export default function AuthModal({
                 : "bg-slate-200 dark:bg-zinc-800 text-slate-400 opacity-50"
             }`}
           >
-            {loading ? "..." : authT.enter}
+            {loading ? "..." : (mode === "signup" ? (authT.signupEnter || authT.enter) : authT.enter)}
           </button>
 
           <button

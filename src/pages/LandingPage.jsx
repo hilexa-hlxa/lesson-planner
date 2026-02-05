@@ -11,7 +11,7 @@ import Footer from "../components/Footer";
 
 import { I18N as t } from "../lib/i18n";
 
-export default function LandingPage({ lang, setLang, setIsAuthOpen, user, setUser }) {
+export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode, resetAuthFields, user, setUser }) {
   const cur = t[lang]?.lt || t.RU.lt;
   const navigate = useNavigate();
 
@@ -55,12 +55,12 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, user, setUse
 
           {!user ? (
             <>
-              <button onClick={() => setIsAuthOpen(true)} className="hover:text-blue-600 transition">
+              <button onClick={() => { resetAuthFields?.(); setAuthMode?.("login"); setIsAuthOpen(true); }} className="hover:text-blue-600 transition">
                 {cur.login}
               </button>
 
               <button
-                onClick={() => setIsAuthOpen(true)}
+                onClick={() => { resetAuthFields?.(); setAuthMode?.("signup"); setIsAuthOpen(true); }}
                 className="px-12 py-5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-500/30 transition-all active:scale-95"
               >
                 {cur.signup}
@@ -132,7 +132,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, user, setUse
         </p>
 
         <button
-          onClick={() => setIsAuthOpen(true)}
+          onClick={() => { resetAuthFields?.(); setAuthMode?.("signup"); setIsAuthOpen(true); }}
           className="group inline-flex items-center gap-6 px-16 py-8 bg-slate-900 dark:bg-white text-white dark:text-black text-xl font-bold uppercase tracking-widest rounded-[32px] hover:bg-blue-600 hover:text-white transition-all shadow-2xl"
         >
           {cur.join} <ChevronRight size={28} />

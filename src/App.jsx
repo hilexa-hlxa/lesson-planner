@@ -102,6 +102,8 @@ export default function App() {
                   lang={lang}
                   setLang={setLang}
                   setIsAuthOpen={setIsAuthOpen}
+                  setAuthMode={setAuthMode}
+                  resetAuthFields={() => { setEmail(""); setPass(""); setShowEmailError(false); }}
                   user={user}
                   setUser={setUser}
                 />
