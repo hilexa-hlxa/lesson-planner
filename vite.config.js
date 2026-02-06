@@ -8,7 +8,7 @@ export default defineConfig({
       '/api': {
         target: 'https://unyieldingly-chanceful-ann.ngrok-free.dev',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       }
     }
   }
