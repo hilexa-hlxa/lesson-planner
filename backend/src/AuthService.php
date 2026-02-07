@@ -249,8 +249,9 @@ final class AuthService {
 
     $hash = $this->tokenHash($raw);
 
+    // 1. ДОБАВИЛ first_name, last_name, coins В ЗАПРОС
     $st = $this->pdo->prepare("
-      select u.id, u.email, u.display_name
+      select u.id, u.email, u.display_name, u.first_name, u.last_name, u.coins
       from sessions s
       join users u on u.id = s.user_id
       where s.session_token_hash = :h
@@ -259,10 +260,10 @@ final class AuthService {
       limit 1
     ");
     $st->execute([':h' => $hash]);
-    $u = $st->fetch();
+    $u = $st->fetch(\PDO::FETCH_ASSOC); // Важно добавить FETCH_ASSOC
     if (!$u) return null;
 
-    // не пишем в БД на каждый запрос — максимум раз в 60 секунд
+    // Обновляем last_seen
     $up = $this->pdo->prepare("
       update sessions
       set last_seen_at = now()
@@ -271,6 +272,7 @@ final class AuthService {
     ");
     $up->execute([':h' => $hash]);
 
+    // Получаем роли
     $rs = $this->pdo->prepare("
       select r.code
       from user_roles ur
@@ -279,7 +281,12 @@ final class AuthService {
       order by r.code
     ");
     $rs->execute([':uid' => $u['id']]);
-    $u['roles'] = array_map(fn($row) => $row['code'], $rs->fetchAll());
+    $roles = array_map(fn($row) => $row['code'], $rs->fetchAll(\PDO::FETCH_ASSOC));
+
+    // 2. ПРЕВРАЩАЕМ МАССИВ В СТРОКУ ДЛЯ ФРОНТА
+    // Берем первую роль, или 'student' если пусто
+    $u['role'] = $roles[0] ?? 'student'; 
+    $u['roles'] = $roles; // Оставляем массив на всякий случай
 
     return $u;
   }

@@ -33,6 +33,17 @@ export const I18N = {
     },
     menu: { hub: "Перейти в хаб", dashboard: "Перейти в Dashboard", logout: "Выйти" },
 
+    // === НОВЫЕ ПЕРЕВОДЫ ДЛЯ ПАНЕЛИ ИНСТРУМЕНТОВ ===
+    tools: {
+        wheel: "Колесо",
+        dice: "Кубик",
+        noise: "Шум",
+        timer: "Таймер",
+        close: "Закрыть",
+        noiseTitle: "Шумомер",
+        noiseDesc: "Доступ к микрофону"
+    },
+
     prompts: {
       back: "Назад",
       title: "Настройки промптов",
@@ -62,7 +73,6 @@ export const I18N = {
       save: "Сохранить",
     },
 
-    // ДОКУМЕНТЫ / DOCX / СЕКЦИИ
     doc: {
       lessonPlan: "План урока",
       test: "Тест",
@@ -106,6 +116,17 @@ export const I18N = {
       signupEnter: "ТІРКЕЛУ"
     },
     menu: { hub: "Хабқа өту", dashboard: "Dashboard-қа өту", logout: "Шығу" },
+
+    // === ЖАҢА АУДАРМАЛАР (ҚҰРАЛДАР) ===
+    tools: {
+        wheel: "Дөңгелек",
+        dice: "Сүйек",
+        noise: "Шу",
+        timer: "Таймер",
+        close: "Жабу",
+        noiseTitle: "Шу өлшегіш",
+        noiseDesc: "Микрофонға рұқсат"
+    },
 
     prompts: {
       back: "Артқа",
@@ -179,6 +200,17 @@ export const I18N = {
       signupEnter: "CREATE ACCOUNT"
     },
     menu: { hub: "Go to Hub", dashboard: "Go to Dashboard", logout: "Log out" },
+
+    // === NEW TRANSLATIONS (TOOLS) ===
+    tools: {
+        wheel: "Wheel",
+        dice: "Dice",
+        noise: "Noise",
+        timer: "Timer",
+        close: "Close",
+        noiseTitle: "Noise Meter",
+        noiseDesc: "Access to microphone"
+    },
 
     prompts: {
       back: "Back",

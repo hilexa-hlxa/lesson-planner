@@ -6,10 +6,12 @@ import ReactMarkdown from 'react-markdown';
 import { I18N as t } from '../lib/i18n';
 import { buildPrompt } from '../lib/prompt';
 import api from '../api';
+import Header from "../components/Header";
 
 const API_URL = 'http://localhost:8000/api';
 
-const CreateTestPage = ({ lang, promptConfig }) => {
+
+const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
   // --- State Management ---
   const [topic, setTopic] = useState('');
   const [subject, setSubject] = useState('');
@@ -45,23 +47,14 @@ const CreateTestPage = ({ lang, promptConfig }) => {
 
   const loadLibrary = async () => {
     try {
-        const res = await api.generations.list(50);
-        const tests = (res.items || []).filter(item => item.subject); 
+        const res = await api.generations.list(100); // Берем чуть больше
+        // ФИЛЬТРУЕМ ПО ТИПУ 'test'
+        const tests = (res.items || []).filter(item => item.type === 'test'); 
         setLibrary(tests);
     } catch (e) { console.error(e); }
   };
 
   // --- Handlers ---
-  const handleSelectOldTest = (test) => {
-      setGeneratedTest(test);
-      setAccessCode(test.access_code); 
-      setReport(null);
-      setTopic(test.topic);
-      setSubject(test.subject);
-      setLessonContext(""); 
-      fetchReport(test.id);
-      setShowLibrary(false);
-  };
 
   const handleGenerate = async () => {
     setLoading(true); setAccessCode(null); setGeneratedTest(null); setReport(null); setSelectedStudent(null);
@@ -71,6 +64,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
         const promptText = buildPrompt("tests", vars, mergedCfg);
 
         const gen = await api.generations.create({
+            type: 'test',
             subject: subject || "Test", topic: topic, grade: grade, lang, prompt: promptText, status: "running"
         });
 
@@ -147,6 +141,7 @@ const CreateTestPage = ({ lang, promptConfig }) => {
     if (!report || report.length === 0) {
         alert("No data available. Students must finish the test first.");
         return;
+
     }
     setIsGeneratingReport(true);
     setAiReport(""); 
@@ -216,10 +211,14 @@ const CreateTestPage = ({ lang, promptConfig }) => {
     } finally {
         setIsGeneratingReport(false);
     }
+
+    grantAchievement({ title: "Аналитик", reward: 300, key: "ai_report_master" });
   };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-6 md:p-10 font-sans flex flex-col md:flex-row gap-8">
+
+    <Header {...accessProps} />
       
       {/* Left Column: Test Creation & Management */}
       <div className="flex-1 max-w-4xl mx-auto w-full">
@@ -251,9 +250,14 @@ const CreateTestPage = ({ lang, promptConfig }) => {
            <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{cur.t || "Topic"}</label>
            <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Topic..." className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none mb-6" />
            
-           <button onClick={handleGenerate} disabled={loading || !topic} className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-white transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 ${loading || !topic ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600'}`}>
-                {loading ? "GENERATING..." : "CREATE QUIZ"}
-           </button>
+           <button 
+                onClick={handleGenerate} 
+                disabled={loading || !topic} 
+                className={`w-full py-5 tactical-button text-white 
+                ${loading || !topic ? 'bg-gray-400 opacity-50' : 'bg-blue-600 hover:bg-blue-500'}`}
+            >
+                {loading ? "ГЕНЕРАЦИЯ..." : "СОЗДАТЬ ТЕСТ"}
+            </button>
         </div>
 
         {/* Active Test View */}

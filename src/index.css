@@ -4,10 +4,22 @@
   --font-mono: "Geist Mono", "SF Mono", monospace;
 }
 
+/* Правильные селекторы для атрибута на самом теге <html> */
+html[data-font="md"] { --app-font-size: 16px; }
+html[data-font="lg"] { --app-font-size: 19px; } /* Сделал чуть больше для заметности */
+html[data-font="xl"] { --app-font-size: 22px; }
+
+html {
+  /* Привязываем базовый размер шрифта к нашей переменной */
+  font-size: var(--app-font-size) !important;
+  transition: font-size 0.2s ease-out;
+}
+
 :root {
 
   --bg-app: #f8fafc;
   --bg-card: rgba(255, 255, 255, 0.88);
+
 
   --primary: #3b82f6;
   --text-main: #0f172a;
@@ -24,6 +36,19 @@
   --text-muted: #cbd5e1;
   --border-color: rgba(148, 163, 184, 0.18);
   --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.tactical-card {
+  @apply bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white shadow-[6px_6px_0px_0px_#000] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,0.1)] rounded-[40px] transition-all;
+}
+
+.tactical-button {
+  @apply border-[3px] border-black shadow-[4px_4px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all font-black uppercase tracking-widest;
+}
+
+/* Высокий контраст */
+.high-contrast {
+  filter: grayscale(1) contrast(1.2);
 }
 
 body {
@@ -152,4 +177,25 @@ button:hover {
 
 .volume-slider::-webkit-slider-thumb:active {
   transform: scale(1.2);
+}
+
+/* Убедись, что переменные темной темы привязаны к html.dark */
+html.dark {
+  background-color: #0b1220;
+}
+
+.dark body {
+  background-color: var(--bg-app) !important;
+  color: var(--text-main) !important;
+}
+
+/* Добавим фикс для селектов, чтобы они не были белыми в темной теме */
+.dark select {
+  background-color: #18181b !important; /* zinc-900 */
+  color: white !important;
+}
+
+.dark select option {
+  background-color: #18181b;
+  color: white;
 }
