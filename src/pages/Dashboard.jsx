@@ -39,22 +39,51 @@ export default function Dashboard({
   // 2. ЕДИНАЯ ЗАГРУЗКА ИСТОРИИ (С КЭШЕМ)
   useEffect(() => {
     let alive = true;
+
     const loadHistory = async () => {
       try {
         // Используем обертку из apiCache
         const data = await generationsListCached(50, 60000);
         if (!alive) return;
 
-        const sidebar = (data?.items || [])
-          .filter(x => x.type === 'lesson_plan')
-          .map((x) => ({ id: x.id, name: x.topic || `#${x.id}`, status: x.status }));
+        // Нормализуем items (на случай если обертка вернет не {items:[]})
+        const items =
+          Array.isArray(data) ? data :
+          Array.isArray(data?.items) ? data.items :
+          Array.isArray(data?.rows) ? data.rows :
+          Array.isArray(data?.data) ? data.data :
+          [];
+
+        const sidebar = items
+          .filter(x => {
+            if (!x) return false;
+            const type = String(x.type || "").trim().toLowerCase();
+            return (
+              type === "lesson_plan" ||
+              type === "lessonplan" ||
+              type === "lesson-plan" ||
+              type === "" // на старых записях могло не быть type
+            );
+          })
+          .map((x) => ({
+            id: x.id,
+            name: x.topic || `#${x.teacher_seq ?? x.id}`,
+            status: x.status,
+          }));
 
         setHistory(sidebar);
-        if (!activeIdRef.current && sidebar[0]?.id) setActiveId(sidebar[0].id);
+
+        // если активного id еще нет — выбираем первый элемент
+        setActiveId((prev) => {
+          if (prev) return prev;
+          return sidebar[0]?.id ?? null;
+        });
+
       } catch (e) {
         console.error("Ошибка загрузки истории:", e);
       }
     };
+
     loadHistory();
     return () => { alive = false; };
   }, []);
@@ -130,14 +159,99 @@ export default function Dashboard({
             {history.map((item) => (
               <div
                 key={item.id}
-                onClick={() => { setActiveId(item.id); setActiveMenu(null); }}
-                className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer ${activeId === item.id ? "ring-4 ring-blue-500/20" : ""}`}
+                onClick={() => {
+                  setActiveId(item.id);
+                  setActiveMenu(null);
+                }}
+                className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer
+                  ${activeId === item.id ? "ring-4 ring-blue-500/20" : ""}`}
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-[13px] font-bold opacity-80 group-hover:opacity-100 truncate w-40">{item.name}</span>
-                  <button onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === item.id ? null : item.id); }} className="opacity-0 group-hover:opacity-100 p-1 rounded-lg">
-                    <MoreVertical size={16}/>
-                  </button>
+                  <span className="text-[13px] font-bold opacity-80 group-hover:opacity-100 truncate w-40">
+                    {item.name}
+                  </span>
+
+                  {/* ✅ ЯКОРЬ: кнопка + меню в relative контейнере */}
+                  <div className="relative z-30">
+                    {/* ✅ КНОПКА "..." */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation(); // важно: не выбирать item
+                        setActiveMenu((prev) => (prev === item.id ? null : item.id));
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-2 rounded-xl hover:bg-white/15"
+                      aria-label="Menu"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+
+                    {/* ✅ DROPDOWN + OUTSIDE CLICK */}
+                    {activeMenu === item.id && (
+                      <>
+                        {/* ✅ клик вне закрывает меню */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setActiveMenu(null)}
+                        />
+
+                        {/* ✅ само меню */}
+                        <div
+                          className="absolute right-0 top-full mt-2 z-50 min-w-[190px]
+                                    rounded-2xl bg-white dark:bg-zinc-950
+                                    border border-black/10 dark:border-white/10
+                                    shadow-2xl overflow-hidden"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="w-full px-4 py-3 text-left text-sm font-bold hover:bg-black/5 dark:hover:bg-white/5 flex items-center gap-2"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setActiveMenu(null);
+                              // TODO: edit handler
+                            }}
+                          >
+                            <Edit3 size={16} /> Редактировать
+                          </button>
+
+                          <button
+                            type="button"
+                            className="w-full px-4 py-3 text-left text-sm font-bold hover:bg-black/5 dark:hover:bg-white/5 flex items-center gap-2 text-red-600"
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setActiveMenu(null);
+
+                              try {
+                                await api.generations.remove(item.id);
+
+                                // ✅ удаляем из sidebar и корректно двигаем activeId
+                                setHistory((prev) => {
+                                  const next = prev.filter((x) => x.id !== item.id);
+
+                                  setActiveId((prevActive) => {
+                                    if (prevActive !== item.id) return prevActive;
+                                    return next[0]?.id ?? null;
+                                  });
+
+                                  return next;
+                                });
+
+                                invalidatePrefixRaw("generations.list");
+                              } catch (err) {
+                                console.error("delete failed", err);
+                              }
+                            }}
+                          >
+                            <Trash2 size={16} /> Удалить
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
