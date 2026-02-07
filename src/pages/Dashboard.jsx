@@ -171,9 +171,7 @@ export default function Dashboard({
                     {item.name}
                   </span>
 
-                  {/* ✅ ЯКОРЬ: кнопка + меню в relative контейнере */}
                   <div className="relative z-30">
-                    {/* ✅ КНОПКА "..." */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -187,16 +185,13 @@ export default function Dashboard({
                       <MoreVertical size={16} />
                     </button>
 
-                    {/* ✅ DROPDOWN + OUTSIDE CLICK */}
                     {activeMenu === item.id && (
                       <>
-                        {/* ✅ клик вне закрывает меню */}
                         <div
                           className="fixed inset-0 z-40"
                           onClick={() => setActiveMenu(null)}
                         />
 
-                        {/* ✅ само меню */}
                         <div
                           className="absolute right-0 top-full mt-2 z-50 min-w-[190px]
                                     rounded-2xl bg-white dark:bg-zinc-950
@@ -228,7 +223,6 @@ export default function Dashboard({
                               try {
                                 await api.generations.remove(item.id);
 
-                                // ✅ удаляем из sidebar и корректно двигаем activeId
                                 setHistory((prev) => {
                                   const next = prev.filter((x) => x.id !== item.id);
 
@@ -287,4 +281,5 @@ export default function Dashboard({
       </main>
     </div>
   );
+
 }
