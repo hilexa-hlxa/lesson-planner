@@ -6,9 +6,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://unyieldingly-chanceful-ann.ngrok-free.dev',
+        target: 'localhost:8000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       }
     }
   }
