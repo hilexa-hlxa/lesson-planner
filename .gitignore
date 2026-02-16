@@ -25,3 +25,7 @@ dist-ssr
 
 # Local PHP configs
 **/config.local.php
+
+# PHP Composer
+vendor/
+backend/vendor/
