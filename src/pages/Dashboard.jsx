@@ -10,6 +10,56 @@ import Header from "../components/Header";
 import { I18N as t, tr } from "../lib/i18n";
 import { buildPrompt } from "../lib/prompt";
 
+function payloadToMarkdown(p, lang) {
+  const sec = p?.sections || {};
+  const sm = (t[lang] || t.RU)?.doc?.sections || t.RU.doc.sections;
+
+  const lines = [];
+  lines.push(`## ${tr(lang,"doc.lessonPlan","План урока")}`);
+  lines.push(`**${tr(lang,"s","Предмет")}:** ${p?.meta?.subject || ""}`);
+  lines.push(`**${tr(lang,"t","Тема")}:** ${p?.meta?.topic || ""}`);
+  lines.push(`**Grade:** ${p?.meta?.grade ?? ""}  **Duration:** ${p?.meta?.duration ?? ""} min`);
+  if (p?.meta?.details) lines.push(`**${tr(lang,"d","Детали")}:** ${p.meta.details}`);
+  lines.push("");
+
+  const renderList = (title, arr) => {
+    lines.push(`## ${title}`);
+    const a = Array.isArray(arr) ? arr : [];
+    if (!a.length) { lines.push("-"); lines.push(""); return; }
+    for (const x of a) lines.push(`- ${String(x)}`);
+    lines.push("");
+  };
+
+  renderList(sm.goals, sec.goals);
+  renderList(sm.equipment, sec.equipment);
+  renderList(sm.key_concepts, sec.key_concepts);
+
+  // timeline как таблица markdown
+  lines.push(`## ${sm.timeline}`);
+  lines.push(`| Stage | Minutes | Teacher | Student | Assessment | Resources |`);
+  lines.push(`|---|---|---|---|---|---|`);
+  const tl = Array.isArray(p?.timeline) ? p.timeline : [];
+  for (const r of tl) {
+    lines.push(`| ${r.stage||""} | ${r.minutes||""} | ${r.teacher||""} | ${r.student||""} | ${r.assessment||""} | ${r.resources||""} |`);
+  }
+  lines.push("");
+
+  renderList(sm.tasks, sec.tasks);
+  renderList(sm.differentiation, sec.differentiation);
+  renderList(sm.assessment, sec.assessment);
+  renderList(sm.homework, sec.homework);
+
+  return lines.join("\n");
+}
+
+function extractJsonObject(s) {
+  if (!s) return "";
+  const i = s.indexOf("{");
+  const j = s.lastIndexOf("}");
+  if (i === -1 || j === -1 || j <= i) return s.trim();
+  return s.slice(i, j + 1).trim();
+}
+
 export default function Dashboard({
   dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, 
   lang, setLang, user, setUser, promptConfig, grantAchievement
@@ -97,8 +147,9 @@ export default function Dashboard({
         const r = await cached("generations.get", () => api.generations.get(activeId), { id: activeId }, 1800000);
         if (!alive) return;
         const it = r?.item || r;
-        setRes(it?.result_md || it?.result || "");
-      } catch (e) { setRes(""); }
+        const next = it?.result_md || it?.result || null;
+        if (next) setRes(next);
+      } catch (e) { console.error(e); }
     })();
     return () => { alive = false; };
   }, [activeId]);
@@ -116,15 +167,36 @@ export default function Dashboard({
       });
       
       setActiveId(gen.id);
+      activeIdRef.current = gen.id;
       setHistory(prev => [{ id: gen.id, name: form.topic, status: "running" }, ...prev]);
       
-      let text = "";
+      let jsonText = "";
       for await (const delta of api.generateStream({ prompt: promptText })) {
-        text += (typeof delta === "string" ? delta : delta?.text || "");
-        if (activeIdRef.current === gen.id) setRes(text);
+        jsonText += (typeof delta === "string" ? delta : delta?.text || "");
+
+        // опционально: показывать "превью" пока идёт стрим
+        // можешь показывать jsonText как есть или попытаться парсить "на лету" — не надо, опасно
       }
-      
-      await api.generations.update(gen.id, { status: "done", result_md: text });
+
+      // parse
+      let payload = null;
+      try { payload = JSON.parse(extractJsonObject(jsonText)); } catch (e) { payload = null; }
+
+      if (!payload) {
+        setRes("Error: invalid JSON from model");
+        return;
+      }
+
+      const md = payloadToMarkdown(payload, lang);
+      setRes(md);
+
+      await api.generations.update(gen.id, {
+        status: "done",
+        result_md: md,         // UI-friendly
+        result_json: payload,  // для DOCX/Go
+        result_json_version: 1,
+        template_key: "kmj_kazakh_january"
+      });
 
       // СБРОС КЭША СПИСКА (чтобы новый план появился везде)
       invalidatePrefixRaw("generations.list"); 
@@ -161,6 +233,7 @@ export default function Dashboard({
                 key={item.id}
                 onClick={() => {
                   setActiveId(item.id);
+                  activeIdRef.current = item.id;
                   setActiveMenu(null);
                 }}
                 className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer
@@ -264,7 +337,7 @@ export default function Dashboard({
                 {[...Array(11)].map((_, i) => <option key={i+1} value={i+1}>{i+1} Класс</option>)}
               </select>
               <select value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} className="w-full p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm outline-none">
-                <option value="45">45 Мин</option><option value="60">60 Мин</option>
+                <option value="45">45 Мин</option><option value="90">90 Мин</option><option value="135">135 Мин</option>
               </select>
             </div>
             <input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder={cur.s} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-blue-500/10 transition-all" />
@@ -277,6 +350,16 @@ export default function Dashboard({
         </section>
         <section className="flex-1 p-14 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">
           <div className="prose dark:prose-invert max-w-none leading-relaxed italic"><ReactMarkdown>{res || "..."}</ReactMarkdown></div>
+          <button
+            disabled={!activeId}
+            onClick={() => {
+              if (!activeId) return;
+              window.location.href = `/api/generations/${activeId}/export-docx`;
+            }}
+            className="mt-6 w-full py-4 rounded-2xl font-black uppercase tracking-widest bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20"
+          >
+            {tr(lang,"doc.exportDocx","ВЫГРУЗИТЬ DOCX")}
+          </button>
         </section>
       </main>
     </div>
