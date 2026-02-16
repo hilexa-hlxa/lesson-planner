@@ -22,6 +22,7 @@ Professional next-generation automated lesson planning system built with **React
 - Markdown: ReactMarkdown
 - postreSQL via supabase
 - PHP 8.5 version
+- Composer
   
 
 ## Getting Started
@@ -34,19 +35,25 @@ Bash
    cd lesson-planner
    npm install
 
-2. Launch Development Servers
+2. Composer install:
+   ```bash
+   composer install
+
+   composer require phpoffice/phpword
+
+3. Launch Development Servers
 Run Frontend:
 
     ```bash
 
     npm run dev
 
-3. Run backend:
+4. Run backend:
     ```bash
     
     php -S 127.0.0.1:8000 -t backend/public
     
-4. Docker Deployment (Alternative)
+5. Docker Deployment (Alternative)
 Bash
     ```bash
     
@@ -62,6 +69,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
