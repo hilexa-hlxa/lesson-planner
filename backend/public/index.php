@@ -317,7 +317,7 @@ try {
     if ($limit > 100) $limit = 100;
 
     $stmt = $db->pdo()->prepare("
-      SELECT id, topic, subject, status, created_at, access_code, result_md
+      SELECT id, topic, subject, status, created_at, access_code
       FROM generations
       WHERE user_id = :uid
       ORDER BY created_at DESC
@@ -395,15 +395,42 @@ try {
 
     $id = (int)$m[1];
 
-    $allowed = ['status', 'result_md', 'error', 'topic'];
+    $allowed = ['status', 'result_md', 'result_json', 'result_json_version', 'template_key', 'error', 'topic'];
     $set = [];
     $params = [':id' => $id, ':uid' => $u['id']];
 
     foreach ($allowed as $f) {
-      if (array_key_exists($f, $body)) {
-        $set[] = "$f = :$f";
-        $params[":$f"] = $body[$f];
+      if (!array_key_exists($f, $body)) continue;
+
+      // SPECIAL: jsonb
+      if ($f === 'result_json') {
+        $set[] = "result_json = :result_json::jsonb";
+
+        $v = $body['result_json'];
+
+        // если пришёл массив/объект — кодируем
+        if (is_array($v) || is_object($v)) {
+          $json = json_encode($v, JSON_UNESCAPED_UNICODE);
+          if ($json === false) Response::error('Invalid JSON payload', 400);
+          $params[':result_json'] = $json;
+        } else {
+          // если пришла строка — считаем что это JSON-текст
+          $params[':result_json'] = (string)$v;
+        }
+
+        continue;
       }
+
+      // optional: int fields
+      if ($f === 'result_json_version') {
+        $set[] = "result_json_version = :result_json_version";
+        $params[':result_json_version'] = (int)$body['result_json_version'];
+        continue;
+      }
+
+      // default
+      $set[] = "$f = :$f";
+      $params[":$f"] = $body[$f];
     }
 
     if (!$set) Response::error('Nothing to update', 400);
@@ -474,7 +501,30 @@ try {
     }
   }
 
-  // Fallback for undefined routes
+  if ($method === 'GET' && preg_match('#^/api/generations/(\d+)/export-docx$#', $path, $m)) {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $id = (int)$m[1];
+
+    $stmt = $db->pdo()->prepare("
+      SELECT *
+      FROM generations
+      WHERE id = :id AND user_id = :uid
+      LIMIT 1
+    ");
+    $stmt->execute([':id' => $id, ':uid' => $u['id']]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) Response::error('Not found', 404);
+
+    require __DIR__ . '/../vendor/autoload.php';
+    require __DIR__ . '/../src/DocxExport.php';
+
+    \App\DocxExport::exportKmj($row);
+    exit;
+  }
+
   error_log("404 Not Found: {$path}");
   Response::error('Endpoint not found', 404);
 
