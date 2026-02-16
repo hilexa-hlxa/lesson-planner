@@ -28,7 +28,6 @@ Professional next-generation automated lesson planning system built with **React
 ## Getting Started
 
 1. Clone and Install (..\lesson-planner-main):
-Bash
 
    ```bash
    git clone https://github.com/hilexa-hlxa/lesson-planner.git
@@ -69,6 +68,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
