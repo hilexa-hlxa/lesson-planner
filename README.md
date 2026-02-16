@@ -27,7 +27,7 @@ Professional next-generation automated lesson planning system built with **React
 
 ## Getting Started
 
-1. Clone and Install:
+1. Clone and Install (..\lesson-planner-main):
 Bash
 
    ```bash
@@ -35,20 +35,20 @@ Bash
    cd lesson-planner
    npm install
 
-2. Composer install:
+2. Composer install (..\lesson-planner-main\backend):
    ```bash
    composer install
 
    composer require phpoffice/phpword
 
 3. Launch Development Servers
-Run Frontend:
+Run Frontend (..\lesson-planner-main):
 
     ```bash
 
     npm run dev
 
-4. Run backend:
+4. Run backend (..\lesson-planner-main):
     ```bash
     
     php -S 127.0.0.1:8000 -t backend/public
@@ -69,6 +69,7 @@ api.js — Axios-like fetch wrapper for backend communication.
 
 📄 License
 © 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+
 
 
 
