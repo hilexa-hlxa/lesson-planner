@@ -455,50 +455,73 @@ try {
   }
 
   // ======================================================
-  // Achievements System
+  // Achievements System (УКРОЩЕННАЯ ВЕРСИЯ)
   // ======================================================
 
-  if ($method === 'POST' && $path === '/api/achievements/grant') {
+  // МЕНЯЕМ ПУТЬ: теперь он совпадает с тем, что шлет фронтенд
+  if ($method === 'POST' && $path === '/api/user/achievements') {
     $u = $auth->currentUser();
     if (!$u) Response::error('Unauthorized', 401);
 
     $key = (string)($body['key'] ?? '');
-    if ($key === '') Response::error('Achievement key required', 400);
+    
+    $rewards = [
+        'visit_profile' => 100,  // Посетил профиль
+        'first_gen'     => 150,  // Создал первый тест
+        'architect_10'  => 500,  // Создал 10 тестов
+        'quiz_host'     => 200,  // Запустил живую сессию (Start Quiz)
+        'data_export'   => 50,   // Скачал отчет в CSV
+    ];
 
-    $rewards = ['visit_profile' => 100];
+    // to test achievements paste in these commands onto console
+    // window.testAchievement({ key: 'visit_profile', title: 'Первый визит профиля!', reward: 100 });
+    // window.testAchievement({ key: 'first_gen', title: 'Первая генерация с помощью ИИ!', reward: 100 });
+    // window.testAchievement({ key: 'architect_10', title: 'Сгенерировал 10 тестов!', reward: 200 });
+    // window.testAchievement({ key: 'quiz_host', title: 'Запустил живую сессию!', reward: 250 });
+    // window.testAchievement({ key: 'data_export', title: 'Скачал первый отчет!', reward: 50 });
+
     if (!isset($rewards[$key])) Response::error('Unknown achievement', 404);
 
     try {
         $db->pdo()->beginTransaction();
         
+        // Вставляем. Если дубль — ничего не делаем (DO NOTHING)
         $stmt = $db->pdo()->prepare("
             INSERT INTO user_achievements (user_id, achievement_key)
             VALUES (:uid, :key)
-            ON CONFLICT (user_id, achievement_key) DO NOTHING
+            ON CONFLICT ON CONSTRAINT unique_user_achievement DO NOTHING
             RETURNING id
         ");
         $stmt->execute([':uid' => $u['id'], ':key' => $key]);
-        
         $newId = $stmt->fetchColumn();
 
         if (!$newId) {
+            // Ачивка уже была. Откатываем транзакцию (деньги не даем)
             $db->pdo()->rollBack();
-            Response::ok(['new' => false]);
+            Response::ok([
+                'success' => true, 
+                'newBalance' => (int)$u['coins'], 
+                'added' => false 
+            ]);
         }
 
+        // Начисляем коины только если вставка прошла успешно
         $stmt = $db->pdo()->prepare("UPDATE users SET coins = coins + :amt WHERE id = :uid");
         $stmt->execute([':amt' => $rewards[$key], ':uid' => $u['id']]);
 
         $db->pdo()->commit();
 
-        $stmt = $db->pdo()->prepare("SELECT coins FROM users WHERE id = :uid");
-        $stmt->execute([':uid' => $u['id']]);
+        Response::ok([
+            'success' => true, 
+            'newBalance' => (int)$u['coins'] + $rewards[$key],
+            'added' => true
+        ]);
         
-        Response::ok(['new' => true, 'reward' => $rewards[$key], 'coins' => $stmt->fetchColumn()]);
     } catch (Throwable $e) {
         if ($db->pdo()->inTransaction()) $db->pdo()->rollBack();
-        throw $e;
+        Response::error('Server Error', 500);
     }
+    exit;
   }
 
   if ($method === 'GET' && preg_match('#^/api/generations/(\d+)/export-docx$#', $path, $m)) {

@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import api from "./api";
-import { cached, meCached } from "./apiCache"; // Импортируем ме-кэш
+import { cached, meCached, invalidate } from "./apiCache";
 
 import AuthModal from "./components/AuthModal";
 import Protected from "./components/Protected";
@@ -49,25 +49,43 @@ export default function App() {
   const [fontSize, setFontSize] = useState(() => localStorage.getItem('fontSize') || "md");
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem('highContrast') === 'true');
   const [activeAchievement, setActiveAchievement] = useState(null);
+  const [isGranting, setIsGranting] = useState(false);
 
   // --- 2. ФУНКЦИИ ---
-  const grantAchievement = (achData) => {
-  // 1. СТРОГАЯ ПРОВЕРКА: Если ачивка уже в процессе или получена — СТОП
-  if (user?.achievements?.includes(achData.key)) return;
-  if (activeAchievement?.key === achData.key) return;
+  const grantAchievement = async (achData) => {
+    // 1. Предварительные проверки
+    const owned = user?.achievements || [];
+    if (owned.includes(achData.key)) return;
+    if (activeAchievement?.key === achData.key) return;
+    if (isGranting) return; // Вот тут переменная теперь будет найдена
 
-  // 2. Локально сразу помечаем, чтобы повторные вызовы в ту же миллисекунду не прошли
-  user.achievements = [...(user.achievements || []), achData.key];
+    setIsGranting(true);
 
-  setActiveAchievement(achData);
+    try {
+      const response = await api.achievements.grant(achData.key);
 
-  // 3. Обновляем стейт (React сам сгруппирует обновления)
-  setUser(prev => ({
-    ...prev,
-    coins: (prev?.coins || 0) + (achData.reward || 0),
-    achievements: [...(prev?.achievements || []), achData.key]
-  }));
-};
+      if (response?.success) {
+        // Показываем тост только если ачивка реально добавлена в этом запросе
+        if (response.added === true) {
+          setActiveAchievement(achData);
+        }
+
+        // В любом случае обновляем данные юзера, чтобы синхронизировать список
+        setUser(prev => ({
+          ...prev,
+          coins: response.newBalance,
+          achievements: [...new Set([...(prev?.achievements || []), achData.key])]
+        }));
+        
+        invalidate("me");
+      }
+    } catch (e) {
+      console.error("Achievement error:", e);
+    } finally {
+      setIsGranting(false); // Разблокируем для следующих ачивок
+    }
+  };
+
 
   // --- 3. ЭФФЕКТЫ ---
 

@@ -146,6 +146,14 @@ const api = {
     }
   },
 
+  achievements: {
+    grant: (key) => request('/user/achievements', {
+      method: 'POST',
+      body: JSON.stringify({ key })
+    }),
+    // Сюда потом можно добавить list: () => request('/user/achievements')
+  },
+
   generations: {
     list: (limit = 50) => request(`/generations?limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
     get: (id) => request(`/generations/${id}`, { method: 'GET' }),

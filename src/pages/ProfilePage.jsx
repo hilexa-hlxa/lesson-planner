@@ -6,10 +6,8 @@ import AchievementToast from "../components/AchievementToast";
 import Footer from "../components/Footer";
 import Header from "../components/Header"; // Импортируем Header
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const ACHIEVEMENT_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3';
 
-export default function ProfilePage({ lang, setLang, user, setUser }) {
+export default function ProfilePage({ lang, setLang, user, setUser, grantAchievement }) {
   // Переводы
   const cur = t[lang]?.prof || t.RU.prof;
 
@@ -27,7 +25,6 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
   const [toast, setToast] = useState({ show: false, reward: 0 });
 
   // Рефы
-  const audioRef = useRef(new Audio(ACHIEVEMENT_SOUND));
   const scrollContainerRef = useRef(null);
 
   // Логика горизонтального скролла
@@ -45,37 +42,14 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
 
   // Проверка ачивки при входе
   useEffect(() => {
-    if (!user) return;
-    audioRef.current.preload = 'auto';
-    audioRef.current.volume = 0.5;
-
-    const checkAchievement = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/achievements/grant`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ key: 'visit_profile' })
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          const data = result.data || result;
-          if (data.new) {
-            audioRef.current.play().catch(() => {});
-            setToast({ show: true, reward: data.reward });
-            if (data.coins !== undefined) {
-               setCoins(data.coins);
-               invalidate("me");
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Err:", e);
-      }
-    };
-    checkAchievement();
-  }, [user]);
+  if (user) {
+    grantAchievement({ 
+      key: 'visit_profile', 
+      title: 'В профиле', 
+      reward: 100 
+    });
+  }
+}, [user, grantAchievement]);
 
   // Сохранение профиля (пока локально + мок)
   const handleSave = () => {
@@ -114,15 +88,6 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-
-      {/* Тост ачивки */}
-      <AchievementToast 
-        show={toast.show} 
-        onClose={() => setToast(prev => ({ ...prev, show: false }))}
-        title="Ачивка разблокирована!"
-        reward={toast.reward}
-        description="Первое посещение профиля."
-      />
 
       <main className="max-w-[1300px] mx-auto px-6">
           <div className="flex flex-col md:flex-row gap-8 items-start">

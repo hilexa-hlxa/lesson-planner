@@ -32,6 +32,7 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [lessonContext, setLessonContext] = useState("");
   const [copied, setCopied] = useState(false);
+  const { grantAchievement } = accessProps;
 
   const [testUi, setTestUi] = useState({
     difficulty: "medium",
@@ -68,6 +69,16 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
             subject: subject || "Test", topic: topic, grade: grade, lang, prompt: promptText, status: "running"
         });
 
+        // --- АЧИВКИ ---
+        // 1. За любой первый созданный тест
+        grantAchievement({ key: 'first_gen', title: 'Первый пошел!', reward: 150 });
+
+        // 2. Если в библиотеке уже 9 тестов, значит этот — десятый
+        if (library.length === 9) {
+            grantAchievement({ key: 'architect_10', title: 'Великий Архитектор', reward: 500 });
+        }
+        // --------------
+
         let accumulatedText = "";
         for await (const evt of api.generateStream({ prompt: promptText })) {
             const delta = typeof evt === "string" ? evt : (evt?.type === "delta" ? evt.text : "");
@@ -97,6 +108,9 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
          if (code) {
              setAccessCode(code);
              setGeneratedTest(prev => ({...prev, access_code: code}));
+
+             // --- АЧИВКА ---
+             grantAchievement({ key: 'quiz_host', title: 'Организатор', reward: 200 });
          }
      } catch(e) { console.error(e); alert("Network Error"); }
   };
@@ -212,7 +226,7 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
         setIsGeneratingReport(false);
     }
 
-    grantAchievement({ title: "Аналитик", reward: 300, key: "ai_report_master" });
+    grantAchievement({ key: 'data_export', title: 'Аналитик', reward: 50 });
   };
 
   return (

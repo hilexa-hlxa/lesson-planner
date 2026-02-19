@@ -6,29 +6,37 @@ const AchievementToast = ({ achievement, onClose }) => {
 
   useEffect(() => {
     if (achievement) {
+      // 1. Показываем плашку (анимация slide-in)
       setVisible(true);
       
-      // Добавим звук (по желанию, можно убрать)
+      // 2. Звук (опционально)
       const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');
-      audio.volume = 0.2; // Сделаем потише
-
-      // Играем только один раз
+      audio.volume = 0.2;
       audio.play().catch(() => {});
 
-      const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(onClose, 300);
-    }, 5000);
+      // 3. Таймер на скрытие (через 5 сек)
+      const hideTimer = setTimeout(() => {
+        setVisible(false);
+      }, 5000);
 
-      return () => clearTimeout(timer);
-      audio.pause();
+      // 4. Таймер на полное закрытие (после завершения анимации ухода)
+      const closeTimer = setTimeout(() => {
+        onClose();
+      }, 5400);
+
+      return () => {
+        clearTimeout(hideTimer);
+        clearTimeout(closeTimer);
+      };
     }
   }, [achievement, onClose]);
 
   if (!achievement) return null;
 
   return (
-    <div className={`fixed bottom-6 right-6 z-[999] transition-all duration-500 transform ${visible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+    <div className={`fixed bottom-6 right-6 z-[999] transition-all duration-500 transform 
+      ${visible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
+    >
       <div className="bg-yellow-400 text-black p-4 rounded-2xl shadow-[6px_6px_0_0_#000] border-[3px] border-black flex items-center gap-4 max-w-sm">
         <div className="bg-white p-3 rounded-xl border-2 border-black">
            <Trophy size={24} className="text-yellow-500 fill-yellow-500 animate-bounce" />
@@ -40,7 +48,10 @@ const AchievementToast = ({ achievement, onClose }) => {
            <p className="text-[10px] font-bold mt-1 uppercase">+ {achievement.reward || 100} Coins</p>
         </div>
 
-        <button onClick={() => setVisible(false)} className="p-1 hover:bg-black/10 rounded-full transition">
+        <button 
+          onClick={() => setVisible(false)} 
+          className="p-1 hover:bg-black/10 rounded-full transition"
+        >
            <X size={16} />
         </button>
       </div>
