@@ -1,0 +1,108 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom'; // Добавил Link
+import { ArrowRight, Hash, User, ChevronLeft } from 'lucide-react'; // Добавил ChevronLeft
+import api from '../api';
+
+const StudentJoinPage = () => {
+  const [code, setCode] = useState('');
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleJoin = async (e) => {
+    e.preventDefault();
+    if (!code || !name) return;
+
+    setLoading(true);
+    try {
+      const data = await api.quiz.join({ accessCode: code.trim() });
+
+      const payload = data?.data || data;
+      const quizData = payload?.quiz || payload;
+
+      const quizId = quizData?.quizId || quizData?.id;
+      const topic = quizData?.topic || '';
+      const questionsJson = quizData?.questionsJson ?? quizData?.questions_json ?? quizData?.result_md ?? null;
+
+      if (!quizId || !questionsJson) {
+        alert("Ошибка данных теста");
+        return;
+      }
+
+      localStorage.setItem('student_quiz_session', JSON.stringify({
+        quiz: { id: quizId, topic, questionsJson },
+        studentName: name.trim(),
+        startTime: Date.now()
+      }));
+
+      navigate('/play');
+
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка сети');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex items-center justify-center p-6 font-sans relative">
+      
+      {/* === КНОПКА НАЗАД (ДОБАВИЛ) === */}
+      <Link 
+        to="/games" 
+        className="absolute top-6 left-6 p-3 bg-white dark:bg-zinc-800 border-[3px] border-black dark:border-white rounded-2xl shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none transition text-black dark:text-white"
+      >
+        <ChevronLeft size={24} />
+      </Link>
+
+      <div className="w-full max-w-md bg-white dark:bg-zinc-900 p-8 rounded-[40px] shadow-[8px_8px_0_0_#000] border-[4px] border-black dark:border-gray-700">
+        <h1 className="text-3xl font-black uppercase text-center mb-2 dark:text-white">Вход в Тест</h1>
+        <p className="text-center text-gray-500 font-bold text-xs uppercase tracking-widest mb-8">
+          Введи код и имя
+        </p>
+
+        <form onSubmit={handleJoin} className="space-y-6">
+          <div>
+            <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">Код доступа</label>
+            <div className="relative">
+              <Hash className="absolute left-4 top-4 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                maxLength={4}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="0000" 
+                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-black text-2xl tracking-[0.2em] outline-none focus:ring-4 ring-blue-500/20 transition text-center dark:text-white"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">Твое Имя</label>
+            <div className="relative">
+              <User className="absolute left-4 top-4 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Иван Иванов" 
+                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-500/20 transition dark:text-white"
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading || code.length !== 4 || !name}
+            className="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Поиск...' : 'Начать'} <ArrowRight size={20} />
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default StudentJoinPage;

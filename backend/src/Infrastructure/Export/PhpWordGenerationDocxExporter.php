@@ -1,0 +1,5 @@
+<?php
+declare(strict_types=1);
+namespace App\Infrastructure\Export;
+use App\Application\Generations\ExportGenerationDocx\GenerationDocxExporter;use App\Domain\Generations\Generation;use PhpOffice\PhpWord\IOFactory;use PhpOffice\PhpWord\PhpWord;
+final class PhpWordGenerationDocxExporter implements GenerationDocxExporter { public function export(Generation $generation): string { $phpWord=new PhpWord(); $s=$phpWord->addSection(); $s->addTitle($generation->topic(),1); $s->addText('Предмет: '.$generation->subject()); $s->addText('Класс: '.$generation->grade().' | Длительность: '.$generation->duration().' мин'); $s->addTextBreak(); $s->addText('Описание: '.$generation->details()); $s->addTextBreak(); $s->addText($generation->resultMd() ?? 'План урока пока не сгенерирован'); $path=tempnam(sys_get_temp_dir(),'generation_'); if($path===false) throw new \RuntimeException('Could not allocate temp file'); $docx=$path.'.docx'; $writer=IOFactory::createWriter($phpWord,'Word2007'); $writer->save($docx); return $docx; }}

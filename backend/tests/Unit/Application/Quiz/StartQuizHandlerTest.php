@@ -1,0 +1,5 @@
+<?php
+declare(strict_types=1);
+namespace Tests\Unit\Application\Quiz;
+use App\Application\Quiz\StartQuiz\StartQuizCommand;use App\Application\Quiz\StartQuiz\StartQuizHandler;use App\Domain\Quiz\QuizSession;use App\Domain\Quiz\QuizSessionId;use App\Domain\Quiz\QuizSessionRepository;use PHPUnit\Framework\TestCase;
+final class StartQuizHandlerTest extends TestCase { public function testGeneratesNewCodeWhenTaken(): void { $repo=new class implements QuizSessionRepository { public int $i=0; public function nextId(): QuizSessionId { return QuizSessionId::fromString('quiz-1'); } public function generateAccessCode(): string { return $this->i++===0 ? '1111' : '2222'; } public function isCodeTaken(string $code): bool { return $code==='1111'; } public function save(QuizSession $session): void {} public function byCode(string $code): ?QuizSession { return null; } public function byId(QuizSessionId $id): ?QuizSession { return null; } }; $h=new StartQuizHandler($repo); $r=$h->handle(new StartQuizCommand('u-1','Topic',null)); self::assertSame('2222',$r->accessCode); }}

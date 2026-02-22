@@ -1,0 +1,5 @@
+<?php
+declare(strict_types=1);
+namespace App\Interfaces\Http\Controller\Generations;
+use App\Application\Generations\CreateGeneration\CreateGenerationCommand;use App\Application\Generations\CreateGeneration\CreateGenerationHandler;use App\Interfaces\Http\Controller\JsonController;use App\Interfaces\Http\Support\ErrorMapper;
+final class CreateGenerationController extends JsonController { public function __construct(private CreateGenerationHandler $handler) {} public function __invoke(): void { try{$b=$this->requestJson(); foreach(['userId','subject','topic','details','grade','duration','lang','prompt'] as $f){ if(!isset($b[$f])){ $this->json(400,['error'=>$f.' is required']); return; }} $r=$this->handler->handle(new CreateGenerationCommand((string)$b['userId'],(string)$b['subject'],(string)$b['topic'],(string)$b['details'],(string)$b['grade'],(int)$b['duration'],(string)$b['lang'],(string)$b['prompt'])); $this->json(201,['generationId'=>$r->generationId]); }catch(\Throwable $e){[$s,$m]=ErrorMapper::map($e);$this->json($s,['error'=>$m]);}}}

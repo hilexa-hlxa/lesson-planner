@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'db' => [
+        // Example Postgres DSN (Supabase-compatible).
+        // Prefer env vars DB_DSN/DB_USER/DB_PASS in real deployments.
+        'dsn' => 'pgsql:host=YOUR_SUPABASE_HOST;port=5432;dbname=postgres;sslmode=require',
+        'user' => 'YOUR_DB_USER',
+        'pass' => 'YOUR_DB_PASSWORD',
+    ],
+    'gemini' => [
+        'api_key' => null,
+        'model' => 'gemini-2.0-flash',
+    ],
+    'cache' => [
+        // Optional: keep null to disable Redis cache locally.
+        'redis_host' => null,
+        'redis_port' => 6379,
+        'generation_ttl' => 900,
+    ],
+];

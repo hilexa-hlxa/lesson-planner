@@ -1,0 +1,5 @@
+<?php
+declare(strict_types=1);
+namespace App\Infrastructure\Persistence\PDO;
+use App\Domain\Auth\User\UserId;use App\Domain\Posts\Post\Post;use App\Domain\Posts\Post\PostId;use App\Domain\Posts\Post\PostRepository;use PDO;
+final class PdoPostRepository implements PostRepository { public function __construct(private PDO $pdo) {} public function nextId(): PostId { return PostId::new(); } public function byId(PostId $id): ?Post { $stmt=$this->pdo->prepare('SELECT * FROM posts WHERE id=:id LIMIT 1'); $stmt->execute(['id'=>$id->value()]); $row=$stmt->fetch(PDO::FETCH_ASSOC); if (!$row) return null; return Post::reconstitute(PostId::fromString($row['id']), UserId::fromString($row['author_id']), $row['title'], $row['body'], new \DateTimeImmutable($row['created_at'])); } public function save(Post $post): void { $stmt=$this->pdo->prepare('INSERT INTO posts (id, author_id, title, body, created_at) VALUES (:id,:author,:title,:body,:created)'); $stmt->execute(['id'=>$post->id()->value(),'author'=>$post->authorId()->value(),'title'=>$post->title(),'body'=>$post->body(),'created'=>$post->createdAt()->format('Y-m-d H:i:s')]); }}
