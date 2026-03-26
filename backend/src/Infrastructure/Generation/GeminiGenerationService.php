@@ -82,10 +82,11 @@ final class GeminiGenerationService implements GeminiClient
         }
 
         $ctx = stream_context_create($opts);
-        $resp = file_get_contents($url, false, $ctx);
+        $resp = @file_get_contents($url, false, $ctx);
 
         if ($resp === false) {
-            throw new \RuntimeException('Gemini request failed');
+            $statusLine = $http_response_header[0] ?? 'no response';
+            throw new \RuntimeException('Gemini request failed: ' . $statusLine);
         }
 
         $json = json_decode($resp, true, 512, JSON_THROW_ON_ERROR);

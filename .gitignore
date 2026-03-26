@@ -29,3 +29,6 @@ dist-ssr
 # PHP Composer
 vendor/
 backend/vendor/
+
+# Auto-migration flag (written by server on first boot)
+backend/.migrated

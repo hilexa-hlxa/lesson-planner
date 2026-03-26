@@ -211,10 +211,6 @@ export default function Dashboard({
         grantAchievement({ title: "Ночная смена", reward: 100, key: "night_owl" });
       }
 
-      if (history.length === 9) {
-        grantAchievement({ title: "Архитектор знаний", reward: 250, key: "architect_10" });
-      }
-
     } catch (e) { 
       setRes("Error."); 
     } finally { 
