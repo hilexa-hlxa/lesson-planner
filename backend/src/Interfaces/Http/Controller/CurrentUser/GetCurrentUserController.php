@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace App\Interfaces\Http\Controller\CurrentUser;
 
+use App\Domain\Achievements\UserAchievementRepository;
 use App\Domain\Auth\User\Email;
 use App\Domain\Auth\User\UserRepository;
+use App\Domain\Economy\WalletRepository;
 use App\Interfaces\Http\Controller\JsonController;
 use App\Interfaces\Http\Support\ErrorMapper;
 
 final class GetCurrentUserController extends JsonController
 {
-    public function __construct(private UserRepository $users)
-    {
+    public function __construct(
+        private UserRepository $users,
+        private WalletRepository $wallets,
+        private UserAchievementRepository $achievements,
+    ) {
     }
 
     public function __invoke(): void
@@ -38,13 +43,22 @@ final class GetCurrentUserController extends JsonController
                 return;
             }
 
+            $userId = $user->id()->value();
+            $wallet = $this->wallets->byUserId($userId);
+            $coins = $wallet !== null ? $wallet->coins() : 0;
+
+            $achievementKeys = array_map(
+                fn($a) => $a->key(),
+                $this->achievements->listByUser($userId),
+            );
+
             $this->json(200, [
                 'user' => [
-                    'id' => $user->id()->value(),
+                    'id' => $userId,
                     'email' => $user->email()->value(),
                     'role' => 'user',
-                    'coins' => 0,
-                    'achievements' => [],
+                    'coins' => $coins,
+                    'achievements' => $achievementKeys,
                 ],
             ]);
         } catch (\Throwable $e) {

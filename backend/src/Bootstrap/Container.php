@@ -63,22 +63,39 @@ use PDO;
 
 final class Container
 {
+    private ?PDO $pdoInstance = null;
+
     public function __construct(private array $config)
     {
     }
 
     private function pdo(): PDO
     {
+        if ($this->pdoInstance !== null) {
+            return $this->pdoInstance;
+        }
+
         $dsn = $this->config['db']['dsn'] ?? null;
         $user = $this->config['db']['user'] ?? null;
         $pass = $this->config['db']['pass'] ?? null;
         $timeout = (int) ($this->config['db']['timeout'] ?? 5);
 
-        return new PDO($dsn, $user, $pass, [
+        $this->pdoInstance = new PDO($dsn, $user, $pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_TIMEOUT => $timeout > 0 ? $timeout : 5,
         ]);
+
+        return $this->pdoInstance;
+    }
+
+    public function migrate(): void
+    {
+        $pdo = $this->pdo();
+        $pdo->exec(
+            "ALTER TABLE generations ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'lesson_plan';" .
+            "CREATE INDEX IF NOT EXISTS idx_generations_type ON generations(type);"
+        );
     }
 
     public function registerUserController(): RegisterUserController { $pdo=$this->pdo(); return new RegisterUserController(new RegisterUserHandler(new PdoUserRepository($pdo), new BcryptPasswordHasher(), new PdoTransactionManager($pdo), new PdoAuditLogRepository($pdo))); }
@@ -111,5 +128,5 @@ final class Container
     public function getCoinsController(): GetCoinsController { $pdo=$this->pdo(); return new GetCoinsController(new GetCoinsHandler(new PdoWalletRepository($pdo))); }
     public function addCoinsController(): AddCoinsController { $pdo=$this->pdo(); return new AddCoinsController(new AddCoinsHandler(new PdoWalletRepository($pdo))); }
     public function grantAchievementController(): GrantAchievementController { $pdo=$this->pdo(); return new GrantAchievementController(new GrantAchievementHandler(new PdoUserAchievementRepository($pdo), new PdoWalletRepository($pdo))); }
-    public function currentUserController(): GetCurrentUserController { $pdo=$this->pdo(); return new GetCurrentUserController(new PdoUserRepository($pdo)); }
+    public function currentUserController(): GetCurrentUserController { $pdo=$this->pdo(); return new GetCurrentUserController(new PdoUserRepository($pdo), new PdoWalletRepository($pdo), new PdoUserAchievementRepository($pdo)); }
 }

@@ -52,20 +52,14 @@ export default function App() {
 
   // --- 2. ФУНКЦИИ ---
   const grantAchievement = (achData) => {
-  // 1. СТРОГАЯ ПРОВЕРКА: Если ачивка уже в процессе или получена — СТОП
   if (user?.achievements?.includes(achData.key)) return;
   if (activeAchievement?.key === achData.key) return;
 
-  // 2. Локально сразу помечаем, чтобы повторные вызовы в ту же миллисекунду не прошли
-  user.achievements = [...(user.achievements || []), achData.key];
-
   setActiveAchievement(achData);
-
-  // 3. Обновляем стейт (React сам сгруппирует обновления)
   setUser(prev => ({
     ...prev,
     coins: (prev?.coins || 0) + (achData.reward || 0),
-    achievements: [...(prev?.achievements || []), achData.key]
+    achievements: [...(prev?.achievements || []), achData.key],
   }));
 };
 

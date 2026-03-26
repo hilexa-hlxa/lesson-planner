@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { I18N as t } from '../lib/i18n';
 import { buildPrompt } from '../lib/prompt';
 import api from '../api';
+import { generationsListCached } from '../apiCache';
 import Header from "../components/Header";
 
 
@@ -71,9 +72,9 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
   const loadLibrary = async () => {
     try {
         const userId = api.getUserId();
-        const res = await api.generations.list(userId);
-        // ФИЛЬТРУЕМ ПО ТИПУ 'test'
-        const tests = (res.items || []).filter(item => item.type === 'test'); 
+        const res = await generationsListCached(userId);
+        const items = Array.isArray(res) ? res : Array.isArray(res?.items) ? res.items : [];
+        const tests = items.filter(item => item.type === 'test');
         setLibrary(tests);
     } catch (e) { console.error(e); }
   };
