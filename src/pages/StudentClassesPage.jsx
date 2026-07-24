@@ -1,14 +1,105 @@
 import { useState, useEffect } from "react";
-import { GraduationCap, Clock, CheckCircle } from "lucide-react";
+import { GraduationCap, Clock, CheckCircle, ChevronDown, ChevronUp, Trophy, AlertCircle } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import api from "../api";
+import { parseMarkdownQuiz } from "../lib/quizParser";
 
 const T = {
-  RU: { title: "МОИ КЛАССЫ", join: "Войти в класс", codePlaceholder: "Код класса (6 символов)", joinBtn: "Подать заявку", teacher: "Учитель", noClasses: "Вы пока не состоите ни в одном классе.", sent: "Заявка отправлена! Ждите одобрения учителя.", alreadyApplied: "Вы уже подали заявку в этот класс.", alreadyMember: "Вы уже состоите в этом классе.", notFound: "Класс не найден.", pending: "Ожидает одобрения" },
-  KZ: { title: "МЕНІҢ СЫНЫПТАРЫМ", join: "Сыныпқа кіру", codePlaceholder: "Сынып коды (6 таңба)", joinBtn: "Өтінім беру", teacher: "Мұғалім", noClasses: "Сіз әлі бірде-бір сыныпта жоқсыз.", sent: "Өтінім жіберілді! Мұғалімнің мақұлдауын күтіңіз.", alreadyApplied: "Сіз бұл сыныпқа өтінім бердіңіз.", alreadyMember: "Сіз бұл сыныпта бар.", notFound: "Сынып табылмады.", pending: "Мақұлдауды күтуде" },
-  EN: { title: "MY CLASSES", join: "Join a Class", codePlaceholder: "Class code (6 characters)", joinBtn: "Apply", teacher: "Teacher", noClasses: "You are not in any class yet.", sent: "Application sent! Wait for teacher approval.", alreadyApplied: "You already applied to this class.", alreadyMember: "You are already a member of this class.", notFound: "Class not found.", pending: "Pending approval" },
+  RU: {
+    title: "МОИ КЛАССЫ", join: "Войти в класс", codePlaceholder: "Код класса (6 символов)", joinBtn: "Подать заявку",
+    teacher: "Учитель", noClasses: "Вы пока не состоите ни в одном классе.", sent: "Заявка отправлена! Ждите одобрения учителя.",
+    alreadyApplied: "Вы уже подали заявку в этот класс.", alreadyMember: "Вы уже состоите в этом классе.",
+    notFound: "Класс не найден.", pending: "Ожидает одобрения", history: "История тестов",
+    noHistory: "В этом классе тестов ещё не было.", score: "Баллы", date: "Дата", seeMore: "Разбор", hide: "Скрыть",
+    wrongQ: "Ошибки:", yourAnswer: "Ваш ответ:", correct: "Правильно:",
+  },
+  KZ: {
+    title: "МЕНІҢ СЫНЫПТАРЫМ", join: "Сыныпқа кіру", codePlaceholder: "Сынып коды (6 таңба)", joinBtn: "Өтінім беру",
+    teacher: "Мұғалім", noClasses: "Сіз әлі бірде-бір сыныпта жоқсыз.", sent: "Өтінім жіберілді! Мұғалімнің мақұлдауын күтіңіз.",
+    alreadyApplied: "Сіз бұл сыныпқа өтінім бердіңіз.", alreadyMember: "Сіз бұл сыныпта бар.",
+    notFound: "Сынып табылмады.", pending: "Мақұлдауды күтуде", history: "Тест тарихы",
+    noHistory: "Бұл сыныпта тест болмады.", score: "Ұпай", date: "Күні", seeMore: "Талдау", hide: "Жасыру",
+    wrongQ: "Қателер:", yourAnswer: "Сіздің жауабыңыз:", correct: "Дұрысы:",
+  },
+  EN: {
+    title: "MY CLASSES", join: "Join a Class", codePlaceholder: "Class code (6 characters)", joinBtn: "Apply",
+    teacher: "Teacher", noClasses: "You are not in any class yet.", sent: "Application sent! Wait for teacher approval.",
+    alreadyApplied: "You already applied to this class.", alreadyMember: "You are already a member of this class.",
+    notFound: "Class not found.", pending: "Pending approval", history: "Test History",
+    noHistory: "No tests in this class yet.", score: "Score", date: "Date", seeMore: "Review", hide: "Hide",
+    wrongQ: "Mistakes:", yourAnswer: "Your answer:", correct: "Correct:",
+  },
 };
+
+function HistoryRow({ item, t }) {
+  const [open, setOpen] = useState(false);
+
+  const answers = (() => {
+    try { return JSON.parse(item.answers_json || '[]'); } catch { return []; }
+  })();
+
+  const wrong = answers.filter(a => !a.isCorrect);
+  const pct = Math.round(Number(item.percentage) || 0);
+  const pctColor = pct >= 70 ? 'text-green-600' : pct >= 50 ? 'text-yellow-500' : 'text-red-500';
+
+  return (
+    <div className="rounded-2xl border-2 border-black/10 dark:border-white/10 overflow-hidden bg-white dark:bg-zinc-900">
+      <div className="flex items-center justify-between px-5 py-4 gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="font-black truncate">{item.topic}</p>
+          <p className="text-xs text-slate-400 font-bold">{item.subject} · {new Date(item.created_at).toLocaleDateString()}</p>
+        </div>
+        <div className={`font-black text-xl shrink-0 ${pctColor}`}>{pct}%</div>
+        <div className="text-sm text-slate-400 font-bold shrink-0">{item.score}/{item.total_questions}</div>
+        {wrong.length > 0 && (
+          <button
+            onClick={() => setOpen(v => !v)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border-2 border-black/10 dark:border-white/10 font-black text-xs uppercase text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 shrink-0"
+          >
+            {open ? <><ChevronUp size={14}/>{t.hide}</> : <><ChevronDown size={14}/>{t.seeMore}</>}
+          </button>
+        )}
+      </div>
+
+      {open && wrong.length > 0 && (
+        <div className="border-t-2 border-black/10 dark:border-white/10 px-5 py-4 space-y-3 bg-slate-50 dark:bg-zinc-950">
+          <p className="font-black text-xs uppercase text-slate-400 mb-2">{t.wrongQ}</p>
+          {wrong.map((a, i) => (
+            <div key={i} className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700">
+              <p className="font-bold text-sm mb-1.5 dark:text-white">
+                {a.questionText || `Вопрос ${a.questionId + 1}`}
+              </p>
+              <p className="text-xs text-red-500 font-bold">{t.yourAnswer} {a.selectedText || '—'}</p>
+              <p className="text-xs text-green-600 font-bold">{t.correct} {a.correctText || '—'}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClassHistory({ classId, t }) {
+  const [history, setHistory] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.student.history(classId)
+      .then(r => setHistory(r.history || []))
+      .catch(() => setHistory([]))
+      .finally(() => setLoading(false));
+  }, [classId]);
+
+  if (loading) return <div className="py-6 text-center text-slate-400 font-black animate-pulse">...</div>;
+  if (!history.length) return <p className="py-6 text-center text-slate-400 font-bold text-sm">{t.noHistory}</p>;
+
+  return (
+    <div className="space-y-3 pt-4">
+      {history.map((item, i) => <HistoryRow key={i} item={item} t={t} />)}
+    </div>
+  );
+}
 
 export default function StudentClassesPage({ lang, setLang, user, setUser, ...accessProps }) {
   const t = T[lang] || T.RU;
@@ -18,6 +109,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
   const [code, setCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [joinMsg, setJoinMsg] = useState(null);
+  const [expandedClass, setExpandedClass] = useState(null);
 
   useEffect(() => {
     api.classes.list().then(r => setClasses(r.items || [])).finally(() => setLoading(false));
@@ -27,8 +119,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
     e.preventDefault();
     const trimmed = code.trim().toUpperCase();
     if (trimmed.length !== 6) return;
-    setJoining(true);
-    setJoinMsg(null);
+    setJoining(true); setJoinMsg(null);
     try {
       const r = await api.classes.join(trimmed);
       if (r.status === 'already_member') { setJoinMsg({ type: 'info', text: t.alreadyMember }); return; }
@@ -38,9 +129,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
     } catch (err) {
       if (err.status === 404) setJoinMsg({ type: 'error', text: t.notFound });
       else setJoinMsg({ type: 'error', text: err.message || 'Error' });
-    } finally {
-      setJoining(false);
-    }
+    } finally { setJoining(false); }
   };
 
   const approved = classes.filter(c => c.status === 'approved' || !c.status);
@@ -109,12 +198,27 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
             ) : (
               <div className="space-y-4">
                 {approved.map(cls => (
-                  <div key={cls.id} className="flex items-center justify-between px-6 py-5 bg-white dark:bg-zinc-900 rounded-2xl border-2 border-black/10 dark:border-white/10">
-                    <div>
-                      <div className="font-black text-xl">{cls.name}</div>
-                      {cls.teacher_name && <div className="text-slate-400 text-sm font-bold">{t.teacher}: {cls.teacher_name}</div>}
-                    </div>
-                    <CheckCircle size={22} className="text-green-500 shrink-0" />
+                  <div key={cls.id} className="rounded-[24px] border-2 border-black/10 dark:border-white/10 overflow-hidden">
+                    <button
+                      onClick={() => setExpandedClass(expandedClass === cls.id ? null : cls.id)}
+                      className="w-full flex items-center justify-between px-6 py-5 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      <div className="text-left">
+                        <div className="font-black text-xl">{cls.name}</div>
+                        {cls.teacher_name && <div className="text-slate-400 text-sm font-bold">{t.teacher}: {cls.teacher_name}</div>}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <CheckCircle size={20} className="text-green-500 shrink-0" />
+                        {expandedClass === cls.id ? <ChevronUp size={18} className="text-slate-400"/> : <ChevronDown size={18} className="text-slate-400"/>}
+                      </div>
+                    </button>
+
+                    {expandedClass === cls.id && (
+                      <div className="px-6 pb-6 bg-slate-50 dark:bg-zinc-950 border-t-2 border-black/10 dark:border-white/10">
+                        <p className="font-black text-xs uppercase text-slate-400 pt-4 mb-2">{t.history}</p>
+                        <ClassHistory classId={cls.id} t={t} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

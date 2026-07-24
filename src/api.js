@@ -167,6 +167,16 @@ const api = {
     set: (config) => request('/prompt-config', { method: 'PUT', body: JSON.stringify({ config }) }),
   },
 
+  wordle: {
+    getWord: (lang) => request(`/wordle/word?lang=${encodeURIComponent(lang)}`, { method: 'GET' }),
+    createSession: (word, lang) => request('/wordle/session', { method: 'POST', body: JSON.stringify({ word, lang }) }),
+    joinSession: (code) => request('/wordle/join', { method: 'POST', body: JSON.stringify({ code }) }),
+  },
+
+  student: {
+    history: (classId) => request(`/student/history${classId ? `?class_id=${classId}` : ''}`, { method: 'GET' }),
+  },
+
   classes: {
     list: () => request('/classes', { method: 'GET' }),
     create: (name) => request('/classes', { method: 'POST', body: JSON.stringify({ name }) }),

@@ -20,6 +20,8 @@ import GamesPage from './pages/GamesPage';
 import ClassesPage from './pages/ClassesPage';
 import ClassDetailPage from './pages/ClassDetailPage';
 import StudentClassesPage from './pages/StudentClassesPage';
+import WordlePage from './pages/WordlePage';
+import LessonSummaryPage from './pages/LessonSummaryPage';
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
 import ClassControlBar from './components/ClassControlBar';
@@ -139,6 +141,8 @@ export default function App() {
           <Route path="/classes" element={<Page><Protected authReady={authReady} user={user}><ClassesPage {...accessProps} /></Protected></Page>} />
           <Route path="/classes/:id" element={<Page><Protected authReady={authReady} user={user}><ClassDetailPage {...accessProps} /></Protected></Page>} />
           <Route path="/my-classes" element={<Page><Protected authReady={authReady} user={user}><StudentClassesPage {...accessProps} /></Protected></Page>} />
+          <Route path="/wordle" element={<Page><Protected authReady={authReady} user={user}><WordlePage {...accessProps} /></Protected></Page>} />
+          <Route path="/lesson-summary" element={<Page><Protected authReady={authReady} user={user}><LessonSummaryPage {...accessProps} /></Protected></Page>} />
           <Route path="/play" element={<QuizPlayer {...accessProps} />} />
           <Route path="*" element={<Navigate to={user ? "/hub" : "/"} replace />} />
         </Routes>

@@ -1,15 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Lock, Gamepad2 } from 'lucide-react';
+import { Play, Lock, Gamepad2, LetterText } from 'lucide-react';
 import { tr } from "../lib/i18n";
 import Header from "../components/Header";
 
-const GamesPage = ({ lang, setLang, user, setUser }) => {
+const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20">
       
       {/* ХЕДЕР */}
-      <Header lang={lang} setLang={setLang} user={user} setUser={setUser} />
+      <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
       <main className="max-w-6xl mx-auto px-10">
         <div className="flex items-center gap-4 mb-4">
@@ -27,7 +27,7 @@ const GamesPage = ({ lang, setLang, user, setUser }) => {
         </p>
 
         {/* ГРИД СЕТКА */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {/* 1. ВОЙТИ В ТЕСТ */}
           <Link 
@@ -52,7 +52,30 @@ const GamesPage = ({ lang, setLang, user, setUser }) => {
             </div>
           </Link>
 
-          {/* 2. ЗАГЛУШКА */}
+          {/* 2. WORDLE */}
+          <Link
+            to="/wordle"
+            className="group bg-white dark:bg-zinc-900 p-10 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between h-[360px]"
+          >
+            <div>
+              <div className="w-20 h-20 bg-green-500 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+                <LetterText size={40} />
+              </div>
+              <h3 className="text-4xl font-black uppercase tracking-tight mb-4">
+                {lang === 'EN' ? "Wordle" : lang === 'KZ' ? "Вордл" : "Вордл"}
+              </h3>
+              <p className="text-slate-500 font-bold text-lg leading-tight">
+                {lang === 'EN' ? "Guess the hidden word. Play solo or in class." :
+                 lang === 'KZ' ? "Жасырын сөзді тап. Жалғыз немесе сыныппен ойна." :
+                 "Угадай скрытое слово. Играй один или в классе."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-sm tracking-widest bg-black text-white px-6 py-3 rounded-full">GO!</span>
+            </div>
+          </Link>
+
+          {/* 3. ЗАГЛУШКА */}
           <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[40px] p-10 flex flex-col items-center justify-center text-slate-400 h-[360px] cursor-not-allowed select-none">
             <Lock size={64} className="mb-6 opacity-30" />
             <span className="font-black uppercase text-2xl tracking-widest opacity-50">Math Battle</span>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Timer, CheckCircle, XCircle, Trophy, LogOut } from 'lucide-react';
+import { Timer, CheckCircle, XCircle, Trophy, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactConfetti from 'react-confetti';
 import { parseMarkdownQuiz } from '../lib/quizParser';
 import api from "../api"; // Импортируем твой апи
@@ -22,6 +22,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [questionTime, setQuestionTime] = useState(0);
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -54,7 +55,15 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     const currentQ = questions[currentIndex];
     const isCorrect = optionIndex === currentQ.correctIndex;
     if (isCorrect) setScore(prev => prev + 1);
-    setAnswersLog(prev => [...prev, { questionId: currentIndex, isCorrect, time: questionTime, selected: optionIndex }]);
+    setAnswersLog(prev => [...prev, {
+      questionId: currentIndex,
+      questionText: currentQ.question,
+      isCorrect,
+      time: questionTime,
+      selected: optionIndex,
+      selectedText: currentQ.options[optionIndex],
+      correctText: currentQ.options[currentQ.correctIndex],
+    }]);
   };
 
   const handleNext = () => {
@@ -90,6 +99,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     try {
         await fetch(`${API_URL}/api/quiz/submit`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 quiz_id: session.quiz.id,
@@ -119,18 +129,49 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
 
   if (quizFinished) {
     const percentage = Math.round((score / questions.length) * 100);
+    const wrong = answersLog.filter(a => !a.isCorrect);
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex items-center justify-center p-6 text-center font-sans">
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex items-center justify-center p-6 font-sans">
         <ReactConfetti recycle={false} numberOfPieces={500} />
-        <div className="max-w-md w-full bg-white dark:bg-zinc-900 p-10 rounded-[40px] shadow-2xl border-[4px] border-black dark:border-white animate-in zoom-in">
+        <div className="max-w-lg w-full bg-white dark:bg-zinc-900 p-10 rounded-[40px] shadow-2xl border-[4px] border-black dark:border-white animate-in zoom-in">
            <div className="mb-6 flex justify-center"><Trophy size={64} className="text-yellow-400 fill-yellow-400 animate-bounce" /></div>
-           <h1 className="text-4xl font-black uppercase mb-2 dark:text-white">Финиш!</h1>
-           <p className="text-gray-500 font-bold uppercase tracking-widest mb-8">{session.studentName}</p>
-           <div className="bg-slate-100 dark:bg-zinc-800 p-6 rounded-2xl mb-8">
+           <h1 className="text-4xl font-black uppercase mb-2 dark:text-white text-center">Финиш!</h1>
+           <p className="text-gray-500 font-bold uppercase tracking-widest mb-8 text-center">{session.studentName}</p>
+           <div className="bg-slate-100 dark:bg-zinc-800 p-6 rounded-2xl mb-6 text-center">
               <div className="text-6xl font-black text-blue-600 mb-2">{percentage}%</div>
               <p className="font-bold text-sm text-gray-400 uppercase">Правильно: {score} / {questions.length}</p>
               <p className="font-bold text-sm text-gray-400 uppercase mt-1">Время: {elapsedTime}с</p>
            </div>
+
+           {wrong.length > 0 && (
+             <div className="mb-6">
+               <button
+                 onClick={() => setShowBreakdown(v => !v)}
+                 className="w-full flex items-center justify-between px-5 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 font-black text-sm text-red-600 dark:text-red-400"
+               >
+                 <span>Разбор ошибок ({wrong.length})</span>
+                 {showBreakdown ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+               </button>
+               {showBreakdown && (
+                 <div className="mt-3 space-y-3">
+                   {wrong.map((a, i) => (
+                     <div key={i} className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-left">
+                       <p className="font-bold text-sm mb-2 dark:text-white">
+                         {a.questionText || `Вопрос ${a.questionId + 1}`}
+                       </p>
+                       <p className="text-xs text-red-500 font-bold">
+                         Ваш ответ: {a.selectedText || '—'}
+                       </p>
+                       <p className="text-xs text-green-600 font-bold">
+                         Правильно: {a.correctText || '—'}
+                       </p>
+                     </div>
+                   ))}
+                 </div>
+               )}
+             </div>
+           )}
+
            <button onClick={handleExit} className="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black uppercase tracking-widest hover:scale-105 transition">Выход</button>
         </div>
       </div>

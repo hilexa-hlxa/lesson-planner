@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, FileQuestion, Lightbulb } from 'lucide-react';
+import { BookOpen, FileQuestion, Lightbulb, ClipboardList } from 'lucide-react';
 import { tr } from "../lib/i18n";
 import Header from "../components/Header";
 
@@ -78,7 +78,32 @@ const ToolsPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
             </div>
           </Link>
 
-          {/* 3. Генератор идей (Заглушка) */}
+          {/* 3. Итог урока */}
+          <Link
+            to="/lesson-summary"
+            className="group bg-white dark:bg-zinc-900 p-8 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(22,163,74,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between h-[320px]"
+          >
+            <div>
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-6 border-2 border-black/10">
+                <ClipboardList size={32} className="text-green-600" />
+              </div>
+              <h3 className="text-3xl font-black uppercase tracking-tight mb-2">
+                {lang === 'EN' ? "Lesson Summary" : lang === 'KZ' ? "Сабақ қорытындысы" : "Итог урока"}
+              </h3>
+              <p className="text-slate-500 font-bold text-sm leading-tight">
+                {lang === 'EN' ? "AI writes what was covered, homework, and who needs support." :
+                 lang === 'KZ' ? "AI нені өткенін, үй тапсырмасын және кімге көмек қажетін жазады." :
+                 "AI пишет что прошли, домашнее задание и кому нужна помощь."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-xs tracking-widest bg-black text-white px-4 py-2 rounded-full">
+                   {tr(lang, "hub.go")}
+               </span>
+            </div>
+          </Link>
+
+          {/* 4. Генератор идей (Заглушка) */}
           <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[40px] p-8 flex flex-col items-center justify-center text-slate-400 h-[320px] group cursor-not-allowed select-none">
             <Lightbulb size={48} className="mb-4 opacity-50 group-hover:text-yellow-500 transition-colors" />
             <span className="font-black uppercase text-lg tracking-widest opacity-60">

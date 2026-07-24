@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, Play, RefreshCw, Eye, X, History, Sparkles, Copy, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronLeft, Play, RefreshCw, Eye, X, History, Sparkles, Copy, Check, ClipboardList } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 import { I18N as t } from '../lib/i18n';
@@ -12,6 +12,8 @@ const API_URL = 'http://localhost:8000/api';
 
 
 const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }) => {
+  const navigate = useNavigate();
+
   // --- State Management ---
   const [topic, setTopic] = useState('');
   const [subject, setSubject] = useState('');
@@ -348,6 +350,16 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                         </div>
                     )}
               </div>
+
+              {testResults && testResults.length > 0 && (
+                <button
+                  onClick={() => navigate(`/lesson-summary?quiz_id=${activeTest.id}&subject=${encodeURIComponent(subject)}&topic=${encodeURIComponent(topic || activeTest.topic || '')}`)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-4 border-green-600 text-green-600 font-black uppercase text-sm tracking-widest hover:bg-green-600 hover:text-white transition-all"
+                >
+                  <ClipboardList size={16} />
+                  {lang === 'KZ' ? 'Сабақ қорытындысы' : lang === 'EN' ? 'Lesson Summary' : 'Итог урока'}
+                </button>
+              )}
 
               <div className="bg-slate-50 dark:bg-zinc-800 p-6 rounded-2xl border-2 border-slate-200 dark:border-zinc-700 max-h-60 overflow-y-auto prose dark:prose-invert text-sm">
                  <ReactMarkdown>{activeTest.result_md}</ReactMarkdown>

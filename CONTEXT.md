@@ -4,7 +4,10 @@
 A registered user with role `teacher`. Creates Lesson Plans and Tests, manages Classes, runs live Test sessions, and reads Reports. The primary user of the platform — students are consumers of what teachers create.
 
 ## Student
-A registered user with role `student`. Joins Classes, takes Tests, and receives feedback through their teacher.
+A registered user with role `student`. Joins Classes, takes Tests, sees their results immediately after finishing, and can review their Test history per Class.
+
+## Student History
+A Student's record of Tests taken within a Class. Shown as a list: test name, date, score. Each entry has a "See More" button that expands into a per-topic breakdown — which topics the student failed at. Built from their Test Results.
 
 ## Lesson Plan
 An AI-generated document for a single lesson. Contains goals, timeline, equipment, key concepts, tasks, differentiation, assessment, and homework. Created by a Teacher and exported as DOCX or viewed in-app. Stored in the `generations` table with `type = 'lesson_plan'`.
@@ -30,5 +33,17 @@ A 6-character alphanumeric code used to apply to a Class. Distinct from an Acces
 ## Membership
 The relationship between a Student and a Class. Has two states: `pending` (applied, awaiting teacher approval) and `approved` (active member).
 
+## Wordle Game
+A classroom word-guessing game. Two modes:
+- **Class mode** — Teacher sets a word (typed manually or AI-suggested based on lesson topic). Students join on their devices and guess letter by letter together in real time.
+- **Solo mode** — Student plays alone at home. Word is drawn randomly from a static Word Bank. No teacher needed.
+
+## Word Bank
+A curated set of school-appropriate words stored in the database, used for Wordle solo mode. 10 words per language (Russian, Kazakh, English) — seeded once by AI, never regenerated. Language follows the student's active language setting.
+
 ## Lesson Summary
-An AI-generated write-up of what happened in a lesson — topics covered, homework set. Produced by the Teacher after a session, intended to be pasted into Kundelik (the national gradebook). Not yet built; planned for a future phase.
+An AI-generated write-up of what happened in a single lesson. Contains: topic covered, homework set, and (when a Test was run) which students are struggling and at what topics. Generated in the Teacher's active language.
+
+A Teacher triggers it by filling a short form (subject, topic, brief notes). If a Test session is attached, the AI also pulls in Test Results automatically. Output is text the Teacher copies and pastes into Kundelik.
+
+Available in two places: on the Create Test page after a test session ends, and on the Tools/Hub page for lessons where no test was run. Direct Kundelik API integration is deferred to a future phase.

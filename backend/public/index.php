@@ -778,6 +778,110 @@ try {
     Response::ok(['class' => $row]);
   }
 
+  // ======================================================
+  // Wordle Routes
+  // ======================================================
+
+  // GET /api/wordle/word?lang=RU — random word for solo mode
+  if ($method === 'GET' && $path === '/api/wordle/word') {
+    $lang = strtoupper(trim($_GET['lang'] ?? 'RU'));
+    if (!in_array($lang, ['RU', 'KZ', 'EN'], true)) $lang = 'RU';
+
+    $stmt = $db->pdo()->prepare("
+      SELECT word FROM word_bank WHERE lang = :lang ORDER BY RANDOM() LIMIT 1
+    ");
+    $stmt->execute([':lang' => $lang]);
+    $word = $stmt->fetchColumn();
+
+    if (!$word) Response::error('No words available', 404);
+    Response::ok(['word' => $word]);
+  }
+
+  // POST /api/wordle/session — teacher creates class wordle session
+  if ($method === 'POST' && $path === '/api/wordle/session') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    $word = strtoupper(trim((string)($body['word'] ?? '')));
+    $lang = strtoupper(trim((string)($body['lang'] ?? 'RU')));
+    if (!in_array($lang, ['RU', 'KZ', 'EN'], true)) $lang = 'RU';
+    if (mb_strlen($word) < 3) Response::error('Word too short (min 3 letters)', 400);
+
+    $code = '';
+    $attempts = 0;
+    do {
+      $code = (string)rand(1000, 9999);
+      $s = $db->pdo()->prepare("SELECT 1 FROM wordle_sessions WHERE access_code = :c AND expires_at > NOW()");
+      $s->execute([':c' => $code]);
+      if ($attempts++ > 10) Response::error('Server busy, try again', 503);
+    } while ($s->fetchColumn());
+
+    // Clear old sessions by this teacher
+    $db->pdo()->prepare("DELETE FROM wordle_sessions WHERE teacher_id = :uid")->execute([':uid' => $u['id']]);
+
+    $stmt = $db->pdo()->prepare("
+      INSERT INTO wordle_sessions (teacher_id, word, lang, access_code)
+      VALUES (:uid, :word, :lang, :code)
+      RETURNING access_code, expires_at
+    ");
+    $stmt->execute([':uid' => $u['id'], ':word' => $word, ':lang' => $lang, ':code' => $code]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    Response::ok(['code' => $row['access_code'], 'expires_at' => $row['expires_at']]);
+  }
+
+  // POST /api/wordle/join — student joins class wordle with code
+  if ($method === 'POST' && $path === '/api/wordle/join') {
+    $code = (string)($body['code'] ?? '');
+    if (strlen($code) !== 4) Response::error('Invalid format', 400);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT word, lang FROM wordle_sessions
+      WHERE access_code = :code AND expires_at > NOW()
+      LIMIT 1
+    ");
+    $stmt->execute([':code' => $code]);
+    $session = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    if (!$session) Response::error('Session not found or expired', 404);
+    Response::ok(['word' => $session['word'], 'lang' => $session['lang']]);
+  }
+
+  // ======================================================
+  // Student History Routes
+  // ======================================================
+
+  // GET /api/student/history?class_id=X
+  if ($method === 'GET' && $path === '/api/student/history') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $classId = isset($_GET['class_id']) ? (int)$_GET['class_id'] : 0;
+
+    $sql = "
+      SELECT g.id AS quiz_id, g.topic, g.subject, g.result_md,
+             qr.score, qr.total_questions, qr.percentage, qr.duration_seconds,
+             qr.answers_json, qr.created_at
+      FROM quiz_results qr
+      JOIN generations g ON g.id = qr.quiz_id
+      WHERE qr.student_id = :sid
+    ";
+    $params = [':sid' => $u['id']];
+
+    if ($classId > 0) {
+      $sql .= " AND g.class_id = :cid";
+      $params[':cid'] = $classId;
+    }
+
+    $sql .= " ORDER BY qr.created_at DESC LIMIT 50";
+
+    $stmt = $db->pdo()->prepare($sql);
+    $stmt->execute($params);
+
+    Response::ok(['history' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+  }
+
   error_log("404 Not Found: {$path}");
   Response::error('Endpoint not found', 404);
 
