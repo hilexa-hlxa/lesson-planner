@@ -11,26 +11,26 @@ import Header from "../components/Header";
 const API_URL = 'http://localhost:8000/api';
 
 
-const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
+const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }) => {
   // --- State Management ---
   const [topic, setTopic] = useState('');
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState('5');
   const [loading, setLoading] = useState(false);
   
-  const [generatedTest, setGeneratedTest] = useState(null); 
+  const [activeTest, setActiveTest] = useState(null);
   const [accessCode, setAccessCode] = useState(null);
-  const [report, setReport] = useState(null);
-  
-  const [library, setLibrary] = useState([]);
+  const [testResults, setTestResults] = useState(null);
+
+  const [savedTests, setSavedTests] = useState([]);
   const [showLibrary, setShowLibrary] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  // AI Report States
+  // Report states
   const [showReportModal, setShowReportModal] = useState(false);
-  const [aiReport, setAiReport] = useState("");
+  const [report, setReport] = useState("");
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [lessonContext, setLessonContext] = useState("");
+  const [reportContext, setReportContext] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [testUi, setTestUi] = useState({
@@ -43,71 +43,86 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
   const cur = t[lang] || t.RU;
 
   // --- Effects ---
-  useEffect(() => { loadLibrary(); }, []);
+  useEffect(() => { loadSavedTests(); }, []);
 
-  const loadLibrary = async () => {
+  const loadSavedTests = async () => {
     try {
-        const res = await api.generations.list(100); // Берем чуть больше
-        // ФИЛЬТРУЕМ ПО ТИПУ 'test'
-        const tests = (res.items || []).filter(item => item.type === 'test'); 
-        setLibrary(tests);
+      const res = await api.tests.list(100);
+      const tests = (res.items || []).filter(item => item.type === 'test');
+      setSavedTests(tests);
     } catch (e) { console.error(e); }
   };
 
   // --- Handlers ---
 
   const handleGenerate = async () => {
-    setLoading(true); setAccessCode(null); setGeneratedTest(null); setReport(null); setSelectedStudent(null);
+    setLoading(true); setAccessCode(null); setActiveTest(null); setTestResults(null); setSelectedStudent(null);
     try {
-        const vars = { lang, subject, topic, grade, details: "" };
-        const mergedCfg = { ...promptConfig, tests: { ...promptConfig?.tests, ...testUi } };
-        const promptText = buildPrompt("tests", vars, mergedCfg);
+      const vars = { lang, subject, topic, grade, details: "" };
+      const mergedCfg = { ...promptConfig, tests: { ...promptConfig?.tests, ...testUi } };
+      const promptText = buildPrompt("tests", vars, mergedCfg);
 
-        const gen = await api.generations.create({
-            type: 'test',
-            subject: subject || "Test", topic: topic, grade: grade, lang, prompt: promptText, status: "running"
-        });
+      const test = await api.tests.create({
+        type: 'test',
+        subject: subject || "Test", topic, grade, lang, prompt: promptText, status: "running"
+      });
 
-        let accumulatedText = "";
-        for await (const evt of api.generateStream({ prompt: promptText })) {
-            const delta = typeof evt === "string" ? evt : (evt?.type === "delta" ? evt.text : "");
-            if (delta) accumulatedText += delta;
-        }
+      let accumulatedText = "";
+      for await (const evt of api.generateStream({ prompt: promptText })) {
+        const delta = typeof evt === "string" ? evt : (evt?.type === "delta" ? evt.text : "");
+        if (delta) accumulatedText += delta;
+      }
 
-        await api.generations.update(gen.id, { status: "done", result_md: accumulatedText });
-        const newTest = { id: gen.id, result_md: accumulatedText, topic, subject, access_code: null };
-        setGeneratedTest(newTest);
-        loadLibrary();
+      await api.tests.update(test.id, { status: "done", result_md: accumulatedText });
+      setActiveTest({ id: test.id, result_md: accumulatedText, topic, subject, access_code: null });
+      loadSavedTests();
 
     } catch (e) { console.error(e); alert("Generation Error"); } finally { setLoading(false); }
   };
 
   const handleStartSession = async () => {
-     if (!generatedTest) return;
-     try {
-         const res = await fetch(`${API_URL}/quiz/start`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ id: generatedTest.id }),
-            credentials: 'include'
-         });
-         if (!res.ok) { alert("Server Error"); return; }
-         const data = await res.json();
-         const code = data.data?.code || data.code;
-         if (code) {
-             setAccessCode(code);
-             setGeneratedTest(prev => ({...prev, access_code: code}));
-         }
-     } catch(e) { console.error(e); alert("Network Error"); }
+    if (!activeTest) return;
+    try {
+      const res = await fetch(`${API_URL}/quiz/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: activeTest.id }),
+        credentials: 'include'
+      });
+      if (!res.ok) { alert("Server Error"); return; }
+      const data = await res.json();
+      const code = data.data?.code || data.code;
+      if (code) {
+        setAccessCode(code);
+        setActiveTest(prev => ({ ...prev, access_code: code }));
+      }
+    } catch (e) { console.error(e); alert("Network Error"); }
   };
 
-  const fetchReport = async (forceId = null) => {
-    const idToFetch = forceId || generatedTest?.id;
-    if (!idToFetch) return;
+  const handleSelectOldTest = async (item) => {
+    setActiveTest(null);
+    setAccessCode(null);
+    setTestResults(null);
+    setSelectedStudent(null);
+    setShowLibrary(false);
     try {
-        const res = await fetch(`${API_URL}/quiz/${idToFetch}/report`, {credentials: 'include'});
-        const data = await res.json();
-        setReport(data.data?.results || data.results || []);
+      const res = await api.tests.get(item.id);
+      const full = res?.item || res;
+      setActiveTest({ id: full.id, result_md: full.result_md, topic: full.topic, subject: full.subject, access_code: full.access_code });
+      if (full.access_code) {
+        setAccessCode(full.access_code);
+        fetchTestResults(full.id);
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchTestResults = async (forceId = null) => {
+    const id = forceId || activeTest?.id;
+    if (!id) return;
+    try {
+      const res = await fetch(`${API_URL}/quiz/${id}/report`, { credentials: 'include' });
+      const data = await res.json();
+      setTestResults(data.data?.results || data.results || []);
     } catch (e) { console.error(e); }
   };
 
@@ -130,36 +145,34 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
 
   // --- Copy Logic ---
   const copyToClipboard = () => {
-      if (!aiReport) return;
-      navigator.clipboard.writeText(aiReport);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    if (!report) return;
+    navigator.clipboard.writeText(report);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   // --- AI Report Logic ---
-  const generateAiReport = async (type) => {
-    if (!report || report.length === 0) {
-        alert("No data available. Students must finish the test first.");
-        return;
-
+  const generateReport = async (type) => {
+    if (!testResults || testResults.length === 0) {
+      alert("No data available. Students must finish the test first.");
+      return;
     }
     setIsGeneratingReport(true);
-    setAiReport(""); 
+    setReport("");
 
     try {
-        // Prepare summary data
-        const summaryData = report.map(r => ({
-            name: r.student_name,
-            score: `${r.score}/${r.total_questions}`,
-            time: `${r.duration_seconds}s`,
-            status: type === 'coach' 
-                ? (r.percentage === 100 ? "Perfect" : `Mistakes: ${getDetailsSafe(r).filter(d => !d.isCorrect).length}`) 
-                : `${r.percentage}%`
-        }));
+      const summaryData = testResults.map(r => ({
+        name: r.student_name,
+        score: `${r.score}/${r.total_questions}`,
+        time: `${r.duration_seconds}s`,
+        status: type === 'coach'
+          ? (r.percentage === 100 ? "Perfect" : `Mistakes: ${getDetailsSafe(r).filter(d => !d.isCorrect).length}`)
+          : `${r.percentage}%`
+      }));
 
-        const contextInfo = lessonContext 
-            ? `Lesson Context: "${lessonContext}".` 
-            : `Topic: ${topic}.`;
+      const contextInfo = reportContext
+        ? `Lesson Context: "${reportContext}".`
+        : `Topic: ${topic}.`;
 
         let promptSystem = "";
         
@@ -198,18 +211,18 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
             `;
         }
 
-        let accumulatedText = "";
-        for await (const evt of api.generateStream({ prompt: promptSystem })) {
-            const delta = typeof evt === "string" ? evt : (evt?.type === "delta" ? evt.text : "");
-            if (delta) accumulatedText += delta;
-            setAiReport(accumulatedText);
-        }
+      let accumulatedText = "";
+      for await (const evt of api.generateStream({ prompt: promptSystem })) {
+        const delta = typeof evt === "string" ? evt : (evt?.type === "delta" ? evt.text : "");
+        if (delta) accumulatedText += delta;
+        setReport(accumulatedText);
+      }
 
     } catch (e) {
-        console.error(e);
-        alert("AI Report Generation Failed");
+      console.error(e);
+      alert("Report generation failed");
     } finally {
-        setIsGeneratingReport(false);
+      setIsGeneratingReport(false);
     }
 
     grantAchievement({ title: "Аналитик", reward: 300, key: "ai_report_master" });
@@ -261,14 +274,14 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
         </div>
 
         {/* Active Test View */}
-        {generatedTest && (
+        {activeTest && (
            <div className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[40px] border-[4px] border-blue-600 shadow-[8px_8px_0_0_#2563eb] animate-in fade-in slide-in-from-bottom-4">
               <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4 border-b border-gray-100 dark:border-zinc-800 pb-6">
                  <div>
-                    <h2 className="text-2xl font-black text-blue-600 uppercase mb-1">{generatedTest.subject || "Quiz"}</h2>
-                    <p className="font-bold opacity-60 text-sm">Topic: {generatedTest.topic}</p>
+                    <h2 className="text-2xl font-black text-blue-600 uppercase mb-1">{activeTest.subject || "Test"}</h2>
+                    <p className="font-bold opacity-60 text-sm">Topic: {activeTest.topic}</p>
                  </div>
-                 
+
                  {!accessCode ? (
                     <button onClick={handleStartSession} className="w-full md:w-auto py-3 px-6 bg-green-500 text-white rounded-xl font-black uppercase shadow-[4px_4px_0_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition border-2 border-black flex items-center justify-center gap-2">
                        <Play size={20} /> Start Session
@@ -286,19 +299,19 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
                     <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-700">
                         <h3 className="font-black text-sm uppercase flex items-center gap-2">📊 Class Performance</h3>
                         <div className="flex gap-2">
-                             <button 
+                             <button
                                 onClick={() => setShowReportModal(true)}
                                 className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg text-xs font-black uppercase shadow-sm hover:bg-purple-700 transition"
                             >
                                 <Sparkles size={14} /> AI Report
                             </button>
-                            <button onClick={() => fetchReport()} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 rounded-lg text-xs font-black uppercase shadow-sm hover:text-blue-600 transition">
+                            <button onClick={() => fetchTestResults()} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 rounded-lg text-xs font-black uppercase shadow-sm hover:text-blue-600 transition">
                                 <RefreshCw size={12}/>
                             </button>
                         </div>
                     </div>
 
-                    {report && report.length > 0 ? (
+                    {testResults && testResults.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
@@ -310,7 +323,7 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="font-bold text-sm">
-                                    {report.map((r, i) => (
+                                    {testResults.map((r, i) => (
                                         <tr key={i} className="border-b border-gray-100 dark:border-zinc-700/50 last:border-0 hover:bg-white dark:hover:bg-zinc-800 transition">
                                             <td className="p-3">{r.student_name}</td>
                                             <td className="p-3">
@@ -337,7 +350,7 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
               </div>
 
               <div className="bg-slate-50 dark:bg-zinc-800 p-6 rounded-2xl border-2 border-slate-200 dark:border-zinc-700 max-h-60 overflow-y-auto prose dark:prose-invert text-sm">
-                 <ReactMarkdown>{generatedTest.result_md}</ReactMarkdown>
+                 <ReactMarkdown>{activeTest.result_md}</ReactMarkdown>
               </div>
            </div>
         )}
@@ -350,8 +363,8 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
             <button onClick={() => setShowLibrary(false)} className="md:hidden"><X size={20}/></button>
         </div>
         <div className="space-y-3 overflow-y-auto h-[calc(100vh-100px)]">
-            {library.map((item) => (
-                <div key={item.id} onClick={() => handleSelectOldTest(item)} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] ${generatedTest?.id === item.id ? 'bg-blue-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-blue-300'}`}>
+            {savedTests.map((item) => (
+                <div key={item.id} onClick={() => handleSelectOldTest(item)} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] ${activeTest?.id === item.id ? 'bg-blue-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-blue-300'}`}>
                     <h4 className="font-black text-sm mb-1 line-clamp-2">{item.topic}</h4>
                     <div className="flex justify-between items-center opacity-70 text-[10px] font-bold uppercase tracking-wider">
                         <span>{item.subject}</span>
@@ -368,15 +381,15 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
             <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-[30px] p-6 md:p-8 shadow-2xl border-[4px] border-purple-600 max-h-[90vh] overflow-y-auto flex flex-col">
                 <h3 className="text-2xl font-black uppercase mb-2 flex-shrink-0">Report Generator</h3>
                 
-                {!aiReport ? (
+                {!report ? (
                     <div className="grid grid-cols-1 gap-4 overflow-y-auto">
                         <div>
                             <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
                                 Lesson Context (Optional)
                             </label>
-                            <textarea 
-                                value={lessonContext}
-                                onChange={(e) => setLessonContext(e.target.value)}
+                            <textarea
+                                value={reportContext}
+                                onChange={(e) => setReportContext(e.target.value)}
                                 placeholder="E.g., We studied discriminants..."
                                 className="w-full p-3 bg-slate-50 dark:bg-zinc-800 rounded-xl border-2 border-gray-200 dark:border-zinc-700 focus:border-purple-500 outline-none text-sm font-bold min-h-[80px]"
                             />
@@ -384,12 +397,12 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
 
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Report Type:</p>
 
-                        <button onClick={() => generateAiReport('coach')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-left transition group">
+                        <button onClick={() => generateReport('coach')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-left transition group">
                             <div className="font-black text-lg uppercase group-hover:text-purple-600">🎓 Teacher's Note</div>
                             <p className="text-xs text-gray-400 font-bold mt-1">Mistakes analysis, teaching tips, context.</p>
                         </button>
 
-                        <button onClick={() => generateAiReport('judge')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left transition group">
+                        <button onClick={() => generateReport('judge')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left transition group">
                             <div className="font-black text-lg uppercase group-hover:text-blue-600">⚖️ Official Report</div>
                             <p className="text-xs text-gray-400 font-bold mt-1">Dry facts, statistics, table for administration.</p>
                         </button>
@@ -400,10 +413,10 @@ const CreateTestPage = ({ lang, promptConfig, ...accessProps }) => {
                 ) : (
                     <div className="animate-in zoom-in flex flex-col h-full">
                         <div className="bg-slate-50 dark:bg-zinc-950 p-4 rounded-xl flex-1 overflow-y-auto prose dark:prose-invert text-sm border-2 border-purple-100 mb-4">
-                            <ReactMarkdown>{aiReport}</ReactMarkdown>
+                            <ReactMarkdown>{report}</ReactMarkdown>
                         </div>
                         <div className="flex gap-4 flex-shrink-0">
-                            <button onClick={() => setAiReport("")} className="flex-1 py-3 font-bold text-gray-400 hover:text-black">Back</button>
+                            <button onClick={() => setReport("")} className="flex-1 py-3 font-bold text-gray-400 hover:text-black">Back</button>
                             {/* Copy Button */}
                             <button 
                                 onClick={copyToClipboard} 

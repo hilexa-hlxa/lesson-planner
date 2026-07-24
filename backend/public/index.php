@@ -99,12 +99,23 @@ try {
       } while ($isTaken);
 
       $stmt = $db->pdo()->prepare("
-          UPDATE generations 
-          SET access_code = :code, 
-              code_expires_at = NOW() + INTERVAL '4 hours' 
+          UPDATE generations
+          SET access_code = :code,
+              code_expires_at = NOW() + INTERVAL '4 hours'
           WHERE id = :id AND user_id = :uid
       ");
       $stmt->execute([':code' => $code, ':id' => $id, ':uid' => $u['id']]);
+
+      // Optionally link to a class
+      $classId = isset($body['class_id']) ? (int)$body['class_id'] : 0;
+      if ($classId > 0) {
+          $chk = $db->pdo()->prepare("SELECT 1 FROM classes WHERE id = :cid AND teacher_id = :uid");
+          $chk->execute([':cid' => $classId, ':uid' => $u['id']]);
+          if ($chk->fetchColumn()) {
+              $lnk = $db->pdo()->prepare("UPDATE generations SET class_id = :cid WHERE id = :id AND user_id = :uid");
+              $lnk->execute([':cid' => $classId, ':id' => $id, ':uid' => $u['id']]);
+          }
+      }
 
       Response::ok(['code' => $code]);
   }
@@ -145,19 +156,23 @@ try {
 
       $percentage = (int)round(($score / $total) * 100);
 
+      $submitter = $auth->currentUser();
+      $studentId = ($submitter && $submitter['role'] === 'student') ? (int)$submitter['id'] : null;
+
       $stmt = $db->pdo()->prepare("
-          INSERT INTO quiz_results 
-            (quiz_id, student_name, score, total_questions, percentage, duration_seconds, answers_json)
-          VALUES 
-            (:qid, :name, :score, :total, :perc, :dur, :details)
+          INSERT INTO quiz_results
+            (quiz_id, student_name, student_id, score, total_questions, percentage, duration_seconds, answers_json)
+          VALUES
+            (:qid, :name, :sid, :score, :total, :perc, :dur, :details)
       ");
       $stmt->execute([
-          ':qid'   => $quizId, 
-          ':name'  => $name,
-          ':score' => $score, 
-          ':total' => $total, 
-          ':perc'  => $percentage,
-          ':dur'   => $duration,
+          ':qid'     => $quizId,
+          ':name'    => $name,
+          ':sid'     => $studentId,
+          ':score'   => $score,
+          ':total'   => $total,
+          ':perc'    => $percentage,
+          ':dur'     => $duration,
           ':details' => $details
       ]);
 
@@ -523,6 +538,244 @@ try {
 
     \App\DocxExport::exportKmj($row);
     exit;
+  }
+
+  // ======================================================
+  // Class Roster Routes
+  // ======================================================
+
+  // Helper: generate unique 6-char alphanumeric code
+  function generateClassCode(\PDO $pdo): string {
+    $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    $attempts = 0;
+    do {
+      $code = '';
+      for ($i = 0; $i < 6; $i++) $code .= $chars[random_int(0, strlen($chars) - 1)];
+      $s = $pdo->prepare("SELECT 1 FROM classes WHERE join_code = :c");
+      $s->execute([':c' => $code]);
+      if ($attempts++ > 20) throw new \RuntimeException('Could not generate unique code');
+    } while ($s->fetchColumn());
+    return $code;
+  }
+
+  // POST /api/classes — create class (teacher)
+  if ($method === 'POST' && $path === '/api/classes') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    $name = trim((string)($body['name'] ?? ''));
+    if ($name === '') Response::error('Name required', 400);
+    if (mb_strlen($name) > 100) Response::error('Name too long', 400);
+
+    $code = generateClassCode($db->pdo());
+
+    $stmt = $db->pdo()->prepare("
+      INSERT INTO classes (teacher_id, name, join_code)
+      VALUES (:uid, :name, :code)
+      RETURNING id, name, join_code, created_at
+    ");
+    $stmt->execute([':uid' => $u['id'], ':name' => $name, ':code' => $code]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    Response::ok(['class' => $row]);
+  }
+
+  // GET /api/classes — list classes
+  if ($method === 'GET' && $path === '/api/classes') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    if ($u['role'] === 'teacher') {
+      $stmt = $db->pdo()->prepare("
+        SELECT c.id, c.name, c.join_code, c.created_at,
+               COUNT(CASE WHEN cm.status = 'approved' THEN 1 END) AS member_count,
+               COUNT(CASE WHEN cm.status = 'pending'  THEN 1 END) AS pending_count
+        FROM classes c
+        LEFT JOIN class_members cm ON cm.class_id = c.id
+        WHERE c.teacher_id = :uid
+        GROUP BY c.id
+        ORDER BY c.created_at DESC
+      ");
+      $stmt->execute([':uid' => $u['id']]);
+    } else {
+      $stmt = $db->pdo()->prepare("
+        SELECT c.id, c.name, c.created_at, cm.status,
+               u.display_name AS teacher_name
+        FROM class_members cm
+        JOIN classes c ON c.id = cm.class_id
+        JOIN users u ON u.id = c.teacher_id
+        WHERE cm.student_id = :uid
+        ORDER BY cm.applied_at DESC
+      ");
+      $stmt->execute([':uid' => $u['id']]);
+    }
+
+    Response::ok(['items' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+  }
+
+  // POST /api/classes/join — student applies to join
+  if ($method === 'POST' && $path === '/api/classes/join') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $code = strtoupper(trim((string)($body['join_code'] ?? '')));
+    if (strlen($code) !== 6) Response::error('Invalid code format', 400);
+
+    $stmt = $db->pdo()->prepare("SELECT id, name FROM classes WHERE join_code = :code LIMIT 1");
+    $stmt->execute([':code' => $code]);
+    $class = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if (!$class) Response::error('Class not found', 404);
+
+    // Check existing membership
+    $chk = $db->pdo()->prepare("SELECT status FROM class_members WHERE class_id = :cid AND student_id = :sid");
+    $chk->execute([':cid' => $class['id'], ':sid' => $u['id']]);
+    $existing = $chk->fetchColumn();
+    if ($existing === 'approved') Response::ok(['status' => 'already_member', 'class_name' => $class['name']]);
+    if ($existing === 'pending')  Response::ok(['status' => 'already_applied', 'class_name' => $class['name']]);
+
+    $ins = $db->pdo()->prepare("
+      INSERT INTO class_members (class_id, student_id, status) VALUES (:cid, :sid, 'pending')
+    ");
+    $ins->execute([':cid' => $class['id'], ':sid' => $u['id']]);
+
+    Response::ok(['status' => 'pending', 'class_name' => $class['name']]);
+  }
+
+  // GET /api/classes/:id/members
+  if ($method === 'GET' && preg_match('#^/api/classes/(\d+)/members$#', $path, $m)) {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    $classId = (int)$m[1];
+
+    $own = $db->pdo()->prepare("SELECT 1 FROM classes WHERE id = :cid AND teacher_id = :uid");
+    $own->execute([':cid' => $classId, ':uid' => $u['id']]);
+    if (!$own->fetchColumn()) Response::error('Access denied', 403);
+
+    $status = $_GET['status'] ?? 'all';
+    $sql = "
+      SELECT cm.id, cm.student_id, cm.status, cm.applied_at, cm.approved_at,
+             u.display_name, u.first_name, u.last_name, u.email, u.phone
+      FROM class_members cm
+      JOIN users u ON u.id = cm.student_id
+      WHERE cm.class_id = :cid
+    ";
+    if (in_array($status, ['pending', 'approved'], true)) $sql .= " AND cm.status = :status";
+    $sql .= " ORDER BY cm.applied_at ASC";
+
+    $stmt = $db->pdo()->prepare($sql);
+    $params = [':cid' => $classId];
+    if (in_array($status, ['pending', 'approved'], true)) $params[':status'] = $status;
+    $stmt->execute($params);
+
+    Response::ok(['members' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+  }
+
+  // POST /api/classes/:id/members/:studentId/approve
+  if ($method === 'POST' && preg_match('#^/api/classes/(\d+)/members/(\d+)/approve$#', $path, $m)) {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    $classId = (int)$m[1]; $studentId = (int)$m[2];
+
+    $own = $db->pdo()->prepare("SELECT 1 FROM classes WHERE id = :cid AND teacher_id = :uid");
+    $own->execute([':cid' => $classId, ':uid' => $u['id']]);
+    if (!$own->fetchColumn()) Response::error('Access denied', 403);
+
+    $stmt = $db->pdo()->prepare("
+      UPDATE class_members SET status = 'approved', approved_at = NOW()
+      WHERE class_id = :cid AND student_id = :sid
+    ");
+    $stmt->execute([':cid' => $classId, ':sid' => $studentId]);
+
+    Response::ok(['ok' => true]);
+  }
+
+  // POST /api/classes/:id/approve-all
+  if ($method === 'POST' && preg_match('#^/api/classes/(\d+)/approve-all$#', $path, $m)) {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    $classId = (int)$m[1];
+
+    $own = $db->pdo()->prepare("SELECT 1 FROM classes WHERE id = :cid AND teacher_id = :uid");
+    $own->execute([':cid' => $classId, ':uid' => $u['id']]);
+    if (!$own->fetchColumn()) Response::error('Access denied', 403);
+
+    $stmt = $db->pdo()->prepare("
+      UPDATE class_members SET status = 'approved', approved_at = NOW()
+      WHERE class_id = :cid AND status = 'pending'
+    ");
+    $stmt->execute([':cid' => $classId]);
+
+    Response::ok(['ok' => true, 'approved_count' => $stmt->rowCount()]);
+  }
+
+  // DELETE /api/classes/:id/members/:studentId — kick student
+  if ($method === 'DELETE' && preg_match('#^/api/classes/(\d+)/members/(\d+)$#', $path, $m)) {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    $classId = (int)$m[1]; $studentId = (int)$m[2];
+
+    $own = $db->pdo()->prepare("SELECT 1 FROM classes WHERE id = :cid AND teacher_id = :uid");
+    $own->execute([':cid' => $classId, ':uid' => $u['id']]);
+    if (!$own->fetchColumn()) Response::error('Access denied', 403);
+
+    $stmt = $db->pdo()->prepare("DELETE FROM class_members WHERE class_id = :cid AND student_id = :sid");
+    $stmt->execute([':cid' => $classId, ':sid' => $studentId]);
+
+    Response::ok(['ok' => true]);
+  }
+
+  // GET /api/classes/:id/quizzes
+  if ($method === 'GET' && preg_match('#^/api/classes/(\d+)/quizzes$#', $path, $m)) {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    $classId = (int)$m[1];
+
+    $own = $db->pdo()->prepare("SELECT 1 FROM classes WHERE id = :cid AND teacher_id = :uid");
+    $own->execute([':cid' => $classId, ':uid' => $u['id']]);
+    if (!$own->fetchColumn()) Response::error('Access denied', 403);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT g.id, g.topic, g.subject, g.created_at,
+             COUNT(qr.id) AS result_count,
+             COALESCE(AVG(qr.percentage), 0) AS avg_score
+      FROM generations g
+      LEFT JOIN quiz_results qr ON qr.quiz_id = g.id
+      WHERE g.class_id = :cid AND g.user_id = :uid
+      GROUP BY g.id
+      ORDER BY g.created_at DESC
+    ");
+    $stmt->execute([':cid' => $classId, ':uid' => $u['id']]);
+
+    Response::ok(['quizzes' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+  }
+
+  // GET /api/classes/:id — get single class
+  if ($method === 'GET' && preg_match('#^/api/classes/(\d+)$#', $path, $m)) {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    $classId = (int)$m[1];
+
+    $stmt = $db->pdo()->prepare("
+      SELECT c.id, c.name, c.join_code, c.created_at, c.teacher_id,
+             u.display_name AS teacher_name
+      FROM classes c JOIN users u ON u.id = c.teacher_id
+      WHERE c.id = :cid
+      LIMIT 1
+    ");
+    $stmt->execute([':cid' => $classId]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if (!$row) Response::error('Not found', 404);
+
+    // Access: teacher owns it, or student is approved member
+    if ($u['role'] === 'teacher' && (int)$row['teacher_id'] !== $u['id']) Response::error('Access denied', 403);
+    if ($u['role'] === 'student') {
+      $chk = $db->pdo()->prepare("SELECT 1 FROM class_members WHERE class_id = :cid AND student_id = :sid AND status = 'approved'");
+      $chk->execute([':cid' => $classId, ':sid' => $u['id']]);
+      if (!$chk->fetchColumn()) Response::error('Access denied', 403);
+    }
+
+    Response::ok(['class' => $row]);
   }
 
   error_log("404 Not Found: {$path}");

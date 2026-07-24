@@ -146,7 +146,15 @@ const api = {
     }
   },
 
-  generations: {
+  lessonPlans: {
+    list: (limit = 50) => request(`/generations?limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
+    get: (id) => request(`/generations/${id}`, { method: 'GET' }),
+    create: (payload) => request(`/generations`, { method: 'POST', body: JSON.stringify(payload) }),
+    update: (id, payload) => request(`/generations/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+    remove: async (id) => { await request(`/generations/${id}`, { method: 'DELETE' }); return true; }
+  },
+
+  tests: {
     list: (limit = 50) => request(`/generations?limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
     get: (id) => request(`/generations/${id}`, { method: 'GET' }),
     create: (payload) => request(`/generations`, { method: 'POST', body: JSON.stringify(payload) }),
@@ -157,7 +165,19 @@ const api = {
   promptConfig: {
     get: () => request('/prompt-config', { method: 'GET' }),
     set: (config) => request('/prompt-config', { method: 'PUT', body: JSON.stringify({ config }) }),
-  }
+  },
+
+  classes: {
+    list: () => request('/classes', { method: 'GET' }),
+    create: (name) => request('/classes', { method: 'POST', body: JSON.stringify({ name }) }),
+    get: (id) => request(`/classes/${id}`, { method: 'GET' }),
+    join: (join_code) => request('/classes/join', { method: 'POST', body: JSON.stringify({ join_code }) }),
+    getMembers: (id, status) => request(`/classes/${id}/members${status ? `?status=${status}` : ''}`, { method: 'GET' }),
+    approve: (classId, studentId) => request(`/classes/${classId}/members/${studentId}/approve`, { method: 'POST' }),
+    approveAll: (classId) => request(`/classes/${classId}/approve-all`, { method: 'POST' }),
+    kick: (classId, studentId) => request(`/classes/${classId}/members/${studentId}`, { method: 'DELETE' }),
+    getQuizzes: (id) => request(`/classes/${id}/quizzes`, { method: 'GET' }),
+  },
 };
 
 export default api;

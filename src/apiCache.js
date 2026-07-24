@@ -51,6 +51,6 @@ export function meCached(ttlMs = 60_000) {
   return cached("me", () => api.me(), {}, ttlMs);
 }
 
-export function generationsListCached(limit = 50, ttlMs = 60_000) {
-  return cached("generations.list", () => api.generations.list(limit), { limit }, ttlMs);
+export function lessonPlansListCached(limit = 50, ttlMs = 60_000) {
+  return cached("lessonPlans.list", () => api.lessonPlans.list(limit), { limit }, ttlMs);
 }

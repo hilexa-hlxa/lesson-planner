@@ -9,8 +9,8 @@ services:
     environment:
       # Прокидываем те самые переменные Supabase
       - DB_DSN=pgsql:host=aws-1-ap-south-1.pooler.supabase.com;port=6543;dbname=postgres;sslmode=require
-      - DB_USER=postgres.ywoxdnpfbdgessvhyabz
-      - DB_PASS=!@Asdzxc4017
+      - DB_USER=postgres.xsywwaufdasfbmrhkguu
+      - DB_PASS=lessonplanner123A1
     volumes:
       - ./backend:/var/www/html # Синхронизация: меняешь код на ноуте — он меняется в докере
 

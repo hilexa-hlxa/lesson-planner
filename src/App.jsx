@@ -17,6 +17,9 @@ import StudentJoinPage from "./pages/StudentJoinPage";
 import CreateTestPage from "./pages/CreateTestPage";
 import ToolsPage from './pages/ToolsPage';
 import GamesPage from './pages/GamesPage';
+import ClassesPage from './pages/ClassesPage';
+import ClassDetailPage from './pages/ClassDetailPage';
+import StudentClassesPage from './pages/StudentClassesPage';
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
 import ClassControlBar from './components/ClassControlBar';
@@ -105,7 +108,7 @@ export default function App() {
   // --- 4. ПРОПСЫ ---
   const accessProps = { grantAchievement, dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, lang, setLang, user, setUser };
 
-  const activeRoutes = ["/hub", "/tools", "/games"];
+  const activeRoutes = ["/hub", "/tools", "/games", "/classes"];
   const isWidgetVisible = user && user.role === 'teacher' && activeRoutes.includes(location.pathname);
 
   return (
@@ -133,6 +136,9 @@ export default function App() {
           <Route path="/profile" element={<Page><Protected authReady={authReady} user={user}><ProfilePage {...accessProps} /></Protected></Page>} />
           <Route path="/prompts" element={<Page><Protected authReady={authReady} user={user}><PromptsPage {...accessProps} promptConfig={promptConfig} setPromptConfig={setPromptConfig} /></Protected></Page>} />
           <Route path="/join-test" element={<Page><Protected authReady={authReady} user={user}><StudentJoinPage {...accessProps} /></Protected></Page>} />
+          <Route path="/classes" element={<Page><Protected authReady={authReady} user={user}><ClassesPage {...accessProps} /></Protected></Page>} />
+          <Route path="/classes/:id" element={<Page><Protected authReady={authReady} user={user}><ClassDetailPage {...accessProps} /></Protected></Page>} />
+          <Route path="/my-classes" element={<Page><Protected authReady={authReady} user={user}><StudentClassesPage {...accessProps} /></Protected></Page>} />
           <Route path="/play" element={<QuizPlayer {...accessProps} />} />
           <Route path="*" element={<Navigate to={user ? "/hub" : "/"} replace />} />
         </Routes>

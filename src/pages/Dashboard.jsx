@@ -5,7 +5,7 @@ import { MoreVertical, Edit3, Trash2, History, Sparkles } from "lucide-react";
 
 import api from "../api";
 // Оставили только ОДИН чистый импорт
-import { cached, invalidatePrefixRaw, generationsListCached } from "../apiCache";
+import { cached, invalidatePrefixRaw, lessonPlansListCached } from "../apiCache";
 import Header from "../components/Header";
 import { I18N as t, tr } from "../lib/i18n";
 import { buildPrompt } from "../lib/prompt";
@@ -67,9 +67,9 @@ export default function Dashboard({
   const accessProps = { dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, lang, setLang, user, setUser };
 
   const [form, setForm] = useState({ subject: "", topic: "", details: "", grade: "5", duration: "45" });
-  const [res, setRes] = useState("");
+  const [planOutput, setPlanOutput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState([]);
+  const [lessonPlans, setLessonPlans] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   
@@ -81,22 +81,20 @@ export default function Dashboard({
 
   // 1. ПРОВЕРКА НА АЧИВКУ (Архитектор)
   useEffect(() => {
-    if (history.length >= 10) {
+    if (lessonPlans.length >= 10) {
       grantAchievement({ title: "Архитектор знаний", reward: 250, key: "architect_10" });
     }
-  }, [history.length]);
+  }, [lessonPlans.length]);
 
   // 2. ЕДИНАЯ ЗАГРУЗКА ИСТОРИИ (С КЭШЕМ)
   useEffect(() => {
     let alive = true;
 
-    const loadHistory = async () => {
+    const loadLessonPlans = async () => {
       try {
-        // Используем обертку из apiCache
-        const data = await generationsListCached(50, 60000);
+        const data = await lessonPlansListCached(50, 60000);
         if (!alive) return;
 
-        // Нормализуем items (на случай если обертка вернет не {items:[]})
         const items =
           Array.isArray(data) ? data :
           Array.isArray(data?.items) ? data.items :
@@ -104,7 +102,7 @@ export default function Dashboard({
           Array.isArray(data?.data) ? data.data :
           [];
 
-        const sidebar = items
+        const plans = items
           .filter(x => {
             if (!x) return false;
             const type = String(x.type || "").trim().toLowerCase();
@@ -112,7 +110,7 @@ export default function Dashboard({
               type === "lesson_plan" ||
               type === "lessonplan" ||
               type === "lesson-plan" ||
-              type === "" // на старых записях могло не быть type
+              type === ""
             );
           })
           .map((x) => ({
@@ -121,20 +119,19 @@ export default function Dashboard({
             status: x.status,
           }));
 
-        setHistory(sidebar);
+        setLessonPlans(plans);
 
-        // если активного id еще нет — выбираем первый элемент
         setActiveId((prev) => {
           if (prev) return prev;
-          return sidebar[0]?.id ?? null;
+          return plans[0]?.id ?? null;
         });
 
       } catch (e) {
-        console.error("Ошибка загрузки истории:", e);
+        console.error("Failed to load lesson plans:", e);
       }
     };
 
-    loadHistory();
+    loadLessonPlans();
     return () => { alive = false; };
   }, []);
 
@@ -144,11 +141,11 @@ export default function Dashboard({
     let alive = true;
     (async () => {
       try {
-        const r = await cached("generations.get", () => api.generations.get(activeId), { id: activeId }, 1800000);
+        const r = await cached("lessonPlans.get", () => api.lessonPlans.get(activeId), { id: activeId }, 1800000);
         if (!alive) return;
         const it = r?.item || r;
         const next = it?.result_md || it?.result || null;
-        if (next) setRes(next);
+        if (next) setPlanOutput(next);
       } catch (e) { console.error(e); }
     })();
     return () => { alive = false; };
@@ -157,62 +154,56 @@ export default function Dashboard({
   // 4. ГЕНЕРАЦИЯ
   const handleGenerate = async () => {
     if (!form.subject || !form.topic) return;
-    setLoading(true); setRes("");
+    setLoading(true); setPlanOutput("");
     const vars = { lang, ...form };
     const promptText = buildPrompt("lesson_plan", vars, promptConfig);
-    
+
     try {
-      const gen = await api.generations.create({ 
-        type: 'lesson_plan', ...form, lang, prompt: promptText, status: "running" 
+      const plan = await api.lessonPlans.create({
+        type: 'lesson_plan', ...form, lang, prompt: promptText, status: "running"
       });
-      
-      setActiveId(gen.id);
-      activeIdRef.current = gen.id;
-      setHistory(prev => [{ id: gen.id, name: form.topic, status: "running" }, ...prev]);
+
+      setActiveId(plan.id);
+      activeIdRef.current = plan.id;
+      setLessonPlans(prev => [{ id: plan.id, name: form.topic, status: "running" }, ...prev]);
       
       let jsonText = "";
       for await (const delta of api.generateStream({ prompt: promptText })) {
         jsonText += (typeof delta === "string" ? delta : delta?.text || "");
-
-        // опционально: показывать "превью" пока идёт стрим
-        // можешь показывать jsonText как есть или попытаться парсить "на лету" — не надо, опасно
       }
 
-      // parse
       let payload = null;
       try { payload = JSON.parse(extractJsonObject(jsonText)); } catch (e) { payload = null; }
 
       if (!payload) {
-        setRes("Error: invalid JSON from model");
+        setPlanOutput("Error: invalid JSON from model");
         return;
       }
 
       const md = payloadToMarkdown(payload, lang);
-      setRes(md);
+      setPlanOutput(md);
 
-      await api.generations.update(gen.id, {
+      await api.lessonPlans.update(plan.id, {
         status: "done",
-        result_md: md,         // UI-friendly
-        result_json: payload,  // для DOCX/Go
+        result_md: md,
+        result_json: payload,
         result_json_version: 1,
         template_key: "kmj_kazakh_january"
       });
 
-      // СБРОС КЭША СПИСКА (чтобы новый план появился везде)
-      invalidatePrefixRaw("generations.list"); 
+      invalidatePrefixRaw("lessonPlans.list");
 
-      // АЧИВКИ
       const hour = new Date().getHours();
       if (hour >= 0 && hour < 5) {
         grantAchievement({ title: "Ночная смена", reward: 100, key: "night_owl" });
       }
 
-      if (history.length === 9) {
+      if (lessonPlans.length === 9) {
         grantAchievement({ title: "Архитектор знаний", reward: 250, key: "architect_10" });
       }
 
-    } catch (e) { 
-      setRes("Error."); 
+    } catch (e) {
+      setPlanOutput("Error.");
     } finally { 
       setLoading(false); 
     }
@@ -228,7 +219,7 @@ export default function Dashboard({
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="text-[10px] font-black opacity-30 mb-8 tracking-[0.3em] uppercase">{cur.h}</div>
           <div className="space-y-4">
-            {history.map((item) => (
+            {lessonPlans.map((item) => (
               <div
                 key={item.id}
                 onClick={() => {
@@ -294,9 +285,9 @@ export default function Dashboard({
                               setActiveMenu(null);
 
                               try {
-                                await api.generations.remove(item.id);
+                                await api.lessonPlans.remove(item.id);
 
-                                setHistory((prev) => {
+                                setLessonPlans((prev) => {
                                   const next = prev.filter((x) => x.id !== item.id);
 
                                   setActiveId((prevActive) => {
@@ -307,7 +298,7 @@ export default function Dashboard({
                                   return next;
                                 });
 
-                                invalidatePrefixRaw("generations.list");
+                                invalidatePrefixRaw("lessonPlans.list");
                               } catch (err) {
                                 console.error("delete failed", err);
                               }
@@ -349,7 +340,7 @@ export default function Dashboard({
           </div>
         </section>
         <section className="flex-1 p-14 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">
-          <div className="prose dark:prose-invert max-w-none leading-relaxed italic"><ReactMarkdown>{res || "..."}</ReactMarkdown></div>
+          <div className="prose dark:prose-invert max-w-none leading-relaxed italic"><ReactMarkdown>{planOutput || "..."}</ReactMarkdown></div>
           <button
             disabled={!activeId}
             onClick={() => {
