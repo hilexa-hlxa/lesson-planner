@@ -226,44 +226,47 @@ function MonitorFrame({ label, children }) {
 
 function LessonPlanMockup() {
   return (
-    <div className="flex h-full gap-1 p-1.5 text-white">
-      {/* Sidebar */}
-      <div className="w-16 bg-white/5 rounded-xl p-1.5 flex flex-col gap-1 shrink-0">
-        <div className="text-[5px] font-black text-white/30 tracking-widest mb-1">ИСТОРИЯ</div>
-        {['Дроби', 'Периметр', 'Площадь', 'Углы', 'Тригон.'].map((item, i) => (
-          <div key={i} className={`text-[6px] font-bold px-1.5 py-1 rounded-lg ${i === 0 ? 'bg-blue-600' : 'text-white/40 hover:bg-white/5'}`}>{item}</div>
+    <div className="flex h-full gap-1.5 p-1.5 text-white bg-[#f0f4f8]">
+      {/* Sidebar — aside.w-80, glassmorphism cards */}
+      <div className="w-[52px] bg-white/60 rounded-[12px] p-1.5 flex flex-col gap-1 shrink-0 shadow-sm">
+        <div className="text-[4.5px] font-black text-black/25 tracking-[0.2em] mb-1.5">ИСТОРИЯ</div>
+        {[['Дроби', true], ['Периметр', false], ['Площадь', false], ['Углы', false], ['Тригон.', false]].map(([item, active], i) => (
+          <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1 rounded-[6px] transition-all ${active ? 'bg-blue-600 text-white ring-2 ring-blue-400/30' : 'text-black/40 bg-white/50'}`}>{item}</div>
         ))}
       </div>
-      {/* Form */}
-      <div className="w-[88px] bg-white/5 rounded-xl p-1.5 flex flex-col gap-1 shrink-0">
-        <div className="text-[5px] font-black text-blue-400 tracking-widest mb-0.5">PLANNER</div>
+
+      {/* Form panel — section.w-[480px], rounded-[40px] */}
+      <div className="w-[86px] bg-white/70 rounded-[12px] p-2 flex flex-col gap-1 shrink-0 shadow-sm">
+        <div className="text-[5px] font-black text-blue-600 tracking-widest mb-1">PLANNER</div>
         <div className="flex gap-1">
-          <div className="flex-1 bg-white/10 rounded text-[5px] text-white/50 px-1 py-0.5 text-center">5 Кл</div>
-          <div className="flex-1 bg-white/10 rounded text-[5px] text-white/50 px-1 py-0.5 text-center">45 Мин</div>
+          <div className="flex-1 bg-slate-100 rounded-[4px] text-[5px] text-black/50 px-1 py-0.5 text-center font-bold">5 Класс</div>
+          <div className="flex-1 bg-slate-100 rounded-[4px] text-[5px] text-black/50 px-1 py-0.5 text-center font-bold">45 Мин</div>
         </div>
-        <div className="bg-white/10 rounded text-[5px] text-white/50 px-1 py-1">Математика</div>
-        <div className="bg-white/10 rounded text-[5px] text-white/50 px-1 py-1">Дроби и части</div>
-        <div className="bg-white/10 rounded text-[5px] text-white/30 px-1 py-3">Детали урока...</div>
-        <div className="bg-blue-600 rounded-lg text-[5px] text-white font-black text-center py-1.5 mt-auto border border-black/30">СОЗДАТЬ ПЛАН</div>
+        <div className="bg-slate-100 rounded-[4px] text-[5px] text-black/50 px-1.5 py-1 font-bold">Математика</div>
+        <div className="bg-slate-100 rounded-[4px] text-[5px] text-black/50 px-1.5 py-1 font-bold">Дроби и части</div>
+        <div className="bg-slate-100 rounded-[4px] text-[5px] text-black/30 px-1.5 py-4 font-bold">Детали...</div>
+        <div className="bg-blue-600 rounded-[6px] text-[4.5px] text-white font-black text-center py-1.5 mt-auto border-[1.5px] border-black shadow-[2px_2px_0_0_#000]">СОЗДАТЬ ПЛАН</div>
       </div>
-      {/* Output */}
-      <div className="flex-1 bg-white/5 rounded-xl p-1.5 overflow-hidden flex flex-col gap-0.5 min-w-0">
-        <div className="text-[6px] font-black text-white/80 mb-0.5">## План урока</div>
-        <div className="text-[5px] text-white/50"><span className="text-white/30">**Предмет:**</span> Математика</div>
-        <div className="text-[5px] text-white/50"><span className="text-white/30">**Тема:**</span> Дроби и части</div>
-        <div className="w-full h-px bg-white/10 my-0.5" />
-        <div className="text-[5.5px] font-black text-white/70">## Цели урока</div>
+
+      {/* Output — section.flex-1, rounded-[40px], italic prose */}
+      <div className="flex-1 bg-white/90 rounded-[12px] p-2 flex flex-col gap-0.5 min-w-0 shadow-sm overflow-hidden">
+        <div className="text-[5.5px] font-black italic text-black/70 mb-0.5">## План урока</div>
+        <div className="text-[4.5px] text-black/50 italic"><span className="font-black">Предмет:</span> Математика</div>
+        <div className="text-[4.5px] text-black/50 italic"><span className="font-black">Тема:</span> Дроби и части</div>
+        <div className="w-full h-px bg-black/10 my-0.5" />
+        <div className="text-[5px] font-black italic text-black/60">## Цели урока</div>
         {['- Познакомить учеников с понятием дроби', '- Развить навыки вычислений', '- Применить знания на практике'].map((l, i) => (
-          <div key={i} className="text-[4.5px] text-white/40 leading-relaxed">{l}</div>
+          <div key={i} className="text-[4px] text-black/40 italic">{l}</div>
         ))}
-        <div className="w-full h-px bg-white/10 my-0.5" />
-        <div className="text-[5.5px] font-black text-white/70">## Ход урока</div>
-        <div className="bg-white/5 rounded p-1">
-          {[['Введение', '5 мин', 'bg-blue-500/20'], ['Объяснение', '15 мин', 'bg-purple-500/20'], ['Практика', '20 мин', 'bg-green-500/20'], ['Итог', '5 мин', 'bg-orange-500/20']].map(([s, ti, cl], i) => (
-            <div key={i} className={`flex justify-between text-[4.5px] text-white/50 py-0.5 px-1 rounded mb-0.5 ${cl}`}>
-              <span>{s}</span><span className="text-white/30">{ti}</span>
-            </div>
-          ))}
+        <div className="w-full h-px bg-black/10 my-0.5" />
+        <div className="text-[5px] font-black italic text-black/60">## Ход урока</div>
+        {[['Введение', '5 мин'], ['Объяснение', '15 мин'], ['Практика', '20 мин']].map(([s, ti], i) => (
+          <div key={i} className="flex justify-between text-[4px] text-black/40 italic py-px border-b border-black/5">
+            <span>{s}</span><span>{ti}</span>
+          </div>
+        ))}
+        <div className="mt-auto pt-1 border-t border-black/10">
+          <div className="bg-black/8 rounded-[4px] text-[4.5px] text-black/40 font-black text-center py-1">ВЫГРУЗИТЬ DOCX</div>
         </div>
       </div>
     </div>
@@ -272,65 +275,71 @@ function LessonPlanMockup() {
 
 function TestMockup() {
   return (
-    <div className="flex h-full gap-1 p-1.5 text-white">
-      {/* Form + session */}
-      <div className="w-24 bg-white/5 rounded-xl p-1.5 flex flex-col gap-1 shrink-0">
-        <div className="text-[5px] font-black text-purple-400 tracking-widest mb-0.5">AI TESTS</div>
-        <div className="bg-white/10 rounded text-[5px] text-white/50 px-1 py-1">Математика</div>
-        <div className="bg-white/10 rounded text-[5px] text-white/50 px-1 py-1">Дроби и части</div>
-        <div className="flex gap-1">
-          <div className="flex-1 bg-white/10 rounded text-[5px] text-white/40 px-1 py-0.5 text-center">5 кл</div>
-          <div className="flex-1 bg-white/10 rounded text-[5px] text-white/40 px-1 py-0.5 text-center">10 вопр</div>
-        </div>
-        <div className="bg-purple-600 rounded-lg text-[5px] text-white font-black text-center py-1.5 border border-black/30">СОЗДАТЬ ТЕСТ</div>
-        {/* Live session */}
-        <div className="mt-1 border border-yellow-400/40 rounded-lg p-1.5 bg-yellow-400/5">
-          <div className="text-[5px] text-yellow-400 font-black mb-1">◉ ЖИВАЯ СЕССИЯ</div>
-          <div className="text-[10px] font-mono font-black text-white tracking-[0.25em] text-center mb-1">4 2 7 9</div>
-          <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-[5px] text-white/50">6 онлайн</span>
+    <div className="flex h-full gap-1.5 p-1.5 bg-[#f8fafc]">
+      {/* Left column */}
+      <div className="flex-1 flex flex-col gap-1.5 min-w-0 overflow-hidden">
+
+        {/* Form panel */}
+        <div className="bg-white rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0_0_#000] p-1.5 shrink-0">
+          <div className="flex gap-1 mb-1">
+            <div className="flex-1 bg-slate-100 rounded-[3px] text-[4.5px] text-black/50 px-1 py-0.5 font-bold">Математика</div>
+            <div className="bg-slate-100 rounded-[3px] text-[4.5px] text-black/50 px-1 py-0.5 font-bold">5 кл</div>
           </div>
+          <div className="bg-slate-100 rounded-[3px] text-[4.5px] text-black/50 px-1 py-0.5 font-bold mb-1">Дроби и части</div>
+          <div className="bg-blue-600 rounded-[4px] text-[4.5px] text-white font-black text-center py-1 border border-black shadow-[1.5px_1.5px_0_0_#000]">СОЗДАТЬ ТЕСТ</div>
         </div>
-      </div>
-      {/* Test questions */}
-      <div className="flex-1 bg-white/5 rounded-xl p-1.5 flex flex-col gap-1 min-w-0">
-        <div className="flex items-center justify-between mb-0.5">
-          <span className="text-[5.5px] font-black text-white/70">Вопрос 2 / 10</span>
-          <div className="flex gap-0.5">
-            {Array(10).fill(0).map((_, i) => (
-              <div key={i} className={`w-1.5 h-1.5 rounded-sm ${i < 2 ? 'bg-blue-500' : 'bg-white/15'}`} />
-            ))}
-          </div>
-        </div>
-        <div className="text-[5.5px] text-white/80 font-bold mb-1 leading-relaxed">Что называется правильной дробью?</div>
-        {[
-          { t: 'A. Числитель меньше знаменателя', c: true },
-          { t: 'B. Числитель больше знаменателя', c: false },
-          { t: 'C. Числитель равен знаменателю', c: false },
-          { t: 'D. Знаменатель равен нулю', c: false },
-        ].map((o, i) => (
-          <div key={i} className={`text-[5px] px-1.5 py-1 rounded-lg border transition-all ${o.c ? 'border-green-500/60 bg-green-500/15 text-green-300' : 'border-white/10 text-white/40'}`}>
-            {o.t}
-          </div>
-        ))}
-        <div className="mt-auto pt-1 border-t border-white/10">
-          <div className="text-[4.5px] text-white/30 font-bold uppercase tracking-widest">Результаты</div>
-          {[['Айгерим К.', 85, true], ['Данияр М.', 60, false], ['Зарина Т.', 100, true]].map(([n, sc, ok]) => (
-            <div key={n} className="flex items-center justify-between py-0.5">
-              <span className="text-[4.5px] text-white/50">{n}</span>
-              <span className={`text-[5px] font-black ${ok ? 'text-green-400' : 'text-yellow-400'}`}>{sc}%</span>
+
+        {/* Active test card — blue border like real page */}
+        <div className="bg-white rounded-[8px] border-[1.5px] border-blue-600 shadow-[2px_2px_0_0_#2563eb] p-1.5 flex-1 overflow-hidden flex flex-col gap-1">
+          <div className="flex items-start justify-between pb-1 border-b border-gray-100">
+            <div>
+              <div className="text-[5.5px] font-black text-blue-600 uppercase">Математика</div>
+              <div className="text-[4px] text-black/40 font-bold">Дроби и части</div>
             </div>
-          ))}
+            {/* Access code — black box, yellow mono */}
+            <div className="bg-black rounded-[4px] px-1.5 py-0.5 text-center">
+              <div className="text-[3px] text-white/60 uppercase tracking-widest">Access Code</div>
+              <div className="text-[9px] font-black font-mono text-yellow-400 tracking-[0.2em] leading-none">4279</div>
+            </div>
+          </div>
+
+          {/* Class Performance */}
+          <div className="bg-slate-50 rounded-[5px] border border-slate-100 overflow-hidden flex-1">
+            <div className="flex items-center justify-between px-1.5 py-0.5 border-b border-gray-100">
+              <span className="text-[4px] font-black uppercase text-black">📊 Class Performance</span>
+              <span className="text-[3.5px] bg-purple-600 text-white font-black px-1 py-0.5 rounded">AI Report</span>
+            </div>
+            <table className="w-full">
+              <thead>
+                <tr className="text-[3.5px] font-black uppercase text-gray-400 border-b border-gray-100">
+                  <th className="px-1.5 py-0.5 text-left">Student</th>
+                  <th className="px-1.5 py-0.5 text-left">Score</th>
+                  <th className="px-1.5 py-0.5 text-left">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[['Айгерим К.', '9/10', 'green'], ['Данияр М.', '6/10', 'yellow'], ['Зарина Т.', '10/10', 'green']].map(([n, sc, color]) => (
+                  <tr key={n} className="border-t border-gray-50">
+                    <td className="px-1.5 py-0.5 text-[4px] font-bold text-black/70">{n}</td>
+                    <td className="px-1.5 py-0.5">
+                      <span className={`text-[3.5px] font-black text-white px-1 rounded ${color === 'green' ? 'bg-green-500' : 'bg-yellow-500'}`}>{sc}</span>
+                    </td>
+                    <td className="px-1.5 py-0.5 text-[3.5px] text-gray-400">42s</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      {/* History */}
-      <div className="w-14 bg-white/5 rounded-xl p-1.5 shrink-0">
-        <div className="text-[5px] font-black text-white/30 tracking-widest mb-1">ИСТОРИЯ</div>
-        {[['Дроби', '95%'], ['Периметр', '78%'], ['Площадь', '82%'], ['Углы', '71%']].map(([topic, sc]) => (
-          <div key={topic} className="py-1 border-b border-white/5">
-            <div className="text-[5px] text-white/50 font-bold">{topic}</div>
-            <div className="text-[4.5px] text-white/25">avg {sc}</div>
+
+      {/* Right sidebar — History */}
+      <div className="w-[50px] bg-white/80 rounded-[8px] p-1.5 shrink-0 overflow-hidden border border-gray-100">
+        <div className="text-[4px] font-black text-black/25 tracking-widest mb-1">ИСТОРИЯ</div>
+        {[['Дроби', '07/25', true], ['Периметр', '07/23', false], ['Площадь', '07/20', false], ['Углы', '07/18', false]].map(([topic, date, active]) => (
+          <div key={topic} className={`p-1 rounded-[4px] mb-0.5 border-2 ${active ? 'bg-blue-600 border-black text-white' : 'bg-white border-gray-100 text-black/60'}`}>
+            <div className="text-[4.5px] font-black truncate">{topic}</div>
+            <div className="text-[3.5px] opacity-60">{date}</div>
           </div>
         ))}
       </div>
@@ -445,7 +454,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="bg-slate-900 dark:bg-zinc-950 text-white border-y-[4px] border-black dark:border-white/20">
+      <section className="bg-zinc-950 text-white border-t-[4px] border-black">
         <div className="max-w-6xl mx-auto px-8 py-28">
           <motion.div {...fadeUp(0)} className="mb-16">
             <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-4">{c.howTitle}</h2>
@@ -455,7 +464,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
             {c.steps.map((s, i) => (
               <motion.div key={i} {...fadeUp(i * 0.12)}
                 className="relative p-10 rounded-[32px] border-[4px] border-white/20 hover:border-white/60 transition-colors">
-                <div className="text-7xl font-black text-white/10 mb-4 leading-none">{s.n}</div>
+                <div className="text-7xl font-black text-white/60 mb-4 leading-none">{s.n}</div>
                 <h3 className="text-2xl font-black uppercase tracking-tight mb-3">{s.title}</h3>
                 <p className="text-zinc-400 font-bold leading-relaxed">{s.desc}</p>
                 {i < c.steps.length - 1 && (
@@ -468,7 +477,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
       </section>
 
       {/* ── MOCKUPS ── */}
-      <section className="bg-zinc-950 border-b-[4px] border-black dark:border-white/20">
+      <section className="bg-zinc-950 border-t border-t-white/15 border-b-[4px] border-b-black">
         <div className="max-w-6xl mx-auto px-8 py-24">
           <motion.div {...fadeUp(0)} className="mb-16">
             <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-4 text-white">{c.mockupTitle}</h2>
@@ -494,7 +503,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
         <motion.div {...fadeUp(0)}>
           <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-6">{c.statsTitle}</h2>
           <button onClick={handleCta}
-            className="inline-flex items-center gap-5 px-14 py-7 bg-black dark:bg-white text-white dark:text-black text-xl font-black uppercase tracking-widest rounded-[32px] border-[4px] border-black shadow-[10px_10px_0px_0px_rgba(37,99,235,1)] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all mt-10">
+            className="inline-flex items-center gap-5 px-14 py-7 bg-blue-600 text-white text-xl font-black uppercase tracking-widest rounded-[32px] border-[4px] border-black shadow-[10px_10px_0px_0px_#000] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all mt-10">
             {c.bottomCta} <ChevronRight size={26} strokeWidth={3} />
           </button>
           <p className="mt-5 text-sm text-slate-400 font-bold">{c.bottomCtaSub}</p>

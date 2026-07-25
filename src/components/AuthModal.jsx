@@ -27,7 +27,7 @@ export default function AuthModal({
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [role, setRole] = useState("teacher"); // default
+  const [role, setRole] = useState("");
 
   const closeModal = () => {
     setFirstName("");
@@ -49,6 +49,10 @@ export default function AuthModal({
       if (mode === "signup") {
         if (!firstName.trim() || !lastName.trim()) {
           alert("Enter first and last name");
+          return;
+        }
+        if (!role) {
+          alert("Select a role");
           return;
         }
 
@@ -87,32 +91,20 @@ export default function AuthModal({
 
         <div className="space-y-6">
           {mode === "signup" && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder={authT.firstName}
-                  className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
-                />
-                <input
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder={authT.lastName}
-                  className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
-                />
-              </div>
-
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500 cursor-pointer"
-              >
-                <option value="teacher">{authT.roleTeacher}</option>
-                <option value="parent">{authT.roleParent}</option>
-                <option value="student">{authT.roleStudent}</option>
-              </select>
-            </>
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder={authT.firstName}
+                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
+              />
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder={authT.lastName}
+                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
+              />
+            </div>
           )}
 
           <input
@@ -138,6 +130,19 @@ export default function AuthModal({
               {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
+
+          {mode === "signup" && (
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500 cursor-pointer appearance-none"
+            >
+              <option value="" disabled>{lang === "KZ" ? "Сіз кімсіз?" : lang === "EN" ? "Who are you?" : "Кто вы?"}</option>
+              <option value="teacher">{authT.roleTeacher}</option>
+              <option value="parent">{authT.roleParent}</option>
+              <option value="student">{authT.roleStudent}</option>
+            </select>
+          )}
 
           <button
             disabled={!isFormValid || loading}
