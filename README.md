@@ -1,89 +1,114 @@
-# 🎓 LESSON.LAB v1.0.5
+# LESSON.LAB
 
-Professional next-generation automated lesson planning system built with **React 18**, **Vite (Rolldown)**, and **Tailwind CSS 4**. Designed for educators who value speed, efficiency, and bold design.
+AI-платформа для казахстанских учителей. Генерация планов уроков, живые тесты, автоматические итоги урока, классы с учениками и игры прямо на уроке.
 
-## 🚀 Key Features
-* **Trilingual Support**: Full localization for Kazakh, Russian, and English.
-* **Smart Navigation (Hub)**: Dedicated zones for Teachers (Tools) and Students (Games).
-* **GitHub-Style Profile**: Personalized user dashboard with editable profile data (John Doe @Guest).
-* **Dynamic Auth**: Secure login/registration system with real-time validation and password hashing.
-* **Smart History**: Manage, edit, and store your generated plans with an intuitive UI.
-* **Dark/Light Mode**: High-contrast brutalist design that respects your eyes.
-* **AI-Powered**: Ready to integrate with Google Gemini for instant plan generation.
-* **Fullstack Ready**: Backend API integration with PHP 8.1 and Supabase (PostgreSQL).
-* **History**: History of generetions is stored in Database.
-* **Cache**: All Api requests now cached.
+---
 
-## Tech Stack
-- Framework: React 18
-- Bundler: Rolldown/Vite (Experimental high-speed build)
-- Styling: Tailwind CSS v4.0
-- Icons: Lucide React
-- Markdown: ReactMarkdown
-- postreSQL via supabase
-- PHP 8.5 version
-- Composer https://getcomposer.org/download/
-  
+## Возможности
 
-## Getting Started
+**Для учителей**
+- Генерация планов уроков (цели, ход, дифференциация, ДЗ) — экспорт в DOCX
+- Создание AI-тестов и запуск живых сессий с 4-значным кодом доступа
+- Итог урока — AI пишет отчёт после теста (что прошли, ДЗ, кому нужна помощь)
+- Управление классами: создание, join code, одобрение учеников, история тестов
+- Вордл для класса — учитель задаёт слово, делится кодом, ученики играют
 
-1. Clone and Install (..\lesson-planner-main):
+**Для учеников**
+- Вступление в класс по коду, прохождение тестов
+- История своих тестов с разбором ошибок
+- Вордл в соло-режиме (случайное слово из банка)
 
-   ```bash
-   git clone https://github.com/hilexa-hlxa/lesson-planner.git
-   cd lesson-planner
-   npm install
+**Общее**
+- Три языка: RU / KZ / EN (переключается в один клик)
+- Тёмный/светлый режим
+- Система достижений и монет
 
-2. Composer install (..\lesson-planner-main\backend):
-   ```bash
-   composer install
+---
 
-   composer require phpoffice/phpword
+## Стек
 
-3. Launch Development Servers
-Run Frontend (..\lesson-planner-main):
+| Слой | Технология |
+|---|---|
+| Frontend | React 18 + Vite (Rolldown) |
+| Styling | Tailwind CSS v4 |
+| Backend | PHP 8.5 |
+| Database | PostgreSQL (Supabase) |
+| AI | Google Gemini 2.0 Flash (streaming) |
+| Auth | Session-based (cookie) |
+| Export | PHPWord (DOCX) |
 
-    ```bash
+---
 
-    npm run dev
+## Запуск
 
-4. Run backend (..\lesson-planner-main):
-    ```bash
-    
-    php -S 127.0.0.1:8000 -t backend/public
-    
-5. Docker Deployment (Alternative)
-Bash
-    ```bash
-    
-    docker-compose up -d --build
+### С Docker (рекомендуется)
 
-    
-🏗 Project Structure
-/src — React components (Landing, Hub, Dashboard, Profile).
+```bash
+# Запустить бэкенд
+docker compose up backend
 
-/backend — PHP API and Supabase logic.
+# Запустить фронтенд (отдельный терминал)
+npm run dev
+```
 
-api.js — Axios-like fetch wrapper for backend communication.
+Открыть: `http://localhost:5173`
 
-📄 License
-© 2026 LESSON.LAB / CORE_SYSTEM. Created for professional educators.
+### Вручную
 
+```bash
+# Frontend
+npm install
+npm run dev
 
+# Backend
+cd backend
+composer install
+php -S 127.0.0.1:8000 -t public
+```
 
+---
 
+## Переменные окружения
 
+Бэкенд читает `backend/config.local.php` (не в репозитории):
 
+```php
+<?php
+return [
+  'db' => [
+    'dsn'  => 'pgsql:host=...;port=6543;dbname=postgres;sslmode=require',
+    'user' => 'postgres.xxxxx',
+    'pass' => 'your_password',
+  ],
+];
+```
 
+---
 
+## База данных
 
+Миграции находятся в `backend/extras/migrations/`. Запускать по порядку через Supabase SQL Editor:
 
+- `000_initial_schema.sql` — основные таблицы
+- `001_classes.sql` — классы и участники
+- `002_word_bank.sql` — банк слов для Вордл
 
+---
 
+## Структура проекта
 
+```
+src/
+  pages/       — страницы (Dashboard, CreateTestPage, ClassesPage, WordlePage, ...)
+  components/  — переиспользуемые компоненты (Header, QuizPlayer, WordleGame, ...)
+  lib/         — утилиты (i18n, prompt builder, quiz parser)
+  api.js       — все запросы к бэкенду
+backend/
+  public/      — точка входа (index.php, все роуты)
+  src/         — DB, Auth, GenerateStream, DocxExport
+  extras/      — миграции
+```
 
+---
 
-
-
-
-
+© 2026 LESSON.LAB — All rights reserved
