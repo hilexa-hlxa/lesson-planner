@@ -10,11 +10,11 @@ import { invalidate, invalidatePrefixRaw } from "../apiCache";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { I18N as t } from "../lib/i18n";
 
-export default function Header({ 
-  lang, setLang, user, setUser, 
+export default function Header({
+  lang, setLang, user, setUser,
   dark, setDark, fontSize, setFontSize, highContrast, setHighContrast,
-  showProfile = true, isLanding = false,
-  setIsAuthOpen, setAuthMode, resetAuthFields 
+  showProfile = true, isLanding = false, announcementBar = false,
+  setIsAuthOpen, setAuthMode, resetAuthFields
 }) {
   const navigate = useNavigate();
   const location = useLocation(); // Следим за текущим путем
@@ -35,7 +35,7 @@ export default function Header({
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] flex justify-between items-center px-12 py-6 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/10 dark:border-white/10 transition-all">
+    <nav className={`fixed ${announcementBar ? 'top-9' : 'top-0'} left-0 right-0 z-[100] flex justify-between items-center px-12 py-6 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/10 dark:border-white/10 transition-all`}>
       
       {/* 1. ЛОГОТИП С УМНОЙ НАВИГАЦИЕЙ */}
       <div className="flex-1 flex justify-start">

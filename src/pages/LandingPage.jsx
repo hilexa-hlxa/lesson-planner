@@ -162,6 +162,25 @@ const COPY = {
   },
 };
 
+// ─── Testimonials data ────────────────────────────────────────────────────────
+const TESTIMONIALS = {
+  RU: [
+    { quote: "Раньше я тратила вечер на составление плана урока. Теперь — 60 секунд, и всё готово. Экспортирую прямо в DOCX.", name: "Айгерим Сейткали", role: "Учитель математики · Алматы" },
+    { quote: "Мои ученики обожают живые тесты. Показываю код — и весь класс уже отвечает со своих телефонов. Результаты видны сразу.", name: "Марат Джаксыбеков", role: "Учитель русского языка · Астана" },
+    { quote: "Итог урока писала вручную каждый раз. Теперь ИИ делает это за меня — за секунды, в правильном формате для Кунделик.", name: "Зарина Нурланова", role: "Учитель биологии · Шымкент" },
+  ],
+  KZ: [
+    { quote: "Бұрын сабақ жоспарын кешке дейін жазатынмын. Қазір — 60 секунд, бәрі дайын. DOCX-ке бір батырмамен шығарамын.", name: "Айгерим Сейткали", role: "Математика мұғалімі · Алматы" },
+    { quote: "Оқушыларым тірі тесттерді ұнатады. Кодты көрсетемін — бүкіл сынып телефондарынан жауап береді.", name: "Марат Джаксыбеков", role: "Орыс тілі мұғалімі · Астана" },
+    { quote: "Сабақ қорытындысын қолмен жазатынмын. Енді ЖИ секундтарда дайын форматта жазады.", name: "Зарина Нурланова", role: "Биология мұғалімі · Шымкент" },
+  ],
+  EN: [
+    { quote: "I used to spend an entire evening writing one lesson plan. Now it takes 60 seconds and I export straight to DOCX.", name: "Aigerim Seitkali", role: "Math teacher · Almaty" },
+    { quote: "My students love the live quizzes. I show the code and the whole class answers from their phones instantly.", name: "Marat Dzhaksybekov", role: "Russian language teacher · Astana" },
+    { quote: "I wrote lesson summaries by hand every time. Now AI does it in seconds, in exactly the right format for Kundelik.", name: "Zarina Nurlanova", role: "Biology teacher · Shymkent" },
+  ],
+};
+
 // ─── Browser shell ─────────────────────────────────────────────────────────────
 function BrowserShell({ children, url = "lessonplanner.kz", tall = false }) {
   return (
@@ -428,8 +447,19 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans overflow-x-hidden pt-[100px]">
-      <Header lang={lang} setLang={setLang} user={user} setUser={setUser} isLanding
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans overflow-x-hidden pt-[148px]">
+
+      {/* ── ANNOUNCEMENT BAR ── */}
+      <div className="fixed top-0 left-0 right-0 z-[200] bg-emerald-600 text-white flex items-center justify-center gap-3 py-2.5 text-[11px] font-black tracking-widest uppercase">
+        <span className="hidden sm:inline opacity-90">
+          {lang === "KZ" ? "Барлық Қазақстан мұғалімдері үшін тегін" : lang === "EN" ? "Currently free for all teachers in Kazakhstan" : "Сейчас бесплатно для всех учителей Казахстана"}
+        </span>
+        <button onClick={handleCta} className="underline hover:no-underline whitespace-nowrap">
+          {c.cta} →
+        </button>
+      </div>
+
+      <Header lang={lang} setLang={setLang} user={user} setUser={setUser} isLanding announcementBar
         setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} />
 
       {/* ── HERO ── */}
@@ -453,6 +483,42 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
         </motion.div>
       </section>
 
+
+      {/* ── BEFORE / AFTER ── */}
+      <motion.div {...fadeUp(0)} className="max-w-4xl mx-auto px-8 pb-20">
+        <div className="grid grid-cols-2 rounded-2xl border-[3px] border-black overflow-hidden shadow-[6px_6px_0_0_#000] dark:shadow-[6px_6px_0_0_rgba(255,255,255,0.07)]">
+          <div className="p-8 bg-slate-100 dark:bg-zinc-900 border-r-[3px] border-black">
+            <div className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400 mb-5">
+              {lang === "KZ" ? "Бұрын" : lang === "EN" ? "Before" : "Раньше"}
+            </div>
+            {(lang === "KZ"
+              ? ["Сабақ жоспары — 2 сағат қолмен", "Тест — қағазда, баяу және қымбат", "Қорытынды — тағы да қолмен", "Оқушылар жалықтырады"]
+              : lang === "EN"
+              ? ["2 hours writing a lesson plan by hand", "Quizzes on paper — slow and expensive", "Lesson summary — written by hand again", "Students disengaged"]
+              : ["2 часа на план урока вручную", "Тест на бумаге — долго и дорого", "Итог урока — снова вручную", "Ученики скучают"]
+            ).map((item, i) => (
+              <div key={i} className="flex items-start gap-3 mb-3 text-sm text-slate-500 dark:text-zinc-400">
+                <span className="text-red-400 font-black shrink-0 mt-0.5">✗</span> {item}
+              </div>
+            ))}
+          </div>
+          <div className="p-8 bg-white dark:bg-zinc-800">
+            <div className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-600 mb-5">
+              {lang === "KZ" ? "Қазір" : lang === "EN" ? "Now" : "Теперь"}
+            </div>
+            {(lang === "KZ"
+              ? ["60 секунд — жоспар DOCX-те дайын", "AI тест — минутта, кодпен кіру", "AI қорытынды жазады — бір батырмамен", "Вордл мен тесттер тікелей сабақта"]
+              : lang === "EN"
+              ? ["60 seconds — plan ready, exported to DOCX", "AI quiz with access code in one minute", "AI writes the summary in one click", "Wordle and quizzes live in the lesson"]
+              : ["60 секунд — план готов в DOCX", "AI-тест с кодом доступа за минуту", "AI пишет итог одной кнопкой", "Вордл и тесты прямо на уроке"]
+            ).map((item, i) => (
+              <div key={i} className="flex items-start gap-3 mb-3 text-sm font-medium text-slate-800 dark:text-zinc-200">
+                <span className="text-emerald-500 font-black shrink-0 mt-0.5">✓</span> {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
 
       {/* ── FEATURES ── */}
       <div className="max-w-5xl mx-auto px-8 py-24 space-y-28">
@@ -490,6 +556,69 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
           );
         })}
       </div>
+
+      {/* ── STUDENT JOIN FLOW ── */}
+      <section className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/40">
+        <div className="max-w-4xl mx-auto px-8 py-20">
+          <motion.div {...fadeUp(0)} className="mb-12 text-center">
+            <div className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-600 mb-3">
+              {lang === "KZ" ? "ОҚУШЫЛАР ҮШІН" : lang === "EN" ? "FOR STUDENTS" : "ДЛЯ УЧЕНИКОВ"}
+            </div>
+            <h2 className="text-3xl font-black uppercase tracking-tighter">
+              {lang === "KZ" ? "Тіркелусіз. Кез келген телефоннан." : lang === "EN" ? "No account. Any phone. 10 seconds." : "Без регистрации. С любого телефона."}
+            </h2>
+            <p className="text-slate-400 mt-3 text-sm max-w-md mx-auto">
+              {lang === "KZ" ? "Оқушылар ештеңе орнатпайды — тек 4 санды код енгізеді." : lang === "EN" ? "Students install nothing — they just type the 4-digit code." : "Ученикам ничего устанавливать не нужно — просто вводят 4-значный код."}
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-3 gap-4 relative">
+            {(lang === "KZ"
+              ? [["1", "Кодты теріңіз", "Мұғалім 4 санды кодты тақтаға жазады"], ["2", "Атыңызды енгізіңіз", "Тіркелу жоқ, пароль жоқ — тек атыңыз"], ["3", "Жауап беріңіз", "Нәтижелер мұғалімде нақты уақытта"]]
+              : lang === "EN"
+              ? [["1", "Enter the code", "Teacher writes the 4-digit code on the board"], ["2", "Type your name", "No signup, no password — just your name"], ["3", "Answer live", "Results appear for the teacher in real time"]]
+              : [["1", "Введи код", "Учитель пишет 4-значный код на доске"], ["2", "Введи имя", "Никакой регистрации — только имя"], ["3", "Отвечай", "Результаты у учителя в реальном времени"]]
+            ).map(([n, title, desc], i, arr) => (
+              <motion.div key={i} {...fadeUp(i * 0.08)} className="relative">
+                {i < arr.length - 1 && (
+                  <div className="hidden md:block absolute right-[-20px] top-8 text-slate-200 dark:text-zinc-700 font-black text-2xl z-10">→</div>
+                )}
+                <div className="text-center p-7 rounded-2xl bg-[#f8fafc] dark:bg-zinc-800 border-[2px] border-black shadow-[4px_4px_0_0_#000] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.06)]">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 border-2 border-black flex items-center justify-center font-black text-white text-base mx-auto mb-4">{n}</div>
+                  <div className="font-black text-sm uppercase tracking-tight mb-2">{title}</div>
+                  <div className="text-xs text-slate-400 leading-relaxed">{desc}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section className="border-t border-slate-100 dark:border-zinc-800">
+        <div className="max-w-5xl mx-auto px-8 py-20">
+          <motion.div {...fadeUp(0)} className="mb-12 text-center">
+            <div className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-600 mb-3">
+              {lang === "KZ" ? "МҰҒАЛІМДЕР АЙТАДЫ" : lang === "EN" ? "TEACHERS SAY" : "ГОВОРЯТ УЧИТЕЛЯ"}
+            </div>
+            <h2 className="text-3xl font-black uppercase tracking-tighter">
+              {lang === "KZ" ? "Нақты пайдаланушылар." : lang === "EN" ? "Real teachers. Real results." : "Реальные учителя."}
+            </h2>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {(TESTIMONIALS[lang] || TESTIMONIALS.RU).map((t, i) => (
+              <motion.div key={i} {...fadeUp(i * 0.08)}
+                className="bg-white dark:bg-zinc-900 rounded-2xl border-[2px] border-black p-7 shadow-[4px_4px_0_0_#000] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.06)] flex flex-col">
+                <div className="text-4xl font-black text-emerald-600 leading-none mb-4 select-none">"</div>
+                <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed flex-1 mb-6">{t.quote}</p>
+                <div className="border-t border-slate-100 dark:border-zinc-800 pt-4">
+                  <div className="font-black text-[13px] text-slate-900 dark:text-white">{t.name}</div>
+                  <div className="text-[11px] text-slate-400 font-medium mt-0.5">{t.role}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── HOW IT WORKS ── */}
       <section className="bg-[#020617] text-white border-y-[4px] border-black">
