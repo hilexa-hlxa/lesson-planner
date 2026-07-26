@@ -22,6 +22,7 @@ import ClassDetailPage from './pages/ClassDetailPage';
 import StudentClassesPage from './pages/StudentClassesPage';
 import WordlePage from './pages/WordlePage';
 import LessonSummaryPage from './pages/LessonSummaryPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
 import ClassControlBar from './components/ClassControlBar';
@@ -144,7 +145,7 @@ export default function App() {
           <Route path="/wordle" element={<Page><Protected authReady={authReady} user={user}><WordlePage {...accessProps} /></Protected></Page>} />
           <Route path="/lesson-summary" element={<Page><Protected authReady={authReady} user={user}><LessonSummaryPage {...accessProps} /></Protected></Page>} />
           <Route path="/play" element={<QuizPlayer {...accessProps} />} />
-          <Route path="*" element={<Navigate to={user ? "/hub" : "/"} replace />} />
+          <Route path="*" element={<Page><NotFoundPage user={user} /></Page>} />
         </Routes>
       </AnimatePresence>
 

@@ -218,6 +218,14 @@ export default function Dashboard({
       <aside className="w-80 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl rounded-[40px] border border-white/20 flex flex-col shadow-xl">
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="text-[10px] font-black opacity-30 mb-8 tracking-[0.3em] uppercase">{cur.h}</div>
+          {lessonPlans.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center opacity-50">
+              <History size={32} className="mb-3 opacity-40" />
+              <p className="text-sm font-bold leading-snug">
+                {lang === "KZ" ? "Жоспарлар жоқ әлі.\nАлғашқы сабақты жасаңыз." : lang === "EN" ? "No plans yet.\nCreate your first lesson." : "Планов пока нет.\nСоздайте первый урок."}
+              </p>
+            </div>
+          )}
           <div className="space-y-4">
             {lessonPlans.map((item) => (
               <div

@@ -524,7 +524,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
 
       {/* ── BEFORE / AFTER ── */}
       <motion.div {...fadeUp(0)} className="max-w-4xl mx-auto px-8 pb-20">
-        <div className="grid grid-cols-2 rounded-2xl border-[3px] border-black overflow-hidden shadow-[6px_6px_0_0_#000] dark:shadow-[6px_6px_0_0_rgba(255,255,255,0.07)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 rounded-2xl border-[3px] border-black overflow-hidden shadow-[6px_6px_0_0_#000] dark:shadow-[6px_6px_0_0_rgba(255,255,255,0.07)]">
           <div className="p-8 bg-slate-100 dark:bg-zinc-900 border-r-[3px] border-black">
             <div className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400 mb-5">
               {lang === "KZ" ? "Бұрын" : lang === "EN" ? "Before" : "Раньше"}
@@ -566,7 +566,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
           const flip = i % 2 !== 0;
           return (
             <motion.div key={i} {...fadeUp(0.05)}
-              className={`grid grid-cols-1 md:grid-cols-2 gap-12 items-center ${flip ? 'md:flex md:flex-row-reverse' : ''}`}>
+              className={`flex flex-col ${flip ? 'md:flex-row-reverse' : 'md:flex-row'} gap-12 items-center`}>
               {/* Text */}
               <div>
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-black tracking-widest uppercase mb-5 ${col.tag}`}>
@@ -609,7 +609,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
               {lang === "KZ" ? "Оқушылар ештеңе орнатпайды — тек 4 санды код енгізеді." : lang === "EN" ? "Students install nothing — they just type the 4-digit code." : "Ученикам ничего устанавливать не нужно — просто вводят 4-значный код."}
             </p>
           </motion.div>
-          <div className="grid grid-cols-3 gap-4 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative">
             {(lang === "KZ"
               ? [["1", "Кодты теріңіз", "Мұғалім 4 санды кодты тақтаға жазады"], ["2", "Атыңызды енгізіңіз", "Тіркелу жоқ, пароль жоқ — тек атыңыз"], ["3", "Жауап беріңіз", "Нәтижелер мұғалімде нақты уақытта"]]
               : lang === "EN"

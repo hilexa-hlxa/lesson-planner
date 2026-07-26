@@ -24,6 +24,7 @@ export default function AuthModal({
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -32,7 +33,8 @@ export default function AuthModal({
   const closeModal = () => {
     setFirstName("");
     setLastName("");
-    setRole("teacher");
+    setRole("");
+    setError("");
     onClose();
   };
 
@@ -45,14 +47,15 @@ export default function AuthModal({
   const handleSubmit = async () => {
     try {
       setLoading(true);
+      setError("");
 
       if (mode === "signup") {
         if (!firstName.trim() || !lastName.trim()) {
-          alert("Enter first and last name");
+          setError(lang === "KZ" ? "Аты-жөніңізді енгізіңіз" : lang === "EN" ? "Enter your first and last name" : "Введите имя и фамилию");
           return;
         }
         if (!role) {
-          alert("Select a role");
+          setError(lang === "KZ" ? "Рөлді таңдаңыз" : lang === "EN" ? "Please select a role" : "Выберите роль");
           return;
         }
 
@@ -72,7 +75,7 @@ export default function AuthModal({
       closeModal();
       navigate("/hub");
     } catch {
-      alert("Auth Error");
+      setError(lang === "KZ" ? "Қате email немесе құпия сөз" : lang === "EN" ? "Incorrect email or password" : "Неверный email или пароль");
     } finally {
       setLoading(false);
     }
@@ -156,8 +159,14 @@ export default function AuthModal({
             {loading ? "..." : (mode === "signup" ? (authT.signupEnter || authT.enter) : authT.enter)}
           </button>
 
+          {error && (
+            <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold text-center">
+              {error}
+            </div>
+          )}
+
           <button
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
+            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}
             className="text-[12px] uppercase font-bold opacity-40 hover:opacity-100 block mx-auto mt-6 tracking-widest text-slate-900 dark:text-white"
           >
             {mode === "login" ? authT.switchL : authT.switchS}
