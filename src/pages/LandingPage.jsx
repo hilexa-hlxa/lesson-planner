@@ -165,19 +165,19 @@ const COPY = {
 // ─── Testimonials data ────────────────────────────────────────────────────────
 const TESTIMONIALS = {
   RU: [
-    { quote: "Раньше я тратила вечер на составление плана урока. Теперь — 60 секунд, и всё готово. Экспортирую прямо в DOCX.", name: "Айгерим Сейткали", role: "Учитель математики · Алматы" },
-    { quote: "Мои ученики обожают живые тесты. Показываю код — и весь класс уже отвечает со своих телефонов. Результаты видны сразу.", name: "Марат Джаксыбеков", role: "Учитель русского языка · Астана" },
-    { quote: "Итог урока писала вручную каждый раз. Теперь ИИ делает это за меня — за секунды, в правильном формате для Кунделик.", name: "Зарина Нурланова", role: "Учитель биологии · Шымкент" },
+    { quote: "Каждое воскресенье я теряла 3–4 часа на планы на неделю. Теперь делаю это за обед в понедельник. Муж уже интересуется, куда пропали «учительские вечера».", name: "Айгерим Сейткали", role: "Учитель математики · Алматы" },
+    { quote: "Честно — ожидал, что ученики найдут способ списать. Но они соревновались, кто быстрее ответит. Про телефоны я вообще забыл.", name: "Марат Джаксыбеков", role: "Учитель русского языка · Астана" },
+    { quote: "Долго не решалась — думала, опять что-то сложное. Попробовала на одном уроке. Теперь сама объясняю коллегам, как это работает.", name: "Зарина Нурланова", role: "Учитель биологии · Шымкент" },
   ],
   KZ: [
-    { quote: "Бұрын сабақ жоспарын кешке дейін жазатынмын. Қазір — 60 секунд, бәрі дайын. DOCX-ке бір батырмамен шығарамын.", name: "Айгерим Сейткали", role: "Математика мұғалімі · Алматы" },
-    { quote: "Оқушыларым тірі тесттерді ұнатады. Кодты көрсетемін — бүкіл сынып телефондарынан жауап береді.", name: "Марат Джаксыбеков", role: "Орыс тілі мұғалімі · Астана" },
-    { quote: "Сабақ қорытындысын қолмен жазатынмын. Енді ЖИ секундтарда дайын форматта жазады.", name: "Зарина Нурланова", role: "Биология мұғалімі · Шымкент" },
+    { quote: "Жексенбі кешін жоспарлар жазумен өткізетінмін. Енді дүйсенбіде түскі үзілісте жасаймын. Ерім не болды деп таңданады.", name: "Айгерим Сейткали", role: "Математика мұғалімі · Алматы" },
+    { quote: "Оқушыларым кім жылдам жауап береді деп жарысты. Телефон туралы ойды ұмытып кеттім.", name: "Марат Джаксыбеков", role: "Орыс тілі мұғалімі · Астана" },
+    { quote: "Бір сабақта байқап көрдім деп едім. Енді өзім әріптестеріме түсіндіріп жүрмін.", name: "Зарина Нурланова", role: "Биология мұғалімі · Шымкент" },
   ],
   EN: [
-    { quote: "I used to spend an entire evening writing one lesson plan. Now it takes 60 seconds and I export straight to DOCX.", name: "Aigerim Seitkali", role: "Math teacher · Almaty" },
-    { quote: "My students love the live quizzes. I show the code and the whole class answers from their phones instantly.", name: "Marat Dzhaksybekov", role: "Russian language teacher · Astana" },
-    { quote: "I wrote lesson summaries by hand every time. Now AI does it in seconds, in exactly the right format for Kundelik.", name: "Zarina Nurlanova", role: "Biology teacher · Shymkent" },
+    { quote: "Every Sunday I lost 3–4 hours writing plans for the week. Now I do it on Monday during lunch. My husband keeps asking what happened to the 'teacher evenings'.", name: "Aigerim Seitkali", role: "Math teacher · Almaty" },
+    { quote: "Honestly expected the kids to find a way to cheat. But they were racing to answer faster. I completely forgot to worry about their phones.", name: "Marat Dzhaksybekov", role: "Russian language teacher · Astana" },
+    { quote: "I kept putting it off — figured it'd be another complicated thing. Tried it once. Now I'm the one explaining it to my colleagues.", name: "Zarina Nurlanova", role: "Biology teacher · Shymkent" },
   ],
 };
 
