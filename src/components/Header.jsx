@@ -41,7 +41,7 @@ export default function Header({
       <div className="flex-1 flex justify-start">
         <Link 
           to={logoTarget} 
-          className="font-black text-2xl italic tracking-tighter flex items-center gap-3 text-blue-600 hover:opacity-80 transition-opacity"
+          className="font-black text-2xl italic tracking-tighter flex items-center gap-3 text-emerald-600 hover:opacity-80 transition-opacity"
         >
           <GraduationCap size={32} /> LESSON.LAB
         </Link>
@@ -55,7 +55,7 @@ export default function Header({
               onClick={() => setDark(!dark)} 
               className="p-2 hover:bg-white dark:hover:bg-zinc-700 rounded-xl transition-all shadow-sm"
             >
-              {dark ? <Sun size={18} className="text-yellow-500" /> : <Moon size={18} className="text-blue-600" />}
+              {dark ? <Sun size={18} className="text-yellow-500" /> : <Moon size={18} className="text-emerald-600" />}
             </button>
             
             <button 
@@ -99,10 +99,10 @@ export default function Header({
           </div>
         ) : isLanding && (
           <div className="flex gap-4 items-center">
-            <button onClick={() => { resetAuthFields?.(); setAuthMode?.("login"); setIsAuthOpen(true); }} className="font-black uppercase text-[12px] tracking-widest hover:text-blue-600 transition">
+            <button onClick={() => { resetAuthFields?.(); setAuthMode?.("login"); setIsAuthOpen(true); }} className="font-black uppercase text-[12px] tracking-widest hover:text-emerald-600 transition">
               {curAuth.login}
             </button>
-            <button onClick={() => { resetAuthFields?.(); setAuthMode?.("signup"); setIsAuthOpen(true); }} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[11px] border-[3px] border-black shadow-[4px_4px_0px_0px_#000] active:shadow-none transition-all">
+            <button onClick={() => { resetAuthFields?.(); setAuthMode?.("signup"); setIsAuthOpen(true); }} className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase text-[11px] border-[3px] border-black shadow-[4px_4px_0px_0px_#000] active:shadow-none transition-all">
               {curAuth.signup}
             </button>
           </div>
