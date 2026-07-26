@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileQuestion, ClipboardList, Gamepad2, Plus, Minus, Check } from "lucide-react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -160,6 +160,25 @@ const COPY = {
     ctaB: "Get started — it's free",
     ctaBs: "Join teachers who are already saving hours every day.",
   },
+};
+
+// ─── Rotating hero headlines ──────────────────────────────────────────────────
+const HEADLINES = {
+  RU: [
+    { a: "Хватит тратить", b: "вечера на уроки." },
+    { a: "Планируй уроки", b: "быстрее с ИИ." },
+    { a: "Планы и тесты —", b: "не твоя забота." },
+  ],
+  KZ: [
+    { a: "Сабаққа дайындалуға", b: "кеш жұмсауды тоқтат." },
+    { a: "ЖИ-мен сабақты", b: "тиімдірек жоспарла." },
+    { a: "Жоспар мен тест —", b: "бір минутта дайын." },
+  ],
+  EN: [
+    { a: "Stop spending evenings", b: "on lesson plans." },
+    { a: "Plan lessons faster", b: "with AI." },
+    { a: "Plans and quizzes —", b: "not your problem." },
+  ],
 };
 
 // ─── Testimonials data ────────────────────────────────────────────────────────
@@ -432,6 +451,14 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
     resetAuthFields?.(); setAuthMode?.("signup"); setIsAuthOpen(true);
   };
 
+  const headlines = HEADLINES[lang] || HEADLINES.RU;
+  const [hlIdx, setHlIdx] = useState(0);
+  useEffect(() => { setHlIdx(0); }, [lang]);
+  useEffect(() => {
+    const t = setInterval(() => setHlIdx(i => (i + 1) % headlines.length), 3500);
+    return () => clearInterval(t);
+  }, [headlines.length]);
+
   const features = [
     { tag: c.f1tag, h: c.f1h, p: c.f1p, b: c.f1b, icon: BookOpen, color: "blue", Visual: PlanVisual },
     { tag: c.f2tag, h: c.f2h, p: c.f2p, b: c.f2b, icon: FileQuestion, color: "purple", Visual: TestVisual },
@@ -469,9 +496,20 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
             {c.badge}
           </div>
         </motion.div>
-        <motion.h1 {...fadeUp(0.07)} className="text-6xl md:text-7xl lg:text-[82px] font-black uppercase tracking-tighter leading-[0.95] mb-6">
-          {c.h1a}<br />{c.h1b}
-        </motion.h1>
+        <div className="h-[160px] md:h-[180px] lg:h-[210px] flex items-center justify-center mb-6">
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={hlIdx}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -24 }}
+              transition={{ duration: 0.38, ease: "easeInOut" }}
+              className="text-6xl md:text-7xl lg:text-[82px] font-black uppercase tracking-tighter leading-[0.95]"
+            >
+              {headlines[hlIdx].a}<br />{headlines[hlIdx].b}
+            </motion.h1>
+          </AnimatePresence>
+        </div>
         <motion.p {...fadeUp(0.13)} className="text-lg md:text-xl text-slate-500 dark:text-zinc-400 max-w-lg mx-auto mb-10 leading-relaxed">
           {c.sub}
         </motion.p>
