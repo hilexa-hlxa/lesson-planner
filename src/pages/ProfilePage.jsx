@@ -170,7 +170,7 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
             </div>
 
             {/* === ПРАВАЯ КОЛОНКА (Слайдер Ачивок) === */}
-            <div className="flex-1 w-full bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-xl shadow-[8px_8px_0px_0px_rgba(37,99,235,1)] p-8 overflow-hidden flex flex-col min-h-[400px]">
+            <div className="flex-1 w-full bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-xl shadow-[8px_8px_0px_0px_rgba(5,150,105,1)] p-8 overflow-hidden flex flex-col min-h-[400px]">
               
               <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100 dark:border-zinc-800">
                  <div className="flex items-center gap-3">

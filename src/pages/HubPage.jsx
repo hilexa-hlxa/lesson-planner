@@ -23,7 +23,7 @@ export default function HubPage({ lang, setLang, user, setUser, ...accessProps }
         <h1 className="text-7xl font-black uppercase mb-24 tracking-tighter italic">{cur.title}</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[500px]">
           
-          <Link to="/tools" className={`group relative p-12 bg-white dark:bg-zinc-900 rounded-[50px] border-[4px] border-black dark:border-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all flex flex-col justify-between text-left h-full ${isStudent ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+          <Link to="/tools" className={`group relative p-12 bg-white dark:bg-zinc-900 rounded-[50px] border-[4px] border-black dark:border-white shadow-[12px_12px_0px_0px_rgba(5,150,105,1)] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all flex flex-col justify-between text-left h-full ${isStudent ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
             <div>
               <div className="absolute -top-6 left-10 px-6 py-2 bg-emerald-600 text-white font-black text-xs rounded-full border-2 border-black uppercase tracking-widest">{isStudent ? hubT.denied : hubT.teacher}</div>
               <div className="flex justify-between items-start mb-10 text-emerald-600">
