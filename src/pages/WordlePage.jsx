@@ -150,7 +150,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
             {/* Solo */}
             <button onClick={() => { setMode('solo'); startSolo(); }}
               className="group p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-[4px] border-black dark:border-white shadow-[6px_6px_0_0_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-left flex items-start gap-5">
-              <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shrink-0">
                 <User size={28} />
               </div>
               <div>
@@ -247,7 +247,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
               <>
                 <div className="text-center mb-6">
                   <p className="font-bold text-sm text-slate-400 uppercase mb-2">{t.codeFor}</p>
-                  <div className="text-7xl font-mono font-black tracking-[0.3em] text-blue-600 mb-2">{hostCode}</div>
+                  <div className="text-7xl font-mono font-black tracking-[0.3em] text-emerald-600 mb-2">{hostCode}</div>
                   <p className="text-slate-500 font-bold text-sm">{t.share}</p>
                 </div>
                 <button

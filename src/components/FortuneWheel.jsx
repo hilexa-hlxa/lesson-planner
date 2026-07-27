@@ -142,7 +142,7 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
           <button
             onClick={spin}
             disabled={isSpinning}
-            className="absolute bottom-10 px-16 py-6 bg-blue-600 text-white font-black text-3xl uppercase rounded-full border-[5px] border-black shadow-[8px_8px_0_0_#000] hover:-translate-y-1 active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute bottom-10 px-16 py-6 bg-emerald-600 text-white font-black text-3xl uppercase rounded-full border-[5px] border-black shadow-[8px_8px_0_0_#000] hover:-translate-y-1 active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSpinning ? "..." : "SPIN!"}
           </button>
@@ -159,7 +159,7 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
               >
                 <div className="bg-white border-[8px] border-black p-12 rounded-[40px] text-center shadow-[30px_30px_0_0_#000] rotate-[-2deg]">
                   <div className="text-2xl font-black text-gray-400 uppercase mb-2">Winner</div>
-                  <div className="text-7xl font-black uppercase text-blue-600 tracking-tighter mb-4">{winner}</div>
+                  <div className="text-7xl font-black uppercase text-emerald-600 tracking-tighter mb-4">{winner}</div>
                   
                   {onWin && (
                       <div className="flex items-center justify-center gap-2 font-black text-green-600 bg-green-100 px-6 py-3 rounded-2xl border-2 border-green-500">

@@ -159,7 +159,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
           {/* Form */}
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             {quizId && (
-              <div className="mb-5 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 font-bold text-sm">
+              <div className="mb-5 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold text-sm">
                 {loadingTest ? t.loadingTest : t.testAttached}
               </div>
             )}
@@ -170,7 +170,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
                 <input
                   value={form.subject}
                   onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                  className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-blue-500/30"
+                  className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
                   placeholder="Математика"
                 />
               </div>
@@ -180,7 +180,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
                 <input
                   value={form.topic}
                   onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
-                  className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-blue-500/30"
+                  className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
                   placeholder="Дроби"
                 />
               </div>
@@ -191,7 +191,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                   rows={5}
-                  className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-blue-500/30 resize-none"
+                  className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30 resize-none"
                   placeholder={t.placeholderNotes}
                 />
               </div>

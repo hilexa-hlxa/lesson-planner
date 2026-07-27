@@ -118,8 +118,8 @@ button:hover {
 
 .btn-primary-large {
   @apply px-10 py-5 text-base font-bold uppercase tracking-widest rounded-2xl
-         bg-blue-600 text-white shadow-xl shadow-blue-500/20
-         transition-all duration-300 hover:scale-[1.02] hover:bg-blue-700 active:scale-95;
+         bg-emerald-600 text-white shadow-xl shadow-emerald-500/20
+         transition-all duration-300 hover:scale-[1.02] hover:bg-emerald-700 active:scale-95;
 }
 
 .glass-nav {

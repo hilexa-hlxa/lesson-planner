@@ -24,7 +24,7 @@ const ClassControlBar = () => {
       style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 9999 }}
     >
       <motion.div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border-[3px] border-black dark:border-white px-4 py-3 rounded-2xl shadow-[6px_6px_0_0_#000] dark:shadow-[6px_6px_0_0_rgba(255,255,255,0.15)]">
-        <Timer size={18} className="text-blue-600 shrink-0" />
+        <Timer size={18} className="text-emerald-600 shrink-0" />
         <span className="font-mono font-black text-xl tracking-wider min-w-[52px] dark:text-white">
           {mins}:{secs}
         </span>

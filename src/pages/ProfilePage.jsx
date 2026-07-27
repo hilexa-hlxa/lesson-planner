@@ -86,7 +86,7 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
 
   // Список ачивок
   const achievements = [
-    { id: 1, title: "Первый шаг", desc: "Регистрация", icon: <User size={20} />, unlocked: true, color: "bg-blue-500" },
+    { id: 1, title: "Первый шаг", desc: "Регистрация", icon: <User size={20} />, unlocked: true, color: "bg-emerald-500" },
     { id: 2, title: "Богач", desc: "500 монет", icon: <Coins size={20} />, unlocked: coins >= 500, color: "bg-yellow-500" },
     { id: 3, title: "В профиле", desc: "Посетить профиль", icon: <Award size={20} />, unlocked: true, color: "bg-purple-500" },
     { id: 4, title: "Мастер", desc: "Сделать 5 тестов", icon: <Trophy size={20} />, unlocked: false, color: "bg-red-500" },
@@ -143,7 +143,7 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
                         <Mail size={14} /> {profileData.username}
                     </p>
                     <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2 border-black mt-2
-                        ${user.role === 'teacher' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                        ${user.role === 'teacher' ? 'bg-emerald-100 text-emerald-700' : 'bg-green-100 text-green-700'}`}>
                         {user.role === 'teacher' ? 'Учитель' : 'Ученик'}
                     </div>
                 </div>
@@ -174,7 +174,7 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
               
               <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100 dark:border-zinc-800">
                  <div className="flex items-center gap-3">
-                    <Trophy size={32} className="text-blue-600" />
+                    <Trophy size={32} className="text-emerald-600" />
                     <h2 className="text-3xl font-black uppercase tracking-tighter italic">Достижения</h2>
                  </div>
                  

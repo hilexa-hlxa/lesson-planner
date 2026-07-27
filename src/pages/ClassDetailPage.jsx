@@ -184,7 +184,7 @@ export default function ClassDetailPage({ lang, setLang, user, setUser, ...acces
                     <div className="flex items-center gap-6 text-right shrink-0">
                       <div className="text-slate-500 text-sm font-bold">{q.result_count} {t.results}</div>
                       <div className="flex items-center gap-1 font-black text-lg">
-                        <BarChart2 size={16} className="text-blue-500" />
+                        <BarChart2 size={16} className="text-emerald-500" />
                         {Math.round(q.avg_score)}%
                       </div>
                     </div>

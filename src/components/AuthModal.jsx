@@ -99,13 +99,13 @@ export default function AuthModal({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder={authT.firstName}
-                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
+                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
               />
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder={authT.lastName}
-                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
+                className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
               />
             </div>
           )}
@@ -116,7 +116,7 @@ export default function AuthModal({
             onBlur={() => setShowEmailError(true)}
             type="email"
             placeholder={authT.email}
-            className={`w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500 transition ${
+            className={`w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500 transition ${
               showEmailError && !isEmailValid ? "border-red-500" : ""
             }`}
           />
@@ -127,7 +127,7 @@ export default function AuthModal({
               onChange={(e) => setPass(e.target.value)}
               type={showPass ? "text" : "password"}
               placeholder={authT.pass}
-              className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500"
+              className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
             />
             <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-6 top-1/2 -translate-y-1/2 opacity-30">
               {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -138,7 +138,7 @@ export default function AuthModal({
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-blue-500 cursor-pointer appearance-none"
+              className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500 cursor-pointer appearance-none"
             >
               <option value="" disabled>{lang === "KZ" ? "Сіз кімсіз?" : lang === "EN" ? "Who are you?" : "Кто вы?"}</option>
               <option value="teacher">{authT.roleTeacher}</option>
@@ -152,7 +152,7 @@ export default function AuthModal({
             onClick={handleSubmit}
             className={`w-full py-6 rounded-2xl font-black uppercase tracking-widest text-lg transition-all ${
               isFormValid && !loading
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
                 : "bg-slate-200 dark:bg-zinc-800 text-slate-400 opacity-50"
             }`}
           >

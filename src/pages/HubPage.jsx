@@ -25,14 +25,14 @@ export default function HubPage({ lang, setLang, user, setUser, ...accessProps }
           
           <Link to="/tools" className={`group relative p-12 bg-white dark:bg-zinc-900 rounded-[50px] border-[4px] border-black dark:border-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all flex flex-col justify-between text-left h-full ${isStudent ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
             <div>
-              <div className="absolute -top-6 left-10 px-6 py-2 bg-blue-600 text-white font-black text-xs rounded-full border-2 border-black uppercase tracking-widest">{isStudent ? hubT.denied : hubT.teacher}</div>
-              <div className="flex justify-between items-start mb-10 text-blue-600">
+              <div className="absolute -top-6 left-10 px-6 py-2 bg-emerald-600 text-white font-black text-xs rounded-full border-2 border-black uppercase tracking-widest">{isStudent ? hubT.denied : hubT.teacher}</div>
+              <div className="flex justify-between items-start mb-10 text-emerald-600">
                 <LayoutGrid size={64} strokeWidth={2.5} /><div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-3xl"><FileText size={32} /></div>
               </div>
               <h2 className="text-4xl font-black uppercase mb-4 tracking-tight">{cur.tools}</h2>
               <p className="text-slate-500 font-bold leading-relaxed max-w-[280px]">{hubT.teacherDesc}</p>
             </div>
-            <div className="flex items-center gap-2 font-black text-sm uppercase tracking-[0.2em] text-blue-600 group-hover:gap-4 transition-all italic mt-8">{cur.go} <ChevronRight size={20} strokeWidth={3} /></div>
+            <div className="flex items-center gap-2 font-black text-sm uppercase tracking-[0.2em] text-emerald-600 group-hover:gap-4 transition-all italic mt-8">{cur.go} <ChevronRight size={20} strokeWidth={3} /></div>
           </Link>
 
           <Link to="/games" className="group relative p-12 bg-slate-100 dark:bg-zinc-950 rounded-[50px] border-[4px] border-black dark:border-zinc-700 shadow-[12px_12px_0px_0px_#000] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all flex flex-col justify-between text-left h-full">

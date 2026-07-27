@@ -235,8 +235,8 @@ export default function Dashboard({
                   activeIdRef.current = item.id;
                   setActiveMenu(null);
                 }}
-                className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-blue-600 hover:text-white transition-all shadow-sm cursor-pointer
-                  ${activeId === item.id ? "ring-4 ring-blue-500/20" : ""}`}
+                className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-emerald-600 hover:text-white transition-all shadow-sm cursor-pointer
+                  ${activeId === item.id ? "ring-4 ring-emerald-500/20" : ""}`}
               >
                 <div className="flex justify-between items-center">
                   <span className="text-[13px] font-bold opacity-80 group-hover:opacity-100 truncate w-40">
@@ -328,7 +328,7 @@ export default function Dashboard({
       <main className="flex-1 flex flex-col xl:flex-row gap-4 md:gap-6 overflow-hidden">
         <section className="w-[480px] p-12 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">    
           <div className="flex justify-between items-center mb-12">
-            <h2 className="text-[12px] font-black uppercase tracking-widest text-blue-600">PLANNER</h2>
+            <h2 className="text-[12px] font-black uppercase tracking-widest text-emerald-600">PLANNER</h2>
           </div>
           <div className="space-y-10">
             <div className="grid grid-cols-2 gap-8">
@@ -339,10 +339,10 @@ export default function Dashboard({
                 <option value="45">45 Мин</option><option value="90">90 Мин</option><option value="135">135 Мин</option>
               </select>
             </div>
-            <input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder={cur.s} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-blue-500/10 transition-all" />
-            <input value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} placeholder={cur.t} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-blue-500/10 transition-all" />
-            <textarea value={form.details} onChange={e => setForm({...form, details: e.target.value})} placeholder={cur.d} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold h-52 resize-none focus:ring-4 ring-blue-500/10 transition-all" />
-            <button onClick={handleGenerate} disabled={loading} className={`w-full py-7 rounded-[28px] text-[15px] font-black uppercase tracking-[0.3em] transition-all border-[4px] border-black dark:border-white shadow-2xl ${loading ? 'bg-slate-200' : 'bg-blue-600 text-white hover:scale-[1.02]'}`}>
+            <input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder={cur.s} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
+            <input value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} placeholder={cur.t} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
+            <textarea value={form.details} onChange={e => setForm({...form, details: e.target.value})} placeholder={cur.d} className="w-full p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold h-52 resize-none focus:ring-4 ring-emerald-500/10 transition-all" />
+            <button onClick={handleGenerate} disabled={loading} className={`w-full py-7 rounded-[28px] text-[15px] font-black uppercase tracking-[0.3em] transition-all border-[4px] border-black dark:border-white shadow-2xl ${loading ? 'bg-slate-200' : 'bg-emerald-600 text-white hover:scale-[1.02]'}`}>
                 {loading ? "..." : tr(lang,"doc.createPlan","СОЗДАТЬ ПЛАН")}
             </button>
           </div>

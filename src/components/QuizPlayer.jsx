@@ -138,7 +138,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
            <h1 className="text-4xl font-black uppercase mb-2 dark:text-white text-center">Финиш!</h1>
            <p className="text-gray-500 font-bold uppercase tracking-widest mb-8 text-center">{session.studentName}</p>
            <div className="bg-slate-100 dark:bg-zinc-800 p-6 rounded-2xl mb-6 text-center">
-              <div className="text-6xl font-black text-blue-600 mb-2">{percentage}%</div>
+              <div className="text-6xl font-black text-emerald-600 mb-2">{percentage}%</div>
               <p className="font-bold text-sm text-gray-400 uppercase">Правильно: {score} / {questions.length}</p>
               <p className="font-bold text-sm text-gray-400 uppercase mt-1">Время: {elapsedTime}с</p>
            </div>
@@ -184,14 +184,14 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] p-6 md:p-10 font-sans flex flex-col max-w-3xl mx-auto text-slate-900 dark:text-white">
        <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-2 bg-white dark:bg-zinc-800 px-4 py-2 rounded-full shadow-sm border border-gray-200 dark:border-zinc-700">
-             <Timer size={18} className="text-blue-500" />
+             <Timer size={18} className="text-emerald-500" />
              <span className="font-black font-mono text-lg">{elapsedTime}s</span>
           </div>
           <button onClick={handleExit} className="p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition"><LogOut size={18} /></button>
        </div>
 
        <div className="w-full h-3 bg-gray-200 dark:bg-zinc-800 rounded-full mb-8 overflow-hidden">
-          <div className="h-full bg-blue-600 transition-all duration-500 ease-out" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
+          <div className="h-full bg-emerald-600 transition-all duration-500 ease-out" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
        </div>
 
        <div className="bg-white dark:bg-zinc-900 p-6 md:p-10 rounded-[30px] border-[3px] border-black dark:border-white shadow-[6px_6px_0_0_#000] mb-6 flex-1">
@@ -199,7 +199,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
           <h2 className="text-2xl font-black mb-8 leading-tight">{currentQ.question}</h2>
           <div className="space-y-3">
              {currentQ.options.map((opt, idx) => {
-                let stateClass = "border-gray-200 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800";
+                let stateClass = "border-gray-200 dark:border-zinc-700 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-zinc-800";
                 if (isAnswered) {
                     if (idx === currentQ.correctIndex) stateClass = "bg-green-100 border-green-500 text-green-700 dark:bg-green-900/30 dark:text-green-400";
                     else if (idx === selectedOption) stateClass = "bg-red-100 border-red-500 text-red-700 dark:bg-red-900/30 dark:text-red-400";

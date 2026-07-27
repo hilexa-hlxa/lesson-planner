@@ -269,7 +269,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                 onClick={handleGenerate} 
                 disabled={loading || !topic} 
                 className={`w-full py-5 tactical-button text-white 
-                ${loading || !topic ? 'bg-gray-400 opacity-50' : 'bg-blue-600 hover:bg-blue-500'}`}
+                ${loading || !topic ? 'bg-gray-400 opacity-50' : 'bg-emerald-600 hover:bg-emerald-500'}`}
             >
                 {loading ? "ГЕНЕРАЦИЯ..." : "СОЗДАТЬ ТЕСТ"}
             </button>
@@ -277,10 +277,10 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
         {/* Active Test View */}
         {activeTest && (
-           <div className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[40px] border-[4px] border-blue-600 shadow-[8px_8px_0_0_#2563eb] animate-in fade-in slide-in-from-bottom-4">
+           <div className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[40px] border-[4px] border-emerald-600 shadow-[8px_8px_0_0_#059669] animate-in fade-in slide-in-from-bottom-4">
               <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4 border-b border-gray-100 dark:border-zinc-800 pb-6">
                  <div>
-                    <h2 className="text-2xl font-black text-blue-600 uppercase mb-1">{activeTest.subject || "Test"}</h2>
+                    <h2 className="text-2xl font-black text-emerald-600 uppercase mb-1">{activeTest.subject || "Test"}</h2>
                     <p className="font-bold opacity-60 text-sm">Topic: {activeTest.topic}</p>
                  </div>
 
@@ -307,7 +307,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             >
                                 <Sparkles size={14} /> AI Report
                             </button>
-                            <button onClick={() => fetchTestResults()} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 rounded-lg text-xs font-black uppercase shadow-sm hover:text-blue-600 transition">
+                            <button onClick={() => fetchTestResults()} className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 rounded-lg text-xs font-black uppercase shadow-sm hover:text-emerald-600 transition">
                                 <RefreshCw size={12}/>
                             </button>
                         </div>
@@ -335,7 +335,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                                             </td>
                                             <td className="p-3 text-gray-500">{r.duration_seconds}s</td>
                                             <td className="p-3">
-                                                <button onClick={() => setSelectedStudent(r)} className="px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition text-[10px] font-black uppercase">
+                                                <button onClick={() => setSelectedStudent(r)} className="px-3 py-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition text-[10px] font-black uppercase">
                                                     <Eye size={14} /> Details
                                                 </button>
                                             </td>
@@ -376,7 +376,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
         </div>
         <div className="space-y-3 overflow-y-auto h-[calc(100vh-100px)]">
             {savedTests.map((item) => (
-                <div key={item.id} onClick={() => handleSelectOldTest(item)} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] ${activeTest?.id === item.id ? 'bg-blue-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-blue-300'}`}>
+                <div key={item.id} onClick={() => handleSelectOldTest(item)} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] ${activeTest?.id === item.id ? 'bg-emerald-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-emerald-300'}`}>
                     <h4 className="font-black text-sm mb-1 line-clamp-2">{item.topic}</h4>
                     <div className="flex justify-between items-center opacity-70 text-[10px] font-bold uppercase tracking-wider">
                         <span>{item.subject}</span>
@@ -414,8 +414,8 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             <p className="text-xs text-gray-400 font-bold mt-1">Mistakes analysis, teaching tips, context.</p>
                         </button>
 
-                        <button onClick={() => generateReport('judge')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left transition group">
-                            <div className="font-black text-lg uppercase group-hover:text-blue-600">⚖️ Official Report</div>
+                        <button onClick={() => generateReport('judge')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-left transition group">
+                            <div className="font-black text-lg uppercase group-hover:text-emerald-600">⚖️ Official Report</div>
                             <p className="text-xs text-gray-400 font-bold mt-1">Dry facts, statistics, table for administration.</p>
                         </button>
                         

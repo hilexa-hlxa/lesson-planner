@@ -61,7 +61,7 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
           </div>
           <button
             onClick={() => setShowForm(v => !v)}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
           >
             <Plus size={18} strokeWidth={3} /> {t.create}
           </button>
@@ -75,7 +75,7 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
               onChange={e => setName(e.target.value)}
               placeholder={t.placeholder}
               maxLength={100}
-              className="flex-1 px-5 py-3 border-4 border-black dark:border-white rounded-2xl bg-white dark:bg-zinc-900 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-5 py-3 border-4 border-black dark:border-white rounded-2xl bg-white dark:bg-zinc-900 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
               type="submit"

@@ -215,7 +215,7 @@ function BrowserShell({ children, url = "lessonplanner.kz", tall = false }) {
       <div className="bg-zinc-900 px-3 py-2 flex items-center justify-between border-b border-zinc-700/60">
         <span className="text-[8px] font-black text-white tracking-[0.18em]">LESSON PLANNER</span>
         <div className="flex gap-3">{['Hub','Tools','Games','Classes'].map(l=><span key={l} className="text-[7px] font-bold text-zinc-400">{l}</span>)}</div>
-        <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[7px] text-white font-black">А</div>
+        <div className="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center text-[7px] text-white font-black">А</div>
       </div>
       <div style={{ height: tall ? 340 : 260 }}>{children}</div>
     </div>
@@ -230,11 +230,11 @@ function DashboardPreview() {
         <div className="w-[80px] bg-white/60 border-r border-black/5 p-2 shrink-0 flex flex-col gap-1">
           <div className="text-[5px] font-black text-black/25 tracking-widest mb-2 px-1">ИСТОРИЯ</div>
           {[['Дроби',true],['Периметр',false],['Площадь',false],['Углы',false],['Вектора',false],['Функции',false]].map(([t,a],i)=>(
-            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1.5 rounded-md ${a?'bg-blue-600 text-white':'text-black/40'}`}>{t}</div>
+            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1.5 rounded-md ${a?'bg-emerald-600 text-white':'text-black/40'}`}>{t}</div>
           ))}
         </div>
         <div className="w-[140px] bg-white/70 border-r border-black/5 p-3 flex flex-col gap-2 shrink-0">
-          <div className="text-[6px] font-black text-blue-600 tracking-widest">PLANNER</div>
+          <div className="text-[6px] font-black text-emerald-600 tracking-widest">PLANNER</div>
           <div className="flex gap-1">
             <div className="flex-1 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold">5 Класс</div>
             <div className="flex-1 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold">45 Мин</div>
@@ -242,7 +242,7 @@ function DashboardPreview() {
           <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold">Математика</div>
           <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold">Дроби и части целого</div>
           <div className="bg-slate-100 rounded text-[5px] text-black/20 px-1.5 py-5">Детали урока...</div>
-          <div className="bg-blue-600 rounded text-[5.5px] text-white font-black text-center py-2 mt-auto border border-black shadow-[2px_2px_0_0_#000]">СОЗДАТЬ ПЛАН</div>
+          <div className="bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-2 mt-auto border border-black shadow-[2px_2px_0_0_#000]">СОЗДАТЬ ПЛАН</div>
         </div>
         <div className="flex-1 bg-white/90 p-3 flex flex-col gap-1 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
@@ -259,11 +259,11 @@ function DashboardPreview() {
           <div className="text-[6px] font-black italic text-black/60 mb-0.5">## Ход урока</div>
           {[['Организационный момент','2 мин'],['Актуализация знаний','8 мин'],['Изучение нового материала','15 мин'],['Практическая работа','15 мин'],['Итоги','5 мин']].map(([s,t],i)=>(
             <div key={i} className="flex justify-between text-[5px] text-black/40 italic py-0.5 border-b border-black/4 last:border-0">
-              <span>{s}</span><span className="font-bold text-blue-500">{t}</span>
+              <span>{s}</span><span className="font-bold text-emerald-500">{t}</span>
             </div>
           ))}
           <div className="mt-auto pt-2 border-t border-black/8 flex gap-1.5">
-            <div className="flex-1 bg-blue-600 rounded text-[5.5px] text-white font-black text-center py-1.5 border border-black shadow-[2px_2px_0_0_#000]">⬇ DOCX</div>
+            <div className="flex-1 bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-1.5 border border-black shadow-[2px_2px_0_0_#000]">⬇ DOCX</div>
             <div className="flex-1 bg-black/5 rounded text-[5.5px] text-black/40 font-black text-center py-1.5">КОПИРОВАТЬ</div>
           </div>
         </div>
@@ -280,7 +280,7 @@ function PlanVisual() {
         <div className="w-[90px] bg-white/60 border-r border-black/5 p-2 flex flex-col gap-1 shrink-0">
           <div className="text-[5px] font-black text-black/25 tracking-widest mb-2">ИСТОРИЯ</div>
           {[['Дроби',true],['Периметр',false],['Площадь',false],['Углы',false]].map(([t,a],i)=>(
-            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1 rounded-md ${a?'bg-blue-600 text-white':'text-black/35'}`}>{t}</div>
+            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1 rounded-md ${a?'bg-emerald-600 text-white':'text-black/35'}`}>{t}</div>
           ))}
         </div>
         <div className="flex-1 bg-white/90 p-3 flex flex-col gap-1 overflow-hidden">
@@ -293,11 +293,11 @@ function PlanVisual() {
           ))}
           {[['Введение','5 мин'],['Объяснение','15 мин'],['Практика','20 мин'],['Итоги','5 мин']].map(([s,t],i)=>(
             <div key={i} className="flex justify-between text-[5px] text-black/40 italic py-0.5 border-b border-black/4 last:border-0">
-              <span>{s}</span><span className="font-bold text-blue-500">{t}</span>
+              <span>{s}</span><span className="font-bold text-emerald-500">{t}</span>
             </div>
           ))}
           <div className="mt-auto pt-1.5 border-t border-black/8">
-            <div className="bg-blue-600 rounded text-[5.5px] text-white font-black text-center py-1.5 border border-black shadow-[2px_2px_0_0_#000]">⬇ ВЫГРУЗИТЬ В DOCX</div>
+            <div className="bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-1.5 border border-black shadow-[2px_2px_0_0_#000]">⬇ ВЫГРУЗИТЬ В DOCX</div>
           </div>
         </div>
       </div>
@@ -316,12 +316,12 @@ function TestVisual() {
               <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold">5 кл</div>
             </div>
             <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold mb-1.5">Дроби и части целого</div>
-            <div className="bg-blue-600 rounded text-[5px] text-white font-black text-center py-1.5 border border-black shadow-[1.5px_1.5px_0_0_#000]">СОЗДАТЬ ТЕСТ</div>
+            <div className="bg-emerald-600 rounded text-[5px] text-white font-black text-center py-1.5 border border-black shadow-[1.5px_1.5px_0_0_#000]">СОЗДАТЬ ТЕСТ</div>
           </div>
-          <div className="bg-white rounded-xl border-[1.5px] border-blue-600 shadow-[2px_2px_0_0_#2563eb] p-2 flex-1 flex flex-col gap-1.5">
+          <div className="bg-white rounded-xl border-[1.5px] border-emerald-600 shadow-[2px_2px_0_0_#059669] p-2 flex-1 flex flex-col gap-1.5">
             <div className="flex justify-between items-start border-b border-gray-100 pb-1.5">
               <div>
-                <div className="text-[6px] font-black text-blue-600">Математика</div>
+                <div className="text-[6px] font-black text-emerald-600">Математика</div>
                 <div className="text-[5px] text-black/40 font-bold">Дроби и части</div>
               </div>
               <div className="bg-black rounded-lg px-2 py-1 text-center">
@@ -346,7 +346,7 @@ function TestVisual() {
         <div className="w-[52px] flex flex-col gap-1.5 shrink-0">
           <div className="text-[4.5px] font-black text-black/25 tracking-widest">ИСТОРИЯ</div>
           {[['Дроби','07/25',true],['Периметр','07/23',false],['Площадь','07/20',false],['Углы','07/18',false]].map(([t,d,a])=>(
-            <div key={t} className={`p-1.5 rounded-lg border-2 ${a?'bg-blue-600 border-black text-white':'bg-white border-gray-100 text-black/50'}`}>
+            <div key={t} className={`p-1.5 rounded-lg border-2 ${a?'bg-emerald-600 border-black text-white':'bg-white border-gray-100 text-black/50'}`}>
               <div className="text-[5px] font-black truncate">{t}</div>
               <div className="text-[4px] opacity-60">{d}</div>
             </div>

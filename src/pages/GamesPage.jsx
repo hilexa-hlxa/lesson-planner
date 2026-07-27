@@ -35,7 +35,7 @@ const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
             className="group bg-white dark:bg-zinc-900 p-10 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between h-[360px]"
           >
             <div>
-              <div className="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+              <div className="w-20 h-20 bg-emerald-600 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
                 <Play size={40} fill="currentColor" />
               </div>
               <h3 className="text-4xl font-black uppercase tracking-tight mb-4">

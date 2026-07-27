@@ -15,7 +15,7 @@ export default function LanguageSwitcher({ lang, setLang }) {
           key={l}
           onClick={() => setLang(l)}
           className={`relative z-10 w-[40px] h-full text-[13px] font-black transition-colors duration-300 flex items-center justify-center ${
-            lang === l ? "text-blue-600 dark:text-white" : "opacity-40 hover:opacity-100"
+            lang === l ? "text-emerald-600 dark:text-white" : "opacity-40 hover:opacity-100"
           }`}
         >
           {l}

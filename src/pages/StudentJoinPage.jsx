@@ -81,7 +81,7 @@ const StudentJoinPage = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="0000" 
-                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-black text-2xl tracking-[0.2em] outline-none focus:ring-4 ring-blue-500/20 transition text-center dark:text-white"
+                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-black text-2xl tracking-[0.2em] outline-none focus:ring-4 ring-emerald-500/20 transition text-center dark:text-white"
               />
             </div>
           </div>
@@ -95,7 +95,7 @@ const StudentJoinPage = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Иван Иванов" 
-                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-500/20 transition dark:text-white"
+                className="w-full pl-12 pr-4 py-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-emerald-500/20 transition dark:text-white"
               />
             </div>
           </div>
@@ -103,7 +103,7 @@ const StudentJoinPage = () => {
           <button 
             type="submit" 
             disabled={loading || code.length !== 4 || !name}
-            className="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Поиск...' : 'Начать'} <ArrowRight size={20} />
           </button>

@@ -156,18 +156,18 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
               onChange={e => setCode(e.target.value.toUpperCase())}
               placeholder={t.codePlaceholder}
               maxLength={6}
-              className="flex-1 px-5 py-3 border-4 border-black dark:border-white rounded-2xl bg-[#f8fafc] dark:bg-zinc-800 font-mono font-black text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+              className="flex-1 px-5 py-3 border-4 border-black dark:border-white rounded-2xl bg-[#f8fafc] dark:bg-zinc-800 font-mono font-black text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase"
             />
             <button
               type="submit"
               disabled={joining || code.trim().length !== 6}
-              className="px-6 py-3 bg-blue-600 text-white font-black uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40 transition-opacity"
+              className="px-6 py-3 bg-emerald-600 text-white font-black uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40 transition-opacity"
             >
               {t.joinBtn}
             </button>
           </form>
           {joinMsg && (
-            <div className={`mt-4 px-4 py-3 rounded-xl font-bold text-sm ${joinMsg.type === 'success' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : joinMsg.type === 'error' ? 'bg-red-100 dark:bg-red-900/40 text-red-600' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600'}`}>
+            <div className={`mt-4 px-4 py-3 rounded-xl font-bold text-sm ${joinMsg.type === 'success' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : joinMsg.type === 'error' ? 'bg-red-100 dark:bg-red-900/40 text-red-600' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600'}`}>
               {joinMsg.text}
             </div>
           )}

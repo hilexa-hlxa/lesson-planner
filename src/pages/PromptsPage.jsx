@@ -20,7 +20,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-10 font-sans">
       <div className="max-w-5xl mx-auto">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 font-black uppercase text-[10px] hover:text-blue-600 transition tracking-widest mb-8">
+        <Link to="/dashboard" className="inline-flex items-center gap-2 font-black uppercase text-[10px] hover:text-emerald-600 transition tracking-widest mb-8">
           <ChevronRight size={14} className="rotate-180" /> {cur.back}
         </Link>
 
@@ -29,7 +29,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
 
         <div className="space-y-10">
           <div className="p-8 bg-white/70 dark:bg-zinc-900/60 rounded-[32px] border border-white/20 shadow-xl">
-            <h2 className="font-black uppercase tracking-widest text-[12px] mb-6 text-blue-600">{cur.lessonTitle}</h2>
+            <h2 className="font-black uppercase tracking-widest text-[12px] mb-6 text-emerald-600">{cur.lessonTitle}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -78,7 +78,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
           </div>
 
           <div className="p-8 bg-white/70 dark:bg-zinc-900/60 rounded-[32px] border border-white/20 shadow-xl">
-            <h2 className="font-black uppercase tracking-widest text-[12px] mb-6 text-blue-600">{cur.testsTitle}</h2>
+            <h2 className="font-black uppercase tracking-widest text-[12px] mb-6 text-emerald-600">{cur.testsTitle}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -130,7 +130,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
             </button>
             <button
               onClick={save}
-              className="px-8 py-4 rounded-2xl bg-blue-600 text-white border-2 border-black font-black uppercase text-[11px] tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              className="px-8 py-4 rounded-2xl bg-emerald-600 text-white border-2 border-black font-black uppercase text-[11px] tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
             >
               {cur.save}
             </button>
