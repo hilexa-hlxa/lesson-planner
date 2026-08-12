@@ -10,8 +10,6 @@ import AchievementToast from "../components/AchievementToast";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 const T = {
   RU: {
     balance: "Твой баланс",
@@ -108,16 +106,7 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
 
     const checkAchievement = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/achievements/grant`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ key: 'visit_profile' })
-        });
-
-        if (!response.ok) return;
-
-        const result = await response.json();
+        const result = await api.achievements.grant('visit_profile');
         const data = result.data || result;
         if (!data.new) return;
 

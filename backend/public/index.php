@@ -1,18 +1,32 @@
 <?php
 declare(strict_types=1);
 
+// Ошибки — только в лог. В ответ они уходить не должны: незакрытое исключение
+// PDO печатало клиенту хост и параметры подключения к базе.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 // 1. Initial Setup
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+
+// Сколько живёт сессия теста после нажатия «Start Session»
+const QUIZ_SESSION_TTL_SECONDS = 4 * 60 * 60;
 
 $config = require __DIR__ . '/../config.php';
 
 require __DIR__ . '/../src/DB.php';
 require __DIR__ . '/../src/AuthService.php';
 require __DIR__ . '/../src/Response.php';
+require __DIR__ . '/../src/QuizParser.php';
 
-$db   = new DB($config['db']);
-$auth = new AuthService($db->pdo(), $config['auth']);
+try {
+  $db   = new DB($config['db']);
+  $auth = new AuthService($db->pdo(), $config['auth']);
+} catch (Throwable $e) {
+  error_log("Bootstrap failed: " . $e->getMessage());
+  Response::error('Service temporarily unavailable', 503);
+}
 
 // ---------------- CORS Configuration ----------------
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -106,10 +120,15 @@ try {
       $stmt = $db->pdo()->prepare("
           UPDATE generations
           SET access_code = :code,
-              code_expires_at = NOW() + INTERVAL '4 hours'
+              code_expires_at = NOW() + ((:ttl)::text || ' seconds')::interval
           WHERE id = :id AND user_id = :uid
       ");
-      $stmt->execute([':code' => $code, ':id' => $id, ':uid' => $u['id']]);
+      $stmt->execute([
+          ':code' => $code,
+          ':ttl'  => (string)QUIZ_SESSION_TTL_SECONDS,
+          ':id'   => $id,
+          ':uid'  => $u['id'],
+      ]);
 
       // Optionally link to a class
       $classId = isset($body['class_id']) ? (int)$body['class_id'] : 0;
@@ -125,41 +144,120 @@ try {
       Response::ok(['code' => $code]);
   }
 
-  // 2. Join Session
-  if ($method === 'POST' && $path === '/api/quiz/join') {
-      $code = (string)($body['code'] ?? '');
+  // Общий помощник: находим активную сессию теста по 4-значному коду.
+  // Код — это общий секрет учителя и класса, поэтому он же служит пропуском
+  // к /answer и /submit: без действующего кода отправить результат нельзя.
+  $findLiveQuizByCode = function (string $code) use ($db) {
       if (strlen($code) !== 4) Response::error('Invalid format', 400);
 
       $stmt = $db->pdo()->prepare("
-          SELECT id, subject, topic, result_md, code_expires_at 
-          FROM generations 
-          WHERE access_code = :code 
+          SELECT id, subject, topic, result_md, code_expires_at
+          FROM generations
+          WHERE access_code = :code
           LIMIT 1
       ");
       $stmt->execute([':code' => $code]);
       $quiz = $stmt->fetch(PDO::FETCH_ASSOC);
 
       if (!$quiz) Response::error('Quiz not found', 404);
+      if (strtotime($quiz['code_expires_at']) < time()) Response::error('Session expired', 410);
 
-      if (strtotime($quiz['code_expires_at']) < time()) {
-          Response::error('Session expired', 410);
-      }
+      $quiz['parsed'] = \App\QuizParser::parse($quiz['result_md']);
+      if (count($quiz['parsed']) === 0) Response::error('Quiz has no questions', 422);
 
-      Response::ok(['quiz' => $quiz]);
+      return $quiz;
+  };
+
+  // 2. Join Session — отдаём вопросы БЕЗ ключа к ответам
+  if ($method === 'POST' && $path === '/api/quiz/join') {
+      $quiz = $findLiveQuizByCode((string)($body['code'] ?? ''));
+
+      Response::ok(['quiz' => [
+          'id'              => (int)$quiz['id'],
+          'subject'         => $quiz['subject'],
+          'topic'           => $quiz['topic'],
+          'code_expires_at' => $quiz['code_expires_at'],
+          'questions'       => \App\QuizParser::withoutAnswers($quiz['parsed']),
+      ]]);
   }
 
-  // 3. Submit Results
+  // 3. Check one answer — правильный вариант раскрываем только ПОСЛЕ выбора,
+  // чтобы у ученика осталась мгновенная обратная связь на вопрос.
+  if ($method === 'POST' && $path === '/api/quiz/answer') {
+      $quiz = $findLiveQuizByCode((string)($body['code'] ?? ''));
+
+      $idx = (int)($body['question_index'] ?? -1);
+      if (!isset($quiz['parsed'][$idx])) Response::error('Unknown question', 404);
+
+      $question = $quiz['parsed'][$idx];
+      $correct  = (int)$question['correctIndex'];
+      $selected = array_key_exists('selected', $body) && $body['selected'] !== null
+          ? (int)$body['selected']
+          : null;
+
+      Response::ok([
+          'correct_index' => $correct,
+          'correct_text'  => $question['options'][$correct] ?? null,
+          'is_correct'    => $selected !== null && $selected === $correct,
+      ]);
+  }
+
+  // 4. Submit Results — балл считает сервер по своему ключу.
+  // Раньше клиент присылал score/total, и любой мог отправить себе 10/10.
   if ($method === 'POST' && $path === '/api/quiz/submit') {
-      $quizId   = (int)($body['quiz_id'] ?? 0);
-      $name     = trim((string)($body['student_name'] ?? 'Guest'));
-      $score    = (int)($body['score'] ?? 0);
-      $total    = (int)($body['total'] ?? 0);
-      $duration = (int)($body['duration'] ?? 0);
-      $details  = json_encode($body['details'] ?? []);
+      $quiz = $findLiveQuizByCode((string)($body['code'] ?? ''));
 
-      if (!$quizId || !$total) Response::error('Invalid data', 400);
+      $answers = $body['answers'] ?? null;
+      if (!is_array($answers)) Response::error('Answers required', 400);
 
-      $percentage = (int)round(($score / $total) * 100);
+      $name = trim((string)($body['student_name'] ?? ''));
+      if ($name === '') $name = 'Guest';
+      if (mb_strlen($name) > 160) $name = mb_substr($name, 0, 160);
+
+      $duration = max(0, (int)($body['duration'] ?? 0));
+
+      $quizId = (int)$quiz['id'];
+      $total  = count($quiz['parsed']);
+      $score  = 0;
+      $details = [];
+
+      foreach ($quiz['parsed'] as $i => $question) {
+          $correct  = (int)$question['correctIndex'];
+          $selected = (array_key_exists($i, $answers) && $answers[$i] !== null)
+              ? (int)$answers[$i]
+              : null;
+
+          $isCorrect = ($selected !== null && $selected === $correct);
+          if ($isCorrect) $score++;
+
+          $details[] = [
+              'questionId'   => $i,
+              'questionText' => $question['question'],
+              'isCorrect'    => $isCorrect,
+              'selected'     => $selected,
+              'selectedText' => ($selected !== null && isset($question['options'][$selected]))
+                  ? $question['options'][$selected]
+                  : null,
+              'correctText'  => $question['options'][$correct] ?? null,
+          ];
+      }
+
+      // Одна попытка на имя в рамках текущей сессии кода: иначе ответы можно
+      // подобрать перебором, отправляя результат снова и снова.
+      $sessionStart = date('c', strtotime($quiz['code_expires_at']) - QUIZ_SESSION_TTL_SECONDS);
+      $dup = $db->pdo()->prepare("
+          SELECT 1 FROM quiz_results
+          WHERE quiz_id = :qid
+            AND lower(student_name) = lower(:name)
+            AND created_at > :since
+          LIMIT 1
+      ");
+      $dup->execute([':qid' => $quizId, ':name' => $name, ':since' => $sessionStart]);
+      if ($dup->fetchColumn()) {
+          Response::error('Result already recorded for this name', 409);
+      }
+
+      $percentage = $total > 0 ? (int)round(($score / $total) * 100) : 0;
 
       $submitter = $auth->currentUser();
       $studentId = ($submitter && $submitter['role'] === 'student') ? (int)$submitter['id'] : null;
@@ -178,10 +276,16 @@ try {
           ':total'   => $total,
           ':perc'    => $percentage,
           ':dur'     => $duration,
-          ':details' => $details
+          ':details' => json_encode($details, JSON_UNESCAPED_UNICODE)
       ]);
 
-      Response::ok(['success' => true]);
+      Response::ok([
+          'success'    => true,
+          'score'      => $score,
+          'total'      => $total,
+          'percentage' => $percentage,
+          'details'    => $details,
+      ]);
   }
 
   // 4. Get Report

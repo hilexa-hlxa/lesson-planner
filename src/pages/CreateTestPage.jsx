@@ -8,8 +8,6 @@ import { buildPrompt } from '../lib/prompt';
 import api from '../api';
 import Header from "../components/Header";
 
-const API_URL = 'http://localhost:8000/api';
-
 // Сообщения об ошибках страницы (вместо браузерных alert)
 const ERR = {
   RU: {
@@ -114,14 +112,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
     if (!activeTest) return;
     setError("");
     try {
-      const res = await fetch(`${API_URL}/quiz/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: activeTest.id }),
-        credentials: 'include'
-      });
-      if (!res.ok) { setError(err.session); return; }
-      const data = await res.json();
+      const data = await api.quiz.start(activeTest.id);
       const code = data.data?.code || data.code;
       if (code) {
         setAccessCode(code);
@@ -151,8 +142,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
     const id = forceId || activeTest?.id;
     if (!id) return;
     try {
-      const res = await fetch(`${API_URL}/quiz/${id}/report`, { credentials: 'include' });
-      const data = await res.json();
+      const data = await api.quiz.report(id);
       setTestResults(data.data?.results || data.results || []);
     } catch (e) { console.error(e); }
   };

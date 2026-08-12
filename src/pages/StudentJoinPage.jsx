@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Hash, User, ChevronLeft, AlertCircle } from 'lucide-react';
-
-// Используем переменную окружения
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import api from '../api';
 
 const T = {
   RU: {
@@ -12,6 +10,7 @@ const T = {
     searching: "Поиск...", start: "Начать",
     notFound: "Сессия не найдена. Проверьте код у учителя.",
     badData: "Не удалось загрузить тест. Попросите учителя перезапустить сессию.",
+    expired: "Сессия теста завершена. Попросите учителя запустить её заново.",
     network: "Нет связи с сервером. Проверьте интернет и попробуйте снова.",
   },
   KZ: {
@@ -20,6 +19,7 @@ const T = {
     searching: "Іздеу...", start: "Бастау",
     notFound: "Сессия табылмады. Кодты мұғалімнен тексеріңіз.",
     badData: "Тестті жүктеу мүмкін болмады. Мұғалімнен сессияны қайта іске қосуын сұраңыз.",
+    expired: "Тест сессиясы аяқталды. Мұғалімнен қайта іске қосуын сұраңыз.",
     network: "Сервермен байланыс жоқ. Интернетті тексеріп, қайталаңыз.",
   },
   EN: {
@@ -28,6 +28,7 @@ const T = {
     searching: "Searching...", start: "Start",
     notFound: "Session not found. Check the code with your teacher.",
     badData: "Could not load the quiz. Ask your teacher to restart the session.",
+    expired: "This quiz session has ended. Ask your teacher to start it again.",
     network: "No connection to the server. Check your internet and try again.",
   },
 };
@@ -45,31 +46,22 @@ const StudentJoinPage = ({ lang = "RU" }) => {
     e.preventDefault();
     if (!code || !name) return;
 
+    const trimmedCode = code.trim();
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_URL}/api/quiz/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim() })
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        setError(data?.error || t.notFound);
-        return;
-      }
-
+      const data = await api.quiz.join(trimmedCode);
       const quizData = data.data?.quiz || data.quiz;
 
-      if (!quizData) {
+      if (!quizData?.questions?.length) {
         setError(t.badData);
         return;
       }
 
+      // Код нужен и дальше: им подтверждается каждый ответ и итоговая отправка
       localStorage.setItem('student_quiz_session', JSON.stringify({
         quiz: quizData,
+        code: trimmedCode,
         studentName: name.trim(),
         startTime: Date.now()
       }));
@@ -77,8 +69,13 @@ const StudentJoinPage = ({ lang = "RU" }) => {
       navigate('/play');
 
     } catch (err) {
-      console.error(err);
-      setError(t.network);
+      if (err?.status === 404) setError(t.notFound);
+      else if (err?.status === 410) setError(t.expired);
+      else if (err?.status === 422) setError(t.badData);
+      else {
+        console.error(err);
+        setError(t.network);
+      }
     } finally {
       setLoading(false);
     }

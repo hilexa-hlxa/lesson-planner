@@ -184,6 +184,37 @@ const api = {
     history: (classId) => request(`/student/history${classId ? `?class_id=${classId}` : ''}`, { method: 'GET' }),
   },
 
+  quiz: {
+    // Учительские
+    start: (id, class_id = null) => request('/quiz/start', {
+      method: 'POST',
+      body: JSON.stringify(class_id ? { id, class_id } : { id })
+    }),
+    report: (id) => request(`/quiz/${id}/report`, { method: 'GET' }),
+
+    // Ученические. Вопросы приходят без правильных ответов; проверка каждого
+    // ответа и итоговый балл считаются на сервере по коду сессии.
+    join: (code) => request('/quiz/join', {
+      method: 'POST',
+      body: JSON.stringify({ code })
+    }),
+    answer: (code, question_index, selected) => request('/quiz/answer', {
+      method: 'POST',
+      body: JSON.stringify({ code, question_index, selected })
+    }),
+    submit: ({ code, student_name, answers, duration }) => request('/quiz/submit', {
+      method: 'POST',
+      body: JSON.stringify({ code, student_name, answers, duration })
+    }),
+  },
+
+  achievements: {
+    grant: (key) => request('/achievements/grant', {
+      method: 'POST',
+      body: JSON.stringify({ key })
+    }),
+  },
+
   classes: {
     list: () => request('/classes', { method: 'GET' }),
     create: (name) => request('/classes', { method: 'POST', body: JSON.stringify({ name }) }),

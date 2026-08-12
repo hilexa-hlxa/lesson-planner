@@ -2,9 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Timer, CheckCircle, XCircle, Trophy, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactConfetti from 'react-confetti';
-import { parseMarkdownQuiz } from '../lib/quizParser';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import api from '../api';
 
 // ДОБАВИЛИ grantAchievement В ПРОПСЫ
 const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
@@ -14,10 +12,16 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [checking, setChecking] = useState(false);
+  // Правильный вариант приходит с сервера только после выбора ученика
+  const [revealed, setRevealed] = useState(null);
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [answersLog, setAnswersLog] = useState([]); 
+  const [answersLog, setAnswersLog] = useState([]);
+  const [answers, setAnswers] = useState([]);
+  // Итог, посчитанный сервером — он и есть настоящий
+  const [serverResult, setServerResult] = useState(null);
 
   const [elapsedTime, setElapsedTime] = useState(0);
   const [questionTime, setQuestionTime] = useState(0);
@@ -29,11 +33,11 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     if (!raw) { navigate('/join-test'); return; }
     try {
       const data = JSON.parse(raw);
+      const qs = data?.quiz?.questions;
+      if (!Array.isArray(qs) || qs.length === 0) { navigate('/join-test'); return; }
       setSession(data);
-      const rawMarkdown = data.quiz.result_md || data.quiz.result;
-      const parsed = parseMarkdownQuiz(rawMarkdown);
-      if (!parsed || parsed.length === 0) { navigate('/join-test'); return; }
-      setQuestions(parsed);
+      setQuestions(qs);
+      setAnswers(new Array(qs.length).fill(null));
       setLoading(false);
     } catch (e) { navigate('/join-test'); }
   }, [navigate]);
@@ -47,22 +51,51 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     return () => clearInterval(timerRef.current);
   }, [quizFinished, loading]);
 
-  const handleAnswer = (optionIndex) => {
-    if (isAnswered) return;
-    setSelectedOption(optionIndex);
-    setIsAnswered(true);
+  const handleAnswer = async (optionIndex) => {
+    if (isAnswered || checking) return;
     const currentQ = questions[currentIndex];
-    const isCorrect = optionIndex === currentQ.correctIndex;
-    if (isCorrect) setScore(prev => prev + 1);
-    setAnswersLog(prev => [...prev, {
-      questionId: currentIndex,
-      questionText: currentQ.question,
-      isCorrect,
-      time: questionTime,
-      selected: optionIndex,
-      selectedText: currentQ.options[optionIndex],
-      correctText: currentQ.options[currentQ.correctIndex],
-    }]);
+
+    setSelectedOption(optionIndex);
+    setChecking(true);
+    setAnswers(prev => {
+      const next = [...prev];
+      next[currentIndex] = optionIndex;
+      return next;
+    });
+
+    try {
+      const r = await api.quiz.answer(session.code, currentIndex, optionIndex);
+      const isCorrect = !!r.is_correct;
+
+      setRevealed({ correctIndex: r.correct_index, correctText: r.correct_text });
+      if (isCorrect) setScore(prev => prev + 1);
+      setAnswersLog(prev => [...prev, {
+        questionId: currentIndex,
+        questionText: currentQ.question,
+        isCorrect,
+        time: questionTime,
+        selected: optionIndex,
+        selectedText: currentQ.options[optionIndex],
+        correctText: r.correct_text,
+      }]);
+    } catch (e) {
+      // Сеть подвела — ответ принимаем без мгновенной проверки.
+      // Он уже в answers, итог всё равно посчитает сервер при отправке.
+      console.error("Answer check failed", e);
+      setRevealed(null);
+      setAnswersLog(prev => [...prev, {
+        questionId: currentIndex,
+        questionText: currentQ.question,
+        isCorrect: null,
+        time: questionTime,
+        selected: optionIndex,
+        selectedText: currentQ.options[optionIndex],
+        correctText: null,
+      }]);
+    } finally {
+      setIsAnswered(true);
+      setChecking(false);
+    }
   };
 
   const handleNext = () => {
@@ -70,6 +103,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
       setCurrentIndex(prev => prev + 1);
       setSelectedOption(null);
       setIsAnswered(false);
+      setRevealed(null);
       setQuestionTime(0);
     } else {
       // ВЫЗЫВАЕМ ЕДИНУЮ ФУНКЦИЮ ФИНИША
@@ -82,27 +116,25 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     setQuizFinished(true);
     clearInterval(timerRef.current);
     
-    const percent = (score / questions.length) * 100;
-
     // 1. Отправка на сервер — ПЕРВЫМ ДЕЛОМ.
     // Результат ученика важнее ачивок: что бы ни случилось дальше, балл уже у учителя.
+    let finalScore = score;
     try {
-        await fetch(`${API_URL}/api/quiz/submit`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                quiz_id: session.quiz.id,
-                student_name: session.studentName,
-                score: score,
-                total: questions.length,
-                duration: elapsedTime,
-                details: answersLog
-            })
+        const r = await api.quiz.submit({
+            code: session.code,
+            student_name: session.studentName,
+            answers,
+            duration: elapsedTime,
         });
+        setServerResult(r);
+        finalScore = r.score;
     } catch (e) {
-        console.error("Submission failed", e);
+        // 409 — результат под этим именем уже записан (повторная отправка).
+        // Это не ошибка для ученика: у учителя балл есть.
+        if (e?.status !== 409) console.error("Submission failed", e);
     }
+
+    const percent = questions.length ? (finalScore / questions.length) * 100 : 0;
 
     // 2. Ачивки — только для залогиненных. У гостя аккаунта нет, grantAchievement
     // молча выйдет. Отдельный try, чтобы ошибка здесь не влияла на отправку выше.
@@ -128,8 +160,13 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
   if (loading) return <div className="min-h-screen flex items-center justify-center font-bold dark:text-white">Загрузка...</div>;
 
   if (quizFinished) {
-    const percentage = Math.round((score / questions.length) * 100);
-    const wrong = answersLog.filter(a => !a.isCorrect);
+    // Показываем то, что записал сервер; локальный подсчёт — запасной вариант,
+    // пока ответ не пришёл (или если отправка не удалась).
+    const finalScore = serverResult?.score ?? score;
+    const totalQuestions = serverResult?.total ?? questions.length;
+    const details = serverResult?.details ?? answersLog;
+    const percentage = totalQuestions ? Math.round((finalScore / totalQuestions) * 100) : 0;
+    const wrong = details.filter(a => a.isCorrect === false);
     return (
       <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex items-center justify-center p-6 font-sans">
         <ReactConfetti recycle={false} numberOfPieces={500} />
@@ -139,7 +176,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
            <p className="text-gray-500 font-bold uppercase tracking-widest mb-8 text-center">{session.studentName}</p>
            <div className="bg-slate-100 dark:bg-zinc-800 p-6 rounded-2xl mb-6 text-center">
               <div className="text-6xl font-black text-emerald-600 mb-2">{percentage}%</div>
-              <p className="font-bold text-sm text-gray-400 uppercase">Правильно: {score} / {questions.length}</p>
+              <p className="font-bold text-sm text-gray-400 uppercase">Правильно: {finalScore} / {totalQuestions}</p>
               <p className="font-bold text-sm text-gray-400 uppercase mt-1">Время: {elapsedTime}с</p>
            </div>
 
@@ -200,16 +237,19 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
           <div className="space-y-3">
              {currentQ.options.map((opt, idx) => {
                 let stateClass = "border-gray-200 dark:border-zinc-700 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-zinc-800";
+                const correctIdx = revealed?.correctIndex;
                 if (isAnswered) {
-                    if (idx === currentQ.correctIndex) stateClass = "bg-green-100 border-green-500 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-                    else if (idx === selectedOption) stateClass = "bg-red-100 border-red-500 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+                    if (correctIdx != null && idx === correctIdx) stateClass = "bg-green-100 border-green-500 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+                    else if (idx === selectedOption) stateClass = correctIdx == null
+                      ? "bg-slate-100 border-slate-400 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"
+                      : "bg-red-100 border-red-500 text-red-700 dark:bg-red-900/30 dark:text-red-400";
                     else stateClass = "opacity-50 border-gray-100 dark:border-zinc-800";
                 }
                 return (
-                   <button key={idx} onClick={() => handleAnswer(idx)} disabled={isAnswered} className={`w-full text-left p-5 rounded-xl border-2 font-bold transition-all duration-200 flex justify-between items-center ${stateClass}`}>
+                   <button key={idx} onClick={() => handleAnswer(idx)} disabled={isAnswered || checking} className={`w-full text-left p-5 rounded-xl border-2 font-bold transition-all duration-200 flex justify-between items-center ${stateClass}`}>
                       <span>{opt}</span>
-                      {isAnswered && idx === currentQ.correctIndex && <CheckCircle size={20} className="text-green-600"/>}
-                      {isAnswered && idx === selectedOption && idx !== currentQ.correctIndex && <XCircle size={20} className="text-red-500"/>}
+                      {isAnswered && correctIdx != null && idx === correctIdx && <CheckCircle size={20} className="text-green-600"/>}
+                      {isAnswered && correctIdx != null && idx === selectedOption && idx !== correctIdx && <XCircle size={20} className="text-red-500"/>}
                    </button>
                 );
              })}
