@@ -192,19 +192,20 @@ const api = {
     }),
     report: (id) => request(`/quiz/${id}/report`, { method: 'GET' }),
 
-    // Ученические. Вопросы приходят без правильных ответов; проверка каждого
-    // ответа и итоговый балл считаются на сервере по коду сессии.
-    join: (code) => request('/quiz/join', {
+    // Ученические. Вопросы приходят без правильных ответов, а вход выдаёт токен
+    // попытки: по нему сервер знает, на каком вопросе ученик, и хранит его
+    // выборы. Ответы и балл клиент не присылает — их считает сервер.
+    join: (code, student_name) => request('/quiz/join', {
       method: 'POST',
-      body: JSON.stringify({ code })
+      body: JSON.stringify({ code, student_name })
     }),
-    answer: (code, question_index, selected) => request('/quiz/answer', {
+    answer: (attempt_token, question_index, selected) => request('/quiz/answer', {
       method: 'POST',
-      body: JSON.stringify({ code, question_index, selected })
+      body: JSON.stringify({ attempt_token, question_index, selected })
     }),
-    submit: ({ code, student_name, answers, duration }) => request('/quiz/submit', {
+    submit: ({ attempt_token, duration }) => request('/quiz/submit', {
       method: 'POST',
-      body: JSON.stringify({ code, student_name, answers, duration })
+      body: JSON.stringify({ attempt_token, duration })
     }),
   },
 

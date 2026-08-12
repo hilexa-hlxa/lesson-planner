@@ -61,6 +61,17 @@
 - **Intermittent 500s from Supabase** — `PDO::ATTR_PERSISTENT` was on, so when the transaction
   pooler dropped an idle connection the PHP worker kept reusing the dead handle and failed every
   request until it recycled ("SSL SYSCALL error: EOF detected"). Persistence is off.
+- **Answers could be read ahead** — `/api/quiz/answer` revealed any question by index. Migration
+  `003` adds `quiz_attempts`: joining issues a one-time token, the server tracks which question
+  the student is on, and only that one can be revealed. The student's choices live in the
+  attempt row, so `submit` no longer accepts answers from the browser at all. One finished
+  attempt per name per session, enforced by a partial unique index.
+- **No rate limiting** — migration `003` adds `rate_limits` and `backend/src/RateLimiter.php`
+  (shared counter in the database, since PHP workers share no memory). Applied to quiz joins
+  (30 failures / 5 min and 120 / hour per IP), logins (8 failures / 15 min per account, 40 per
+  IP), registration (10 / hour per IP) and generation (60 / hour per account). Only *failures*
+  count, and the code is checked before the limit — a whole class shares one school IP, so a
+  correct code must never be refused because someone else was guessing.
 
 ## Open
 
@@ -72,10 +83,7 @@
   (labels, table headers, the report modal). Its error messages are localised; the rest is not.
 - **Report prompts** — `generateReport` hardcodes "Language: Russian (Strictly)" regardless
   of the interface language.
-- **Answer reveal can still be scripted** — `/api/quiz/answer` keeps no per-student progress,
-  so a determined student could request every question's answer before answering. Closing this
-  needs a `quiz_attempts` table to track position; it raises the bar from "read the page source"
-  to "write a script", which was the goal for a classroom setting.
-- **No server-side rate limiting** — nothing throttles join attempts, so the 10 000-code space
-  is brute-forceable. Worth a per-IP limit on `/api/quiz/join` and on the auth routes.
 - **`cookie_secure` is `false`** — must be `true` in `config.local.php` before an HTTPS deploy.
+- **The test library on `/create-test` is always empty** — it filters `item.type === 'test'`,
+  but `generations` has no `type` column and `GET /api/generations` never returns one, so the
+  filter drops every row. Either add the column or drop the filter.

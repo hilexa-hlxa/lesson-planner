@@ -19,6 +19,7 @@ require __DIR__ . '/../src/DB.php';
 require __DIR__ . '/../src/AuthService.php';
 require __DIR__ . '/../src/Response.php';
 require __DIR__ . '/../src/QuizParser.php';
+require __DIR__ . '/../src/RateLimiter.php';
 
 try {
   $db   = new DB($config['db']);
@@ -74,9 +75,15 @@ $body = in_array($method, ['POST','PUT','PATCH'], true) ? readJsonBodyOrFail() :
 // Обязательно требуем сессию: без этой проверки эндпоинт был открытым прокси
 // к Gemini — любой мог слать произвольные промпты за счёт нашего API-ключа.
 if ($method === 'POST' && preg_match('#^/api/generate/stream/?$#', $path)) {
-  if (!$auth->currentUser()) {
+  $streamUser = $auth->currentUser();
+  if (!$streamUser) {
     Response::error('Unauthorized', 401);
   }
+
+  // Каждый запрос стоит нам квоты Gemini, поэтому считаем их все — и по
+  // аккаунту, чтобы один пользователь не выбрал лимит на всех.
+  \App\RateLimiter::enforce($db->pdo(), 'generate:' . (int)$streamUser['id'], 60, 3600);
+
   require __DIR__ . '/../src/GenerateStream.php';
   \App\GenerateStream::handle($config, $body);
   exit;
@@ -147,8 +154,15 @@ try {
   // Общий помощник: находим активную сессию теста по 4-значному коду.
   // Код — это общий секрет учителя и класса, поэтому он же служит пропуском
   // к /answer и /submit: без действующего кода отправить результат нельзя.
-  $findLiveQuizByCode = function (string $code) use ($db) {
-      if (strlen($code) !== 4) Response::error('Invalid format', 400);
+  // $onFail вызывается перед каждым отказом — так в счётчик частоты попадают
+  // только неудачные попытки подобрать код, а не обычные входы класса.
+  $findLiveQuizByCode = function (string $code, ?callable $onFail = null) use ($db) {
+      $reject = function (string $msg, int $status) use ($onFail) {
+          if ($onFail) $onFail();
+          Response::error($msg, $status);
+      };
+
+      if (strlen($code) !== 4) $reject('Invalid format', 400);
 
       $stmt = $db->pdo()->prepare("
           SELECT id, subject, topic, result_md, code_expires_at
@@ -159,41 +173,155 @@ try {
       $stmt->execute([':code' => $code]);
       $quiz = $stmt->fetch(PDO::FETCH_ASSOC);
 
-      if (!$quiz) Response::error('Quiz not found', 404);
-      if (strtotime($quiz['code_expires_at']) < time()) Response::error('Session expired', 410);
+      if (!$quiz) $reject('Quiz not found', 404);
+      if (strtotime($quiz['code_expires_at']) < time()) $reject('Session expired', 410);
 
       $quiz['parsed'] = \App\QuizParser::parse($quiz['result_md']);
-      if (count($quiz['parsed']) === 0) Response::error('Quiz has no questions', 422);
+      if (count($quiz['parsed']) === 0) $reject('Quiz has no questions', 422);
 
       return $quiz;
   };
 
-  // 2. Join Session — отдаём вопросы БЕЗ ключа к ответам
-  if ($method === 'POST' && $path === '/api/quiz/join') {
-      $quiz = $findLiveQuizByCode((string)($body['code'] ?? ''));
+  // Находим активную попытку по токену, который ученик получил при входе.
+  // Возвращает [попытка, разобранный тест].
+  $findAttempt = function (string $token) use ($db) {
+      if (strlen($token) !== 64) Response::error('Invalid attempt', 400);
 
-      Response::ok(['quiz' => [
-          'id'              => (int)$quiz['id'],
-          'subject'         => $quiz['subject'],
-          'topic'           => $quiz['topic'],
-          'code_expires_at' => $quiz['code_expires_at'],
-          'questions'       => \App\QuizParser::withoutAnswers($quiz['parsed']),
-      ]]);
+      $st = $db->pdo()->prepare("
+          SELECT a.*, g.result_md, g.code_expires_at
+          FROM quiz_attempts a
+          JOIN generations g ON g.id = a.quiz_id
+          WHERE a.token_hash = :h
+          LIMIT 1
+      ");
+      $st->execute([':h' => hash('sha256', $token)]);
+      $attempt = $st->fetch(PDO::FETCH_ASSOC);
+
+      if (!$attempt) Response::error('Attempt not found', 404);
+      if (strtotime($attempt['expires_at']) < time()) Response::error('Session expired', 410);
+
+      $parsed = \App\QuizParser::parse($attempt['result_md']);
+      if (count($parsed) === 0) Response::error('Quiz has no questions', 422);
+
+      return [$attempt, $parsed];
+  };
+
+  // 2. Join Session — отдаём вопросы БЕЗ ключа и заводим попытку
+  if ($method === 'POST' && $path === '/api/quiz/join') {
+      // Ограничение срабатывает ТОЛЬКО на неверных кодах, и проверяется уже
+      // после поиска. Порядок здесь важен: школа выходит в сеть одним адресом,
+      // и если сверять лимит до поиска, один переборщик запер бы весь класс.
+      // С верным кодом ученик проходит всегда, каким бы ни был счётчик.
+      //
+      // Два порога. Короткий терпит опечатки: тридцать учеников набирают код
+      // руками, часть ошибётся. Длинный ловит перебор: 120 промахов в час —
+      // это ~83 часа на все 10 000 кодов, а код живёт четыре.
+      $ip           = \App\RateLimiter::clientIp();
+      $failBurstKey = 'quiz_join_fail_5m:' . $ip;
+      $failHourKey  = 'quiz_join_fail_1h:' . $ip;
+
+      $code = (string)($body['code'] ?? '');
+      $quiz = $findLiveQuizByCode($code, function () use ($db, $failBurstKey, $failHourKey) {
+          \App\RateLimiter::fail($db->pdo(), $failBurstKey, 300);
+          \App\RateLimiter::fail($db->pdo(), $failHourKey, 3600);
+          // Перебрал — дальше вместо 404 отвечаем 429 и ничего не сообщаем о коде
+          \App\RateLimiter::guard($db->pdo(), $failBurstKey, 30, 300);
+          \App\RateLimiter::guard($db->pdo(), $failHourKey, 120, 3600);
+      });
+
+      // Верный код — значит это ученик, а не перебор: обнуляем короткий счётчик,
+      // чтобы чужие опечатки не копились против класса.
+      \App\RateLimiter::reset($db->pdo(), $failBurstKey);
+
+      $name = trim((string)($body['student_name'] ?? ''));
+      if ($name === '') $name = 'Guest';
+      if (mb_strlen($name) > 160) $name = mb_substr($name, 0, 160);
+
+      $quizId = (int)$quiz['id'];
+
+      // Повторно пройти тест под тем же именем в этой же сессии нельзя
+      $done = $db->pdo()->prepare("
+          SELECT 1 FROM quiz_attempts
+          WHERE quiz_id = :qid AND session_code = :code
+            AND lower(student_name) = lower(:name)
+            AND submitted_at IS NOT NULL
+          LIMIT 1
+      ");
+      $done->execute([':qid' => $quizId, ':code' => $code, ':name' => $name]);
+      if ($done->fetchColumn()) {
+          Response::error('This name has already finished the quiz', 409);
+      }
+
+      $submitter = $auth->currentUser();
+      $studentId = ($submitter && $submitter['role'] === 'student') ? (int)$submitter['id'] : null;
+
+      $token = bin2hex(random_bytes(32));
+      $ins = $db->pdo()->prepare("
+          INSERT INTO quiz_attempts
+            (quiz_id, token_hash, session_code, student_name, student_id, expires_at)
+          VALUES (:qid, :h, :code, :name, :sid, :exp)
+      ");
+      $ins->execute([
+          ':qid'  => $quizId,
+          ':h'    => hash('sha256', $token),
+          ':code' => $code,
+          ':name' => $name,
+          ':sid'  => $studentId,
+          ':exp'  => $quiz['code_expires_at'],
+      ]);
+
+      Response::ok([
+          'attempt_token' => $token,
+          'quiz' => [
+              'id'              => $quizId,
+              'subject'         => $quiz['subject'],
+              'topic'           => $quiz['topic'],
+              'code_expires_at' => $quiz['code_expires_at'],
+              'questions'       => \App\QuizParser::withoutAnswers($quiz['parsed']),
+          ],
+      ]);
   }
 
-  // 3. Check one answer — правильный вариант раскрываем только ПОСЛЕ выбора,
-  // чтобы у ученика осталась мгновенная обратная связь на вопрос.
+  // 3. Check one answer — раскрываем правильный вариант ТОЛЬКО для того вопроса,
+  // до которого ученик дошёл. Прочитать ответы вперёд перебором номеров нельзя.
   if ($method === 'POST' && $path === '/api/quiz/answer') {
-      $quiz = $findLiveQuizByCode((string)($body['code'] ?? ''));
+      [$attempt, $parsed] = $findAttempt((string)($body['attempt_token'] ?? ''));
 
-      $idx = (int)($body['question_index'] ?? -1);
-      if (!isset($quiz['parsed'][$idx])) Response::error('Unknown question', 404);
+      if ($attempt['submitted_at'] !== null) Response::error('Attempt already submitted', 409);
 
-      $question = $quiz['parsed'][$idx];
+      $idx      = (int)($body['question_index'] ?? -1);
+      $position = (int)$attempt['answered_count'];
+      $answers  = json_decode((string)$attempt['answers_json'], true);
+      if (!is_array($answers)) $answers = [];
+
+      if (!isset($parsed[$idx])) Response::error('Unknown question', 404);
+
+      // Повтор последнего вопроса (например, ответ потерялся в сети) —
+      // отдаём тот же результат, не сдвигая позицию.
+      $isReplay = ($idx === $position - 1);
+      if ($idx !== $position && !$isReplay) {
+          Response::error('Answer the questions in order', 409);
+      }
+
+      $question = $parsed[$idx];
       $correct  = (int)$question['correctIndex'];
       $selected = array_key_exists('selected', $body) && $body['selected'] !== null
           ? (int)$body['selected']
           : null;
+
+      if (!$isReplay) {
+          $answers[$idx] = $selected;
+          $upd = $db->pdo()->prepare("
+              UPDATE quiz_attempts
+              SET answers_json = :ans, answered_count = :cnt
+              WHERE id = :id
+          ");
+          $upd->execute([
+              ':ans' => json_encode($answers, JSON_UNESCAPED_UNICODE),
+              ':cnt' => $idx + 1,
+              ':id'  => (int)$attempt['id'],
+          ]);
+      }
 
       Response::ok([
           'correct_index' => $correct,
@@ -202,26 +330,25 @@ try {
       ]);
   }
 
-  // 4. Submit Results — балл считает сервер по своему ключу.
-  // Раньше клиент присылал score/total, и любой мог отправить себе 10/10.
+  // 4. Submit Results — балл считает сервер по СВОИМ данным: и ключ, и выбранные
+  // варианты лежат в базе, клиент не присылает ни ответов, ни очков.
   if ($method === 'POST' && $path === '/api/quiz/submit') {
-      $quiz = $findLiveQuizByCode((string)($body['code'] ?? ''));
+      [$attempt, $parsed] = $findAttempt((string)($body['attempt_token'] ?? ''));
 
-      $answers = $body['answers'] ?? null;
-      if (!is_array($answers)) Response::error('Answers required', 400);
+      if ($attempt['submitted_at'] !== null) {
+          Response::error('Result already recorded', 409);
+      }
 
-      $name = trim((string)($body['student_name'] ?? ''));
-      if ($name === '') $name = 'Guest';
-      if (mb_strlen($name) > 160) $name = mb_substr($name, 0, 160);
+      $answers = json_decode((string)$attempt['answers_json'], true);
+      if (!is_array($answers)) $answers = [];
 
       $duration = max(0, (int)($body['duration'] ?? 0));
+      $quizId   = (int)$attempt['quiz_id'];
+      $total    = count($parsed);
+      $score    = 0;
+      $details  = [];
 
-      $quizId = (int)$quiz['id'];
-      $total  = count($quiz['parsed']);
-      $score  = 0;
-      $details = [];
-
-      foreach ($quiz['parsed'] as $i => $question) {
+      foreach ($parsed as $i => $question) {
           $correct  = (int)$question['correctIndex'];
           $selected = (array_key_exists($i, $answers) && $answers[$i] !== null)
               ? (int)$answers[$i]
@@ -242,42 +369,44 @@ try {
           ];
       }
 
-      // Одна попытка на имя в рамках текущей сессии кода: иначе ответы можно
-      // подобрать перебором, отправляя результат снова и снова.
-      $sessionStart = date('c', strtotime($quiz['code_expires_at']) - QUIZ_SESSION_TTL_SECONDS);
-      $dup = $db->pdo()->prepare("
-          SELECT 1 FROM quiz_results
-          WHERE quiz_id = :qid
-            AND lower(student_name) = lower(:name)
-            AND created_at > :since
-          LIMIT 1
-      ");
-      $dup->execute([':qid' => $quizId, ':name' => $name, ':since' => $sessionStart]);
-      if ($dup->fetchColumn()) {
-          Response::error('Result already recorded for this name', 409);
-      }
-
       $percentage = $total > 0 ? (int)round(($score / $total) * 100) : 0;
 
-      $submitter = $auth->currentUser();
-      $studentId = ($submitter && $submitter['role'] === 'student') ? (int)$submitter['id'] : null;
+      $db->pdo()->beginTransaction();
+      try {
+          // Помечаем попытку первой: уникальный индекс не даст записать два
+          // результата на одно имя в одной сессии даже при гонке.
+          $mark = $db->pdo()->prepare("
+              UPDATE quiz_attempts SET submitted_at = NOW()
+              WHERE id = :id AND submitted_at IS NULL
+          ");
+          $mark->execute([':id' => (int)$attempt['id']]);
+          if ($mark->rowCount() === 0) {
+              $db->pdo()->rollBack();
+              Response::error('Result already recorded', 409);
+          }
 
-      $stmt = $db->pdo()->prepare("
-          INSERT INTO quiz_results
-            (quiz_id, student_name, student_id, score, total_questions, percentage, duration_seconds, answers_json)
-          VALUES
-            (:qid, :name, :sid, :score, :total, :perc, :dur, :details)
-      ");
-      $stmt->execute([
-          ':qid'     => $quizId,
-          ':name'    => $name,
-          ':sid'     => $studentId,
-          ':score'   => $score,
-          ':total'   => $total,
-          ':perc'    => $percentage,
-          ':dur'     => $duration,
-          ':details' => json_encode($details, JSON_UNESCAPED_UNICODE)
-      ]);
+          $stmt = $db->pdo()->prepare("
+              INSERT INTO quiz_results
+                (quiz_id, student_name, student_id, score, total_questions, percentage, duration_seconds, answers_json)
+              VALUES
+                (:qid, :name, :sid, :score, :total, :perc, :dur, :details)
+          ");
+          $stmt->execute([
+              ':qid'     => $quizId,
+              ':name'    => $attempt['student_name'],
+              ':sid'     => $attempt['student_id'] !== null ? (int)$attempt['student_id'] : null,
+              ':score'   => $score,
+              ':total'   => $total,
+              ':perc'    => $percentage,
+              ':dur'     => $duration,
+              ':details' => json_encode($details, JSON_UNESCAPED_UNICODE)
+          ]);
+
+          $db->pdo()->commit();
+      } catch (\Throwable $e) {
+          if ($db->pdo()->inTransaction()) $db->pdo()->rollBack();
+          throw $e;
+      }
 
       Response::ok([
           'success'    => true,
@@ -360,6 +489,9 @@ try {
   // ======================================================
 
   if ($method === 'POST' && $path === '/api/auth/register') {
+    // Регистрация создаёт запись в базе, поэтому считаем каждое обращение
+    \App\RateLimiter::enforce($db->pdo(), 'register:' . \App\RateLimiter::clientIp(), 10, 3600);
+
     try {
       $userId = $auth->register(
         (string)($body['email'] ?? ''),
@@ -380,8 +512,26 @@ try {
   }
 
   if ($method === 'POST' && $path === '/api/auth/login') {
-    $ok = $auth->login((string)($body['email'] ?? ''), (string)($body['password'] ?? ''));
-    if (!$ok) Response::error('Wrong email or password', 401);
+    // Считаем только неуспешные входы — по IP и отдельно по адресу почты,
+    // чтобы перебор пароля к одному аккаунту не размазывался по разным IP.
+    $email  = (string)($body['email'] ?? '');
+    $ipKey  = 'login_fail_ip:' . \App\RateLimiter::clientIp();
+    $accKey = 'login_fail_acct:' . strtolower(trim($email));
+
+    // По IP порог свободный (школа выходит в сеть одним адресом),
+    // по аккаунту — жёсткий: он и защищает от подбора пароля.
+    \App\RateLimiter::guard($db->pdo(), $ipKey, 40, 900);
+    \App\RateLimiter::guard($db->pdo(), $accKey, 8, 900);
+
+    $ok = $auth->login($email, (string)($body['password'] ?? ''));
+    if (!$ok) {
+      \App\RateLimiter::fail($db->pdo(), $ipKey, 900);
+      \App\RateLimiter::fail($db->pdo(), $accKey, 900);
+      Response::error('Wrong email or password', 401);
+    }
+
+    \App\RateLimiter::reset($db->pdo(), $ipKey);
+    \App\RateLimiter::reset($db->pdo(), $accKey);
     Response::ok();
   }
 

@@ -19,7 +19,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
   const [quizFinished, setQuizFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [answersLog, setAnswersLog] = useState([]);
-  const [answers, setAnswers] = useState([]);
+  const [answerError, setAnswerError] = useState("");
   // Итог, посчитанный сервером — он и есть настоящий
   const [serverResult, setServerResult] = useState(null);
 
@@ -34,10 +34,9 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     try {
       const data = JSON.parse(raw);
       const qs = data?.quiz?.questions;
-      if (!Array.isArray(qs) || qs.length === 0) { navigate('/join-test'); return; }
+      if (!Array.isArray(qs) || qs.length === 0 || !data.attemptToken) { navigate('/join-test'); return; }
       setSession(data);
       setQuestions(qs);
-      setAnswers(new Array(qs.length).fill(null));
       setLoading(false);
     } catch (e) { navigate('/join-test'); }
   }, [navigate]);
@@ -57,14 +56,10 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
 
     setSelectedOption(optionIndex);
     setChecking(true);
-    setAnswers(prev => {
-      const next = [...prev];
-      next[currentIndex] = optionIndex;
-      return next;
-    });
+    setAnswerError("");
 
     try {
-      const r = await api.quiz.answer(session.code, currentIndex, optionIndex);
+      const r = await api.quiz.answer(session.attemptToken, currentIndex, optionIndex);
       const isCorrect = !!r.is_correct;
 
       setRevealed({ correctIndex: r.correct_index, correctText: r.correct_text });
@@ -78,22 +73,14 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
         selectedText: currentQ.options[optionIndex],
         correctText: r.correct_text,
       }]);
-    } catch (e) {
-      // Сеть подвела — ответ принимаем без мгновенной проверки.
-      // Он уже в answers, итог всё равно посчитает сервер при отправке.
-      console.error("Answer check failed", e);
-      setRevealed(null);
-      setAnswersLog(prev => [...prev, {
-        questionId: currentIndex,
-        questionText: currentQ.question,
-        isCorrect: null,
-        time: questionTime,
-        selected: optionIndex,
-        selectedText: currentQ.options[optionIndex],
-        correctText: null,
-      }]);
-    } finally {
       setIsAnswered(true);
+    } catch (e) {
+      // Ответ засчитывает сервер, поэтому не принимаем его локально: иначе
+      // ученик пошёл бы дальше, а выбор нигде не сохранился. Даём выбрать снова.
+      console.error("Answer check failed", e);
+      setSelectedOption(null);
+      setAnswerError("Не удалось записать ответ. Нажмите вариант ещё раз.");
+    } finally {
       setChecking(false);
     }
   };
@@ -104,6 +91,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
       setSelectedOption(null);
       setIsAnswered(false);
       setRevealed(null);
+      setAnswerError("");
       setQuestionTime(0);
     } else {
       // ВЫЗЫВАЕМ ЕДИНУЮ ФУНКЦИЮ ФИНИША
@@ -121,9 +109,7 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     let finalScore = score;
     try {
         const r = await api.quiz.submit({
-            code: session.code,
-            student_name: session.studentName,
-            answers,
+            attempt_token: session.attemptToken,
             duration: elapsedTime,
         });
         setServerResult(r);
@@ -254,6 +240,12 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
                 );
              })}
           </div>
+
+          {answerError && (
+            <p className="mt-5 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-sm font-bold">
+              {answerError}
+            </p>
+          )}
        </div>
 
        <div className="h-20 flex items-center justify-end">

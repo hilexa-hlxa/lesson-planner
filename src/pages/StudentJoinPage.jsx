@@ -11,6 +11,8 @@ const T = {
     notFound: "Сессия не найдена. Проверьте код у учителя.",
     badData: "Не удалось загрузить тест. Попросите учителя перезапустить сессию.",
     expired: "Сессия теста завершена. Попросите учителя запустить её заново.",
+    alreadyDone: "Под этим именем тест уже пройден. Возьмите другое имя или спросите учителя.",
+    tooMany: "Слишком много попыток. Подождите несколько минут и попробуйте снова.",
     network: "Нет связи с сервером. Проверьте интернет и попробуйте снова.",
   },
   KZ: {
@@ -20,6 +22,8 @@ const T = {
     notFound: "Сессия табылмады. Кодты мұғалімнен тексеріңіз.",
     badData: "Тестті жүктеу мүмкін болмады. Мұғалімнен сессияны қайта іске қосуын сұраңыз.",
     expired: "Тест сессиясы аяқталды. Мұғалімнен қайта іске қосуын сұраңыз.",
+    alreadyDone: "Бұл атпен тест тапсырылып қойған. Басқа ат алыңыз немесе мұғалімнен сұраңыз.",
+    tooMany: "Тым көп әрекет. Бірнеше минут күтіп, қайталаңыз.",
     network: "Сервермен байланыс жоқ. Интернетті тексеріп, қайталаңыз.",
   },
   EN: {
@@ -29,6 +33,8 @@ const T = {
     notFound: "Session not found. Check the code with your teacher.",
     badData: "Could not load the quiz. Ask your teacher to restart the session.",
     expired: "This quiz session has ended. Ask your teacher to start it again.",
+    alreadyDone: "This name has already finished the quiz. Use another name or ask your teacher.",
+    tooMany: "Too many attempts. Wait a few minutes and try again.",
     network: "No connection to the server. Check your internet and try again.",
   },
 };
@@ -50,18 +56,19 @@ const StudentJoinPage = ({ lang = "RU" }) => {
     setLoading(true);
     setError("");
     try {
-      const data = await api.quiz.join(trimmedCode);
+      const data = await api.quiz.join(trimmedCode, name.trim());
       const quizData = data.data?.quiz || data.quiz;
+      const attemptToken = data.attempt_token || data.data?.attempt_token;
 
-      if (!quizData?.questions?.length) {
+      if (!quizData?.questions?.length || !attemptToken) {
         setError(t.badData);
         return;
       }
 
-      // Код нужен и дальше: им подтверждается каждый ответ и итоговая отправка
+      // Токен попытки нужен дальше: им подтверждается каждый ответ и отправка
       localStorage.setItem('student_quiz_session', JSON.stringify({
         quiz: quizData,
-        code: trimmedCode,
+        attemptToken,
         studentName: name.trim(),
         startTime: Date.now()
       }));
@@ -71,6 +78,8 @@ const StudentJoinPage = ({ lang = "RU" }) => {
     } catch (err) {
       if (err?.status === 404) setError(t.notFound);
       else if (err?.status === 410) setError(t.expired);
+      else if (err?.status === 409) setError(t.alreadyDone);
+      else if (err?.status === 429) setError(t.tooMany);
       else if (err?.status === 422) setError(t.badData);
       else {
         console.error(err);
