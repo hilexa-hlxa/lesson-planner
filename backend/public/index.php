@@ -13,6 +13,9 @@ $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 // Сколько живёт сессия теста после нажатия «Start Session»
 const QUIZ_SESSION_TTL_SECONDS = 4 * 60 * 60;
 
+// Что бывает в generations.type. Неизвестное значение считаем планом урока.
+const GENERATION_TYPES = ['lesson_plan', 'test'];
+
 $config = require __DIR__ . '/../config.php';
 
 require __DIR__ . '/../src/DB.php';
@@ -615,14 +618,23 @@ try {
     if ($limit <= 0) $limit = 50;
     if ($limit > 100) $limit = 100;
 
-    $stmt = $db->pdo()->prepare("
-      SELECT id, topic, subject, status, created_at, access_code
+    // ?type=lesson_plan | test — фильтруем в базе, чтобы страница получала
+    // только своё. Без параметра отдаём всё, как раньше.
+    $type = isset($_GET['type']) ? (string)$_GET['type'] : '';
+    $filterByType = in_array($type, GENERATION_TYPES, true);
+
+    $sql = "
+      SELECT id, type, topic, subject, status, created_at, access_code
       FROM generations
       WHERE user_id = :uid
+    " . ($filterByType ? " AND type = :type " : "") . "
       ORDER BY created_at DESC
       LIMIT :limit
-    ");
+    ";
+
+    $stmt = $db->pdo()->prepare($sql);
     $stmt->bindValue(':uid', $u['id']);
+    if ($filterByType) $stmt->bindValue(':type', $type);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
 
@@ -644,14 +656,18 @@ try {
     $lang     = (string)($body['lang'] ?? 'RU');
     $prompt   = (string)($body['prompt'] ?? '');
 
+    // Клиент присылал type и раньше, но записывать его было некуда
+    $type = (string)($body['type'] ?? 'lesson_plan');
+    if (!in_array($type, GENERATION_TYPES, true)) $type = 'lesson_plan';
+
     if ($subject === '' || $topic === '') Response::error('Subject/Topic required', 400);
     if ($prompt === '') Response::error('Prompt required', 400);
 
     $stmt = $db->pdo()->prepare("
       INSERT INTO generations
-        (user_id, subject, topic, details, grade, duration, lang, prompt, status)
+        (user_id, subject, topic, details, grade, duration, lang, prompt, status, type)
       VALUES
-        (:uid, :subject, :topic, :details, :grade, :duration, :lang, :prompt, 'pending')
+        (:uid, :subject, :topic, :details, :grade, :duration, :lang, :prompt, 'pending', :type)
       RETURNING id
     ");
     $stmt->execute([
@@ -663,6 +679,7 @@ try {
       ':duration' => $duration,
       ':lang'     => $lang,
       ':prompt'   => $prompt,
+      ':type'     => $type,
     ]);
 
     $id = $stmt->fetchColumn();

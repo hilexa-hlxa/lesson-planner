@@ -72,6 +72,12 @@
   IP), registration (10 / hour per IP) and generation (60 / hour per account). Only *failures*
   count, and the code is checked before the limit — a whole class shares one school IP, so a
   correct code must never be refused because someone else was guessing.
+- **Plans and quizzes were indistinguishable** — both pages sent `type` on create, but there was
+  no column to hold it, so `POST /api/generations` dropped it and the GET never returned it. The
+  Dashboard history therefore listed everything and the `/create-test` library listed nothing.
+  Migration `004` adds `generations.type` (defaulting to `lesson_plan`, backfilling rows that
+  have an access code to `test`), the insert stores it, and `GET /api/generations?type=` filters
+  in the database — so each page asks for its own kind and no client-side filtering is left.
 
 ## Open
 
@@ -84,8 +90,3 @@
 - **Report prompts** — `generateReport` hardcodes "Language: Russian (Strictly)" regardless
   of the interface language.
 - **`cookie_secure` is `false`** — must be `true` in `config.local.php` before an HTTPS deploy.
-- **Plans and quizzes are not distinguishable** — `generations` has no `type` column, and
-  `POST /api/generations` silently drops the `type` both pages send. The always-empty filter on
-  `/create-test` is gone, so the library works, but it now lists lesson plans alongside quizzes
-  — as the Dashboard history already did. Adding a `type` column and writing it on insert would
-  let each page show only its own kind.

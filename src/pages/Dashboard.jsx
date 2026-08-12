@@ -132,17 +132,9 @@ export default function Dashboard({
           Array.isArray(data?.data) ? data.data :
           [];
 
+        // Фильтр по типу больше не нужен: сервер отдаёт только планы уроков
         const plans = items
-          .filter(x => {
-            if (!x) return false;
-            const type = String(x.type || "").trim().toLowerCase();
-            return (
-              type === "lesson_plan" ||
-              type === "lessonplan" ||
-              type === "lesson-plan" ||
-              type === ""
-            );
-          })
+          .filter(Boolean)
           .map((x) => ({
             id: x.id,
             name: x.topic || `#${x.teacher_seq ?? x.id}`,

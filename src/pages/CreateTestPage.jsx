@@ -83,12 +83,8 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
   const loadSavedTests = async () => {
     try {
+      // Фильтровать на клиенте нечего: сервер отдаёт только type=test
       const res = await api.tests.list(100);
-      // Фильтра по типу здесь нет намеренно: колонки type в generations не
-      // существует, POST /api/generations её не пишет, а GET не возвращает —
-      // item.type всегда undefined, и проверка `=== 'test'` отбрасывала всё,
-      // из-за чего библиотека была вечно пустой. Пока планы и тесты лежат в
-      // одной таблице без признака, показываем все генерации.
       setSavedTests(res.items || []);
     } catch (e) { console.error(e); }
   };

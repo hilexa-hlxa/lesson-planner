@@ -153,8 +153,10 @@ const api = {
     }
   },
 
+  // Планы уроков и тесты лежат в одной таблице и различаются полем type.
+  // Фильтрует сервер: страница получает только своё.
   lessonPlans: {
-    list: (limit = 50) => request(`/generations?limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
+    list: (limit = 50) => request(`/generations?type=lesson_plan&limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
     get: (id) => request(`/generations/${id}`, { method: 'GET' }),
     create: (payload) => request(`/generations`, { method: 'POST', body: JSON.stringify(payload) }),
     update: (id, payload) => request(`/generations/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
@@ -162,7 +164,7 @@ const api = {
   },
 
   tests: {
-    list: (limit = 50) => request(`/generations?limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
+    list: (limit = 50) => request(`/generations?type=test&limit=${encodeURIComponent(limit)}`, { method: 'GET' }),
     get: (id) => request(`/generations/${id}`, { method: 'GET' }),
     create: (payload) => request(`/generations`, { method: 'POST', body: JSON.stringify(payload) }),
     update: (id, payload) => request(`/generations/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
