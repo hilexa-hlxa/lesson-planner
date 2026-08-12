@@ -33,6 +33,13 @@ const ERR = {
   },
 };
 
+// Подписи панели «История»
+const LIBRARY = {
+  RU: { empty: "Пока ничего не создано. Сгенерируйте первый тест — он появится здесь." },
+  KZ: { empty: "Әзірге ештеңе жасалмаған. Алғашқы тестті жасаңыз — ол осында шығады." },
+  EN: { empty: "Nothing here yet. Generate your first quiz and it will show up." },
+};
+
 const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }) => {
   const navigate = useNavigate();
 
@@ -66,6 +73,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
   const cur = t[lang] || t.RU;
   const err = ERR[lang] || ERR.RU;
+  const LIB = LIBRARY[lang] || LIBRARY.RU;
 
   const [error, setError] = useState("");
   const [reportError, setReportError] = useState("");
@@ -76,8 +84,12 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
   const loadSavedTests = async () => {
     try {
       const res = await api.tests.list(100);
-      const tests = (res.items || []).filter(item => item.type === 'test');
-      setSavedTests(tests);
+      // Фильтра по типу здесь нет намеренно: колонки type в generations не
+      // существует, POST /api/generations её не пишет, а GET не возвращает —
+      // item.type всегда undefined, и проверка `=== 'test'` отбрасывала всё,
+      // из-за чего библиотека была вечно пустой. Пока планы и тесты лежат в
+      // одной таблице без признака, показываем все генерации.
+      setSavedTests(res.items || []);
     } catch (e) { console.error(e); }
   };
 
@@ -402,6 +414,12 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
             <button onClick={() => setShowLibrary(false)} className="md:hidden"><X size={20}/></button>
         </div>
         <div className="space-y-3 overflow-y-auto h-[calc(100vh-100px)]">
+            {savedTests.length === 0 && (
+                <div className="flex flex-col items-center text-center px-4 py-10 rounded-2xl border-2 border-dashed border-black/10 dark:border-white/10">
+                    <ClipboardList size={28} className="mb-3 text-slate-300" />
+                    <p className="text-xs font-bold text-slate-400 leading-relaxed">{LIB.empty}</p>
+                </div>
+            )}
             {savedTests.map((item) => (
                 <div key={item.id} onClick={() => handleSelectOldTest(item)} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] ${activeTest?.id === item.id ? 'bg-emerald-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-emerald-300'}`}>
                     <h4 className="font-black text-sm mb-1 line-clamp-2">{item.topic}</h4>

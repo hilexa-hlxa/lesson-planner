@@ -84,6 +84,8 @@
 - **Report prompts** — `generateReport` hardcodes "Language: Russian (Strictly)" regardless
   of the interface language.
 - **`cookie_secure` is `false`** — must be `true` in `config.local.php` before an HTTPS deploy.
-- **The test library on `/create-test` is always empty** — it filters `item.type === 'test'`,
-  but `generations` has no `type` column and `GET /api/generations` never returns one, so the
-  filter drops every row. Either add the column or drop the filter.
+- **Plans and quizzes are not distinguishable** — `generations` has no `type` column, and
+  `POST /api/generations` silently drops the `type` both pages send. The always-empty filter on
+  `/create-test` is gone, so the library works, but it now lists lesson plans alongside quizzes
+  — as the Dashboard history already did. Adding a `type` column and writing it on insert would
+  let each page show only its own kind.
