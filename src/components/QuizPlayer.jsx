@@ -5,7 +5,7 @@ import ReactConfetti from 'react-confetti';
 import api from '../api';
 
 // ДОБАВИЛИ grantAchievement В ПРОПСЫ
-const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
+const QuizPlayer = ({ grantAchievement }) => {
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [questions, setQuestions] = useState([]);

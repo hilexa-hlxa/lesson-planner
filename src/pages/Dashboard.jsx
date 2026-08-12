@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+
 import ReactMarkdown from "react-markdown";
 import { MoreVertical, Edit3, Trash2, History, Sparkles } from "lucide-react";
 
@@ -102,7 +102,6 @@ export default function Dashboard({
   const [activeId, setActiveId] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   
-  const navigate = useNavigate();
   const activeIdRef = useRef(null);
   const cur = t[lang] || t.RU;
   const GEN_T = GEN[lang] || GEN.RU;
@@ -114,7 +113,7 @@ export default function Dashboard({
     if (lessonPlans.length >= 10) {
       grantAchievement({ title: "Архитектор знаний", reward: 250, key: "architect_10" });
     }
-  }, [lessonPlans.length]);
+  }, [lessonPlans.length, grantAchievement]);
 
   // 2. ЕДИНАЯ ЗАГРУЗКА ИСТОРИИ (С КЭШЕМ)
   useEffect(() => {

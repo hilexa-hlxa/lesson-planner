@@ -1,6 +1,6 @@
 import React from "react";
 import StaticPage, { Section, Bullets } from "../components/StaticPage";
-import { CONTACT_EMAIL } from "../components/Footer";
+import { CONTACT_EMAIL } from "../siteConfig";
 
 const T = {
   RU: {

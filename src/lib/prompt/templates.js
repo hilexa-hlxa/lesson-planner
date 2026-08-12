@@ -1,5 +1,5 @@
 import { DEFAULT_PROMPT_CONFIG } from "./defaults";
-import { I18N as t, langWord } from "../i18n";
+import { langWord } from "../i18n";
 
 function escapeJsonString(s) {
   return String(s ?? "")
@@ -12,8 +12,8 @@ function escapeJsonString(s) {
 export function buildPrompt(type, vars, cfg) {
   // 1. Lesson Plan Generation
   if (type === "lesson_plan") {
-    const c = cfg?.lesson_plan || DEFAULT_PROMPT_CONFIG.lesson_plan;
-
+    // TODO: настройки плана урока (стиль, детализация, поминутный тайминг)
+    // со страницы /prompts сюда пока не подставляются — см. ROADMAP.
     const gradeInt = Number.isFinite(Number(vars.grade)) ? Number(vars.grade) : 0;
     const durationInt = Number.isFinite(Number(vars.duration)) ? Number(vars.duration) : 0;
 

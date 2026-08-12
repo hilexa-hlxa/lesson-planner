@@ -15,8 +15,8 @@
   gone too: `CreateTestPage` (5), `StudentJoinPage` (3), `FortuneWheel` (1) now use inline
   banners or disabled states.
 - **Footer content** — localised (RU/KZ/EN) with Pricing, Privacy, Terms and a contact
-  mailto. Social links are declared in `SOCIALS` at the top of `Footer.jsx` and render only
-  when a URL is filled in.
+  mailto. Contacts and social links live in `src/siteConfig.js`; socials render only when a
+  URL is filled in.
 - **Empty states** — Hub (onboarding card), Classes (icon + create CTA), StudentClasses,
   Dashboard history and generation output.
 - **Loading states** — shared `Skeleton` / `SkeletonCard` / `SkeletonRows` components replace
@@ -72,6 +72,21 @@
   IP), registration (10 / hour per IP) and generation (60 / hour per account). Only *failures*
   count, and the code is checked before the limit — a whole class shares one school IP, so a
   correct code must never be refused because someone else was guessing.
+- **`cookie_secure` was a manual step** — it was hardcoded `false` with a comment saying to
+  flip it on HTTPS, which is the kind of thing you find out about after deploying. It is now
+  detected from the request (`HTTPS`, port 443, or `X-Forwarded-Proto` behind a proxy) and can
+  still be forced either way with the `COOKIE_SECURE` env var.
+- **CreateTestPage was half-translated** — the page mixed hardcoded Russian and English and
+  ignored the language switch. All of it now comes from one map, and `generateReport` asks the
+  model for the interface language instead of always Russian.
+- **Lint** — `eslint-plugin-react` was missing, so JSX usage was invisible to `no-unused-vars`
+  and imports like `motion` looked dead (deleting them would have broken the pages). With the
+  plugin added and the genuine problems fixed, the project lints clean: 0 problems, from 24.
+- **Students could not reach the join page** — `/join-test` sat behind `Protected`, which sends
+  anyone without an account to the landing page. The whole "join by code, no registration"
+  promise — advertised on the landing, pricing and privacy pages — was unreachable for the
+  people it was built for. The route is public now, like `/play` beside it, and the back arrow
+  points home for guests instead of into the members-only games section.
 - **Plans and quizzes were indistinguishable** — both pages sent `type` on create, but there was
   no column to hold it, so `POST /api/generations` dropped it and the GET never returned it. The
   Dashboard history therefore listed everything and the `/create-test` library listed nothing.
@@ -83,10 +98,10 @@
 
 - **Real testimonials** — the landing still uses invented teachers. Replace the entries in
   `TESTIMONIALS` (`LandingPage.jsx`) with real quotes once teachers are using the product.
-- **Contact address and socials** — `CONTACT_EMAIL` in `Footer.jsx` is set to
-  `hello@lessonplanner.kz` and the `SOCIALS` URLs are empty. Fill both in with real values.
-- **CreateTestPage copy** — the page is still a mix of Russian and English hardcoded strings
-  (labels, table headers, the report modal). Its error messages are localised; the rest is not.
-- **Report prompts** — `generateReport` hardcodes "Language: Russian (Strictly)" regardless
-  of the interface language.
-- **`cookie_secure` is `false`** — must be `true` in `config.local.php` before an HTTPS deploy.
+- **Contact address and socials** — `CONTACT_EMAIL` and `SOCIALS` now live in
+  `src/siteConfig.js`, the only file to edit. The address is still the placeholder
+  `hello@lessonplanner.kz` and both social URLs are empty (empty ones render nothing).
+- **Lesson-plan prompt settings do nothing** — `/prompts` lets you set style, detail level and
+  per-minute timing, and `buildPrompt` loads `cfg.lesson_plan`, but the `lesson_plan` branch of
+  `templates.js` never substitutes any of it into the prompt. The quiz branch does use its
+  config. Either wire the values in or drop that half of the settings page.

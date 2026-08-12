@@ -574,7 +574,8 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
 
   const headlines = HEADLINES[lang] || HEADLINES.RU;
   const [hlIdx, setHlIdx] = useState(0);
-  useEffect(() => { setHlIdx(0); }, [lang]);
+  // Индекс берём по модулю — при смене языка сбрасывать состояние не нужно
+  const headline = headlines[hlIdx % headlines.length];
   useEffect(() => {
     const t = setInterval(() => setHlIdx(i => (i + 1) % headlines.length), 3500);
     return () => clearInterval(t);
@@ -627,7 +628,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
               transition={{ duration: 0.38, ease: "easeInOut" }}
               className="text-[34px] sm:text-5xl md:text-7xl lg:text-[82px] font-black uppercase tracking-tighter leading-[0.95] break-words"
             >
-              {headlines[hlIdx].a}<br />{headlines[hlIdx].b}
+              {headline.a}<br />{headline.b}
             </motion.h1>
           </AnimatePresence>
         </div>

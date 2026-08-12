@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, School, Mail } from "lucide-react";
 import StaticPage, { Section, Bullets } from "../components/StaticPage";
-import { CONTACT_EMAIL } from "../components/Footer";
+import { CONTACT_EMAIL } from "../siteConfig";
 
 const T = {
   RU: {

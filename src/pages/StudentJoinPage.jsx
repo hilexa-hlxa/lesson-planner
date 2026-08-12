@@ -39,8 +39,11 @@ const T = {
   },
 };
 
-const StudentJoinPage = ({ lang = "RU" }) => {
+const StudentJoinPage = ({ lang = "RU", user = null }) => {
   const t = T[lang] || T.RU;
+  // Гость сюда попадает по ссылке от учителя — возвращать его в игротеку
+  // (закрытый раздел) незачем, там его развернёт обратно
+  const backTo = user ? "/games" : "/";
 
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -95,7 +98,7 @@ const StudentJoinPage = ({ lang = "RU" }) => {
 
       {/* === КНОПКА НАЗАД === */}
       <Link
-        to="/games"
+        to={backTo}
         className="absolute top-5 left-5 sm:top-6 sm:left-6 p-3 bg-white dark:bg-zinc-800 border-[3px] border-black dark:border-white rounded-2xl shadow-[4px_4px_0_0_#000] hover:translate-y-1 hover:shadow-none transition text-black dark:text-white"
       >
         <ChevronLeft size={24} />

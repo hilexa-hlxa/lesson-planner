@@ -1,14 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { GraduationCap, Mail, Send, Instagram } from "lucide-react";
+import { GraduationCap, Mail, Send, Instagram, Link2 } from "lucide-react";
+import { CONTACT_EMAIL, SOCIALS } from "../siteConfig";
 
-// ─── Контакты и соцсети ───────────────────────────────────────────────────────
-// Заполните ссылки на реальные аккаунты — пустые значения не отображаются.
-export const CONTACT_EMAIL = "hello@lessonplanner.kz";
-const SOCIALS = [
-  { key: "telegram", label: "Telegram", href: "", Icon: Send },
-  { key: "instagram", label: "Instagram", href: "", Icon: Instagram },
-];
+// Иконка под каждую соцсеть; для незнакомого ключа — нейтральная ссылка
+const SOCIAL_ICONS = { telegram: Send, instagram: Instagram };
 
 const T = {
   RU: {
@@ -68,7 +64,7 @@ export default function Footer({ lang = "RU" }) {
             {socials.length > 0 && (
               <div className="flex gap-2 mt-2">
                 {socials.map((s) => {
-                  const Icon = s.Icon;
+                  const Icon = SOCIAL_ICONS[s.key] || Link2;
                   return (
                     <a
                       key={s.key}

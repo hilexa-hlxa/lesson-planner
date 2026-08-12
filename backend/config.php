@@ -10,7 +10,8 @@ $cfg = [
   'auth' => [
     'cookie_name' => 'lp_session',
     'session_ttl_seconds' => 60 * 60 * 24 * 7,
-    'cookie_secure' => false,     // true на https
+    // null = определить по запросу (см. ниже). Явные true/false тоже работают.
+    'cookie_secure' => null,
     'cookie_samesite' => 'Lax',
   ],
   'gemini' => [
@@ -39,7 +40,24 @@ $cfg['db']['pass'] = $cfg['db']['pass'] ?: (getenv('DB_PASS') ?: null);
 $cfg['gemini']['api_key'] = $cfg['gemini']['api_key'] ?: (getenv('GEMINI_API_KEY') ?: null);
 $cfg['gemini']['model']   = $cfg['gemini']['model']   ?: (getenv('GEMINI_MODEL') ?: 'gemini-2.0-flash');
 
-// 3) validate DB (строго обязательно)
+// 3) Флаг Secure у cookie сессии.
+// Раньше здесь стояло жёсткое false с комментарием «true на https», то есть
+// про него надо было вспомнить руками при деплое — и, скорее всего, забыть.
+// Теперь определяем по запросу: за обратным прокси (Supabase, Cloudflare,
+// nginx) сам PHP видит http, поэтому смотрим и на X-Forwarded-Proto.
+if ($cfg['auth']['cookie_secure'] === null) {
+  $https =
+    (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
+    || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443
+    || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+
+  $envOverride = getenv('COOKIE_SECURE');
+  $cfg['auth']['cookie_secure'] = $envOverride !== false
+    ? filter_var($envOverride, FILTER_VALIDATE_BOOLEAN)
+    : $https;
+}
+
+// 4) validate DB (строго обязательно)
 if (!$cfg['db']['dsn'] || !$cfg['db']['user'] || !$cfg['db']['pass']) {
   throw new RuntimeException(
     'Database config is not set. Provide in config.local.php or env vars: DB_DSN, DB_USER, DB_PASS'

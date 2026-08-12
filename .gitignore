@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Agent worktrees (создаются инструментами, в репозиторий не нужны)
+.claude/worktrees/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

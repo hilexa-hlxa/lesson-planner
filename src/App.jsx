@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
-import api from "./api";
-import { cached, meCached } from "./apiCache"; // Импортируем ме-кэш
+import { meCached } from "./apiCache"; // Импортируем ме-кэш
 
 import AuthModal from "./components/AuthModal";
 import Protected from "./components/Protected";
@@ -69,7 +68,7 @@ export default function App() {
   // Сбрасываем при смене пользователя (выход / вход под другим аккаунтом)
   useEffect(() => { grantedKeysRef.current = new Set(); }, [user?.id]);
 
-  const grantAchievement = (achData) => {
+  const grantAchievement = useCallback((achData) => {
     if (!achData?.key) return;
 
     // Гость (ученик, вошедший в тест по коду) — аккаунта для начисления нет.
@@ -88,7 +87,7 @@ export default function App() {
       coins: (prev.coins || 0) + (achData.reward || 0),
       achievements: [...(prev.achievements || []), achData.key]
     }) : prev);
-  };
+  }, [user]);
 
   // --- 3. ЭФФЕКТЫ ---
 
@@ -151,7 +150,7 @@ export default function App() {
     localStorage.setItem('theme', dark ? 'dark' : 'light');
     localStorage.setItem('fontSize', fontSize);
     localStorage.setItem('highContrast', highContrast);
-  }, [dark, fontSize, highContrast]);
+  }, [dark, fontSize, highContrast, grantAchievement]);
 
   // --- 4. ПРОПСЫ ---
   const accessProps = { grantAchievement, dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, lang, setLang, user, setUser };
@@ -183,7 +182,10 @@ export default function App() {
           <Route path="/create-test" element={<Page><Protected authReady={authReady} user={user}><CreateTestPage {...accessProps} promptConfig={promptConfig} /></Protected></Page>} />
           <Route path="/profile" element={<Page><Protected authReady={authReady} user={user}><ProfilePage {...accessProps} /></Protected></Page>} />
           <Route path="/prompts" element={<Page><Protected authReady={authReady} user={user}><PromptsPage {...accessProps} promptConfig={promptConfig} setPromptConfig={setPromptConfig} /></Protected></Page>} />
-          <Route path="/join-test" element={<Page><Protected authReady={authReady} user={user}><StudentJoinPage {...accessProps} /></Protected></Page>} />
+          {/* Вход в тест — БЕЗ авторизации. Весь смысл в том, что ученик
+              заходит по коду и без аккаунта; под Protected эта страница
+              разворачивала гостя на лендинг, как и /play рядом. */}
+          <Route path="/join-test" element={<Page><StudentJoinPage {...accessProps} /></Page>} />
           <Route path="/classes" element={<Page><Protected authReady={authReady} user={user}><ClassesPage {...accessProps} /></Protected></Page>} />
           <Route path="/classes/:id" element={<Page><Protected authReady={authReady} user={user}><ClassDetailPage {...accessProps} /></Protected></Page>} />
           <Route path="/my-classes" element={<Page><Protected authReady={authReady} user={user}><StudentClassesPage {...accessProps} /></Protected></Page>} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { I18N as t } from "../lib/i18n";
@@ -6,9 +6,15 @@ import { DEFAULT_PROMPT_CONFIG } from "../lib/prompt";
 
 export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
   const [local, setLocal] = useState(promptConfig);
+  const [syncedFrom, setSyncedFrom] = useState(promptConfig);
   const cur = t[lang]?.prompts || t.RU.prompts;
 
-  useEffect(() => setLocal(promptConfig), [promptConfig]);
+  // Подхватываем внешние изменения конфига во время рендера: setState в эффекте
+  // здесь давал лишний каскад рендеров.
+  if (promptConfig !== syncedFrom) {
+    setSyncedFrom(promptConfig);
+    setLocal(promptConfig);
+  }
 
   const save = () => setPromptConfig(local);
 
