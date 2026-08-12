@@ -98,6 +98,14 @@
   Minutes column when per-minute timing is off. The lesson-plan card also lost its "Markdown"
   toggle: that pipeline always emits JSON and the app renders the document itself, so the
   control could never have done anything.
+- **Achievement names were always Russian** — the title was passed as a literal string into
+  `grantAchievement` from three different files, so a teacher on the English interface saw
+  «Высший пилотаж» in the toast. Calls now pass only a key and the text comes from
+  `src/lib/achievements.js`, which also replaced the duplicate catalog `ProfilePage` was keeping.
+- **Mobile on the last four pages** — Tools, Games, Wordle and Lesson Summary still had `px-10`,
+  `p-10`, `text-6xl`/`text-7xl` and fixed `h-[360px]` cards with no responsive variants. Fixed by
+  inspection: they sit behind auth, so they could not be measured in a browser the way the public
+  pages were.
 - **Plans and quizzes were indistinguishable** — both pages sent `type` on create, but there was
   no column to hold it, so `POST /api/generations` dropped it and the GET never returned it. The
   Dashboard history therefore listed everything and the `/create-test` library listed nothing.

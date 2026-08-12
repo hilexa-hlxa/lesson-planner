@@ -6,6 +6,7 @@ import {
 import { I18N as t } from "../lib/i18n";
 import { invalidate } from "../apiCache";
 import api from "../api";
+import { achievementText } from "../lib/achievements";
 import AchievementToast from "../components/AchievementToast";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -49,15 +50,15 @@ const T = {
   },
 };
 
-// Каталог достижений. Ключи совпадают с теми, что выдаёт grantAchievement и бэкенд.
-const ACHIEVEMENTS = [
-  { key: "visit_profile",   icon: Award,     color: "bg-purple-500", RU: ["В профиле", "Посетить профиль"],            KZ: ["Профильде", "Профильге кіру"],                 EN: ["Profile visit", "Open your profile"] },
-  { key: "architect_10",    icon: Trophy,    color: "bg-emerald-500",RU: ["Архитектор знаний", "10 планов уроков"],    KZ: ["Білім сәулетшісі", "10 сабақ жоспары"],         EN: ["Knowledge architect", "10 lesson plans"] },
-  { key: "ai_report_master",icon: BarChart3, color: "bg-blue-500",   RU: ["Аналитик", "Собрать AI-отчёт по классу"],   KZ: ["Талдаушы", "Сынып бойынша AI-есеп жасау"],      EN: ["Analyst", "Build an AI class report"] },
-  { key: "perfect_score",   icon: Target,    color: "bg-green-500",  RU: ["Высший пилотаж", "100% за тест"],           KZ: ["Жоғары шеберлік", "Тестке 100%"],               EN: ["Perfect run", "100% on a quiz"] },
-  { key: "speedrunner",     icon: Timer,     color: "bg-orange-500", RU: ["Сверхзвук", "Пройти тест меньше чем за минуту"], KZ: ["Дыбыстан жылдам", "Тестті бір минуттан аз уақытта аяқтау"], EN: ["Speedrunner", "Finish a quiz in under a minute"] },
-  { key: "night_owl",       icon: Moon,      color: "bg-indigo-500", RU: ["Ночная смена", "Сгенерировать план ночью"], KZ: ["Түнгі ауысым", "Түнде жоспар жасау"],           EN: ["Night shift", "Generate a plan after midnight"] },
-  { key: "rich",            icon: Coins,     color: "bg-yellow-500", RU: ["Богач", "Накопить 500 монет"],              KZ: ["Байлық", "500 монета жинау"],                   EN: ["Rich", "Save up 500 coins"] },
+// Порядок карточек на странице; тексты и награды — из общего каталога
+const ACHIEVEMENT_ORDER = [
+  { key: "visit_profile",    icon: Award,     color: "bg-purple-500" },
+  { key: "architect_10",     icon: Trophy,    color: "bg-emerald-500" },
+  { key: "ai_report_master", icon: BarChart3, color: "bg-blue-500" },
+  { key: "perfect_score",    icon: Target,    color: "bg-green-500" },
+  { key: "speedrunner",      icon: Timer,     color: "bg-orange-500" },
+  { key: "night_owl",        icon: Moon,      color: "bg-indigo-500" },
+  { key: "rich",             icon: Coins,     color: "bg-yellow-500" },
 ];
 
 // Инициалы вместо внешней картинки — аватар всегда доступен и не тянет чужой домен
@@ -159,10 +160,9 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
 
   const roleLabel = user.role === 'teacher' ? tr.teacher : user.role === 'parent' ? tr.parent : tr.student;
 
-  const achievements = ACHIEVEMENTS.map(a => ({
+  const achievements = ACHIEVEMENT_ORDER.map(a => ({
     ...a,
-    title: (a[lang] || a.RU)[0],
-    desc: (a[lang] || a.RU)[1],
+    ...achievementText(a.key, lang),
     // "rich" считается по балансу, остальные — по выданным ключам
     unlocked: a.key === 'rich' ? coins >= 500 : unlocked.has(a.key),
   }));

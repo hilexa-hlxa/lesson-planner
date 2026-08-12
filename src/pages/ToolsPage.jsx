@@ -11,13 +11,13 @@ const ToolsPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
   const headerProps = { lang, setLang, user, setUser, ...accessProps };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20 transition-colors">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20 transition-colors">
       
       {/* Теперь Хедер функционален на 100% */}
       <Header {...headerProps} />
 
-      <main className="max-w-6xl mx-auto px-10">
-        <h1 className="text-6xl font-black uppercase mb-4 tracking-tighter italic">
+      <main className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase mb-4 tracking-tighter italic break-words">
             {tr(lang, "hub.tools")}
         </h1>
         <p className="text-xl text-slate-500 font-bold mb-16 max-w-2xl">

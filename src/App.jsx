@@ -28,6 +28,7 @@ import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
+import { achievementReward, achievementText } from "./lib/achievements";
 import ClassControlBar from './components/ClassControlBar';
 import QuizPlayer from "./components/QuizPlayer";
 import AchievementToast from "./components/AchievementToast";
@@ -69,24 +70,28 @@ export default function App() {
   // Сбрасываем при смене пользователя (выход / вход под другим аккаунтом)
   useEffect(() => { grantedKeysRef.current = new Set(); }, [user?.id]);
 
-  const grantAchievement = useCallback((achData) => {
-    if (!achData?.key) return;
+  // Принимает КЛЮЧ достижения; название и награда берутся из общего каталога,
+  // поэтому тост говорит на языке интерфейса, а не всегда по-русски.
+  const grantAchievement = useCallback((key) => {
+    if (!key || typeof key !== "string") return;
 
     // Гость (ученик, вошедший в тест по коду) — аккаунта для начисления нет.
     // Раньше здесь была мутация user.achievements, которая падала с TypeError
     // и обрывала завершение теста ДО отправки результата на сервер.
     if (!user) return;
 
-    if (grantedKeysRef.current.has(achData.key)) return;
-    if (user.achievements?.includes(achData.key)) return;
+    if (grantedKeysRef.current.has(key)) return;
+    if (user.achievements?.includes(key)) return;
 
-    grantedKeysRef.current.add(achData.key);
-    setActiveAchievement(achData);
+    const reward = achievementReward(key);
+
+    grantedKeysRef.current.add(key);
+    setActiveAchievement(key);
 
     setUser(prev => prev ? ({
       ...prev,
-      coins: (prev.coins || 0) + (achData.reward || 0),
-      achievements: [...(prev.achievements || []), achData.key]
+      coins: (prev.coins || 0) + reward,
+      achievements: [...(prev.achievements || []), key]
     }) : prev);
   }, [user]);
 
@@ -226,9 +231,12 @@ export default function App() {
         </Routes>
       </AnimatePresence>
 
-      <AchievementToast 
-        achievement={activeAchievement} 
-        onClose={() => setActiveAchievement(null)} 
+      <AchievementToast
+        achievement={activeAchievement && {
+          ...achievementText(activeAchievement, lang),
+          reward: achievementReward(activeAchievement),
+        }}
+        onClose={() => setActiveAchievement(null)}
       />
       
       {isWidgetVisible && <ClassControlBar />}

@@ -128,7 +128,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
   const isTeacher = user?.role === 'teacher';
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
       <main className="max-w-xl mx-auto px-6">
@@ -138,7 +138,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
             className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-5xl font-black uppercase tracking-tighter italic">{t.title}</h1>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter italic break-words">{t.title}</h1>
         </div>
 
         {/* Active game */}
@@ -199,7 +199,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.replace(/\D/g,'').slice(0,4))}
               placeholder={t.codePlaceholder}
-              className="w-full text-center text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none"
+              className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none"
               maxLength={4}
             />
             {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
@@ -247,7 +247,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
               <>
                 <div className="text-center mb-6">
                   <p className="font-bold text-sm text-slate-400 uppercase mb-2">{t.codeFor}</p>
-                  <div className="text-7xl font-mono font-black tracking-[0.3em] text-emerald-600 mb-2">{hostCode}</div>
+                  <div className="text-5xl sm:text-6xl lg:text-7xl font-mono font-black tracking-[0.2em] sm:tracking-[0.3em] break-all text-emerald-600 mb-2">{hostCode}</div>
                   <p className="text-slate-500 font-bold text-sm">{t.share}</p>
                 </div>
                 <button

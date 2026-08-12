@@ -331,7 +331,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
       setIsGeneratingReport(false);
     }
 
-    grantAchievement({ title: "Аналитик", reward: 300, key: "ai_report_master" });
+    grantAchievement("ai_report_master");
   };
 
   return (

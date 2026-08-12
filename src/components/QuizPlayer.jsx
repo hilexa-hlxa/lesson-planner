@@ -127,10 +127,10 @@ const QuizPlayer = ({ grantAchievement }) => {
     try {
       if (grantAchievement) {
         if (percent === 100 && questions.length >= 5) {
-          grantAchievement({ title: "Высший пилотаж", reward: 150, key: "perfect_score" });
+          grantAchievement("perfect_score");
         }
         if (elapsedTime < 60 && percent >= 80) {
-          grantAchievement({ title: "Сверхзвук", reward: 200, key: "speedrunner" });
+          grantAchievement("speedrunner");
         }
       }
     } catch (e) {

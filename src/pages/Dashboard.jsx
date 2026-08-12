@@ -71,7 +71,7 @@ export default function Dashboard({
   // 1. ПРОВЕРКА НА АЧИВКУ (Архитектор)
   useEffect(() => {
     if (lessonPlans.length >= 10) {
-      grantAchievement({ title: "Архитектор знаний", reward: 250, key: "architect_10" });
+      grantAchievement("architect_10");
     }
   }, [lessonPlans.length, grantAchievement]);
 
@@ -176,11 +176,11 @@ export default function Dashboard({
 
       const hour = new Date().getHours();
       if (hour >= 0 && hour < 5) {
-        grantAchievement({ title: "Ночная смена", reward: 100, key: "night_owl" });
+        grantAchievement("night_owl");
       }
 
       if (lessonPlans.length === 9) {
-        grantAchievement({ title: "Архитектор знаний", reward: 250, key: "architect_10" });
+        grantAchievement("architect_10");
       }
 
     } catch (e) {

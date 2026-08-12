@@ -6,17 +6,17 @@ import Header from "../components/Header";
 
 const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       
       {/* ХЕДЕР */}
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-6xl mx-auto px-10">
+      <main className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
         <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl">
                 <Gamepad2 size={32} />
             </div>
-            <h1 className="text-6xl font-black uppercase tracking-tighter italic">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tighter italic break-words">
               {tr(lang, "hub.games").replace(" (Скоро)", "").replace(" (Soon)", "").replace(" (Жақында)", "")}
             </h1>
         </div>
@@ -32,7 +32,7 @@ const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
           {/* 1. ВОЙТИ В ТЕСТ */}
           <Link 
             to="/join-test" 
-            className="group bg-white dark:bg-zinc-900 p-10 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between h-[360px]"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
           >
             <div>
               <div className="w-20 h-20 bg-emerald-600 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
@@ -55,7 +55,7 @@ const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
           {/* 2. WORDLE */}
           <Link
             to="/wordle"
-            className="group bg-white dark:bg-zinc-900 p-10 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between h-[360px]"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
           >
             <div>
               <div className="w-20 h-20 bg-green-500 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
@@ -76,7 +76,7 @@ const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
           </Link>
 
           {/* 3. ЗАГЛУШКА */}
-          <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[40px] p-10 flex flex-col items-center justify-center text-slate-400 h-[360px] cursor-not-allowed select-none">
+          <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[32px] sm:rounded-[40px] p-7 sm:p-10 flex flex-col items-center justify-center text-slate-400 min-h-[280px] sm:h-[360px] cursor-not-allowed select-none">
             <Lock size={64} className="mb-6 opacity-30" />
             <span className="font-black uppercase text-2xl tracking-widest opacity-50">Math Battle</span>
             <div className="mt-4 px-4 py-1 bg-slate-200 dark:bg-zinc-800 rounded-full text-xs font-black uppercase tracking-widest">

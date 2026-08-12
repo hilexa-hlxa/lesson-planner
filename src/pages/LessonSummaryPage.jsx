@@ -144,15 +144,15 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-3xl mx-auto px-6">
+      <main className="max-w-3xl mx-auto px-5 sm:px-6">
         <div className="flex items-center gap-4 mb-10">
           <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-5xl font-black uppercase tracking-tighter italic">{t.title}</h1>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter italic break-words">{t.title}</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
