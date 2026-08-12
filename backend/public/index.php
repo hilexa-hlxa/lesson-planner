@@ -287,6 +287,31 @@ try {
     Response::ok(['user' => $u]);
   }
 
+  // Обновление собственного профиля (имя и фамилия)
+  if ($method === 'PATCH' && $path === '/api/me') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $first = trim((string)($body['first_name'] ?? ''));
+    $last  = trim((string)($body['last_name']  ?? ''));
+
+    if ($first === '') Response::error('First name is required', 400);
+    if (mb_strlen($first) > 80 || mb_strlen($last) > 80) {
+      Response::error('Name is too long', 400);
+    }
+
+    $display = trim($first . ' ' . $last);
+
+    $st = $db->pdo()->prepare("
+      update users
+      set first_name = :f, last_name = :l, display_name = :d
+      where id = :id
+    ");
+    $st->execute([':f' => $first, ':l' => $last, ':d' => $display, ':id' => $u['id']]);
+
+    Response::ok(['user' => $auth->currentUser()]);
+  }
+
   // ======================================================
   // Economy & Coins Routes
   // ======================================================

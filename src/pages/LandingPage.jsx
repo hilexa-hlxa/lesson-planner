@@ -200,6 +200,123 @@ const TESTIMONIALS = {
   ],
 };
 
+// ─── Mockup copy ──────────────────────────────────────────────────────────────
+// Тексты внутри превью-скриншотов. Переключаются вместе с языком интерфейса.
+const MOCK = {
+  RU: {
+    history: "ИСТОРИЯ", params: "ПАРАМЕТРЫ", done: "✓ ГОТОВО",
+    topics: ["Дроби", "Периметр", "Площадь", "Углы", "Вектора", "Функции"],
+    grade: "5 Класс", gradeShort: "5 кл", classroom: "5А класс", duration: "45 Мин",
+    subject: "Математика", topic: "Дроби и части целого", topicShort: "Дроби и части",
+    detailsPh: "Детали урока...", contextPh: "Контекст...",
+    createPlan: "СОЗДАТЬ ПЛАН", createTest: "СОЗДАТЬ ТЕСТ", create: "СОЗДАТЬ",
+    planTitleLong: "## План урока — Дроби и части целого", planTitle: "## План урока",
+    planMeta: "Математика · 5 класс · 45 минут",
+    goalsTitle: "## Цели урока",
+    goalsLong: ["- Познакомить с понятием дроби", "- Формировать навык записи и чтения дробей", "- Развить умение сравнивать дроби"],
+    goalsShort: ["- Познакомить с понятием дроби", "- Развить навыки вычислений"],
+    flowTitle: "## Ход урока",
+    flowLong: [["Организационный момент", "2 мин"], ["Актуализация знаний", "8 мин"], ["Изучение нового материала", "15 мин"], ["Практическая работа", "15 мин"], ["Итоги", "5 мин"]],
+    flowShort: [["Введение", "5 мин"], ["Объяснение", "15 мин"], ["Практика", "20 мин"], ["Итоги", "5 мин"]],
+    copy: "КОПИРОВАТЬ", exportDocx: "⬇ ВЫГРУЗИТЬ В DOCX",
+    code: "код", results: "📊 Результаты",
+    summaryTitle: "Итог урока — AI Отчёт",
+    summaryHead: "📋 Математика · Дроби · 5А",
+    summaryCovered: ["Тема пройдена на ", "82%", " · 14 учеников"],
+    needHelp: "⚠ Нужна помощь",
+    homework: "📝 Домашнее задание",
+    homeworkBody: "Задачник с. 45, №3–7. Повторить правило сравнения дробей.",
+    copyKundelik: "Скопировать в Кунделик",
+    wordleTitle: "ВОРДЛ — КЛАСС", wordleAnswer: "КНИГА", wordleGuesses: ["КАРТА", "КИНГА", "КНИГА"],
+    wordleTries: "3 / 6 попыток",
+  },
+  KZ: {
+    history: "ТАРИХ", params: "ПАРАМЕТРЛЕР", done: "✓ ДАЙЫН",
+    topics: ["Бөлшектер", "Периметр", "Аудан", "Бұрыштар", "Векторлар", "Функциялар"],
+    grade: "5 сынып", gradeShort: "5 сн", classroom: "5А сынып", duration: "45 мин",
+    subject: "Математика", topic: "Бөлшектер және бүтіннің бөлігі", topicShort: "Бөлшектер",
+    detailsPh: "Сабақ мәліметтері...", contextPh: "Мәтінмән...",
+    createPlan: "ЖОСПАР ЖАСАУ", createTest: "ТЕСТ ЖАСАУ", create: "ЖАСАУ",
+    planTitleLong: "## Сабақ жоспары — Бөлшектер", planTitle: "## Сабақ жоспары",
+    planMeta: "Математика · 5 сынып · 45 минут",
+    goalsTitle: "## Сабақ мақсаттары",
+    goalsLong: ["- Бөлшек ұғымымен таныстыру", "- Бөлшекті жазу және оқу дағдысын қалыптастыру", "- Бөлшектерді салыстыруды үйрету"],
+    goalsShort: ["- Бөлшек ұғымымен таныстыру", "- Есептеу дағдысын дамыту"],
+    flowTitle: "## Сабақ барысы",
+    flowLong: [["Ұйымдастыру кезеңі", "2 мин"], ["Білімді жаңғырту", "8 мин"], ["Жаңа материал", "15 мин"], ["Практикалық жұмыс", "15 мин"], ["Қорытынды", "5 мин"]],
+    flowShort: [["Кіріспе", "5 мин"], ["Түсіндіру", "15 мин"], ["Практика", "20 мин"], ["Қорытынды", "5 мин"]],
+    copy: "КӨШІРУ", exportDocx: "⬇ DOCX-КЕ ЖҮКТЕУ",
+    code: "код", results: "📊 Нәтижелер",
+    summaryTitle: "Сабақ қорытындысы — AI есеп",
+    summaryHead: "📋 Математика · Бөлшектер · 5А",
+    summaryCovered: ["Тақырып ", "82%", " меңгерілді · 14 оқушы"],
+    needHelp: "⚠ Көмек керек",
+    homework: "📝 Үй тапсырмасы",
+    homeworkBody: "Есептер жинағы 45-бет, №3–7. Бөлшектерді салыстыру ережесін қайталау.",
+    copyKundelik: "Кунделикке көшіру",
+    wordleTitle: "ВОРДЛ — СЫНЫП", wordleAnswer: "САБАҚ", wordleGuesses: ["САНАУ", "САБЫН", "САБАҚ"],
+    wordleTries: "3 / 6 әрекет",
+  },
+  EN: {
+    history: "HISTORY", params: "PARAMETERS", done: "✓ DONE",
+    topics: ["Fractions", "Perimeter", "Area", "Angles", "Vectors", "Functions"],
+    grade: "Grade 5", gradeShort: "G5", classroom: "Grade 5A", duration: "45 min",
+    subject: "Math", topic: "Fractions and parts of a whole", topicShort: "Fractions",
+    detailsPh: "Lesson details...", contextPh: "Context...",
+    createPlan: "CREATE PLAN", createTest: "CREATE QUIZ", create: "CREATE",
+    planTitleLong: "## Lesson plan — Fractions and parts", planTitle: "## Lesson plan",
+    planMeta: "Math · Grade 5 · 45 minutes",
+    goalsTitle: "## Lesson goals",
+    goalsLong: ["- Introduce the concept of a fraction", "- Build skill in writing and reading fractions", "- Develop the ability to compare fractions"],
+    goalsShort: ["- Introduce the concept of a fraction", "- Develop calculation skills"],
+    flowTitle: "## Lesson flow",
+    flowLong: [["Opening routine", "2 min"], ["Recalling prior knowledge", "8 min"], ["New material", "15 min"], ["Practical work", "15 min"], ["Wrap-up", "5 min"]],
+    flowShort: [["Intro", "5 min"], ["Explanation", "15 min"], ["Practice", "20 min"], ["Wrap-up", "5 min"]],
+    copy: "COPY", exportDocx: "⬇ EXPORT TO DOCX",
+    code: "code", results: "📊 Results",
+    summaryTitle: "Lesson summary — AI Report",
+    summaryHead: "📋 Math · Fractions · 5A",
+    summaryCovered: ["Topic covered at ", "82%", " · 14 students"],
+    needHelp: "⚠ Needs support",
+    homework: "📝 Homework",
+    homeworkBody: "Workbook p. 45, #3–7. Review the rule for comparing fractions.",
+    copyKundelik: "Copy to Kundelik",
+    wordleTitle: "WORDLE — CLASS", wordleAnswer: "LEARN", wordleGuesses: ["LATER", "LEANS", "LEARN"],
+    wordleTries: "3 / 6 tries",
+  },
+};
+
+// Имена учеников для превью результатов — латиница только в EN
+const MOCK_STUDENTS = {
+  RU: [["Айгерим К.", "9/10", "green"], ["Данияр М.", "6/10", "yellow"], ["Зарина Т.", "10/10", "green"], ["Ернар С.", "7/10", "green"]],
+  KZ: [["Айгерим Қ.", "9/10", "green"], ["Данияр М.", "6/10", "yellow"], ["Зарина Т.", "10/10", "green"], ["Ернар С.", "7/10", "green"]],
+  EN: [["Aigerim K.", "9/10", "green"], ["Daniyar M.", "6/10", "yellow"], ["Zarina T.", "10/10", "green"], ["Yernar S.", "7/10", "green"]],
+};
+
+const MOCK_STRUGGLING = {
+  RU: ["Данияр М. — 60%", "Ернар С. — 55%", "Камила Б. — 50%"],
+  KZ: ["Данияр М. — 60%", "Ернар С. — 55%", "Камила Б. — 50%"],
+  EN: ["Daniyar M. — 60%", "Yernar S. — 55%", "Kamila B. — 50%"],
+};
+
+const mock = (lang) => MOCK[lang] || MOCK.RU;
+
+// Раскраска догадок как в настоящем Вордле: сначала точные попадания, потом остальные
+function scoreGuess(guess, answer) {
+  const g = [...guess], a = [...answer];
+  const result = g.map(() => "a");
+  const pool = {};
+  g.forEach((ch, i) => {
+    if (ch === a[i]) result[i] = "c";
+    else pool[a[i]] = (pool[a[i]] || 0) + 1;
+  });
+  g.forEach((ch, i) => {
+    if (result[i] === "c") return;
+    if (pool[ch] > 0) { result[i] = "p"; pool[ch] -= 1; }
+  });
+  return g.map((l, i) => ({ l, s: result[i] }));
+}
+
 // ─── Browser shell ─────────────────────────────────────────────────────────────
 function BrowserShell({ children, url = "lessonplanner.kz", tall = false }) {
   return (
@@ -223,48 +340,49 @@ function BrowserShell({ children, url = "lessonplanner.kz", tall = false }) {
 }
 
 // ─── Dashboard preview (hero) ─────────────────────────────────────────────────
-function DashboardPreview() {
+function DashboardPreview({ lang }) {
+  const m = mock(lang);
   return (
     <BrowserShell url="lessonplanner.kz/dashboard" tall>
       <div className="flex h-full bg-[#f0f4f8]">
         <div className="w-[80px] bg-white/60 border-r border-black/5 p-2 shrink-0 flex flex-col gap-1">
-          <div className="text-[5px] font-black text-black/25 tracking-widest mb-2 px-1">ИСТОРИЯ</div>
-          {[['Дроби',true],['Периметр',false],['Площадь',false],['Углы',false],['Вектора',false],['Функции',false]].map(([t,a],i)=>(
-            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1.5 rounded-md ${a?'bg-emerald-600 text-white':'text-black/40'}`}>{t}</div>
+          <div className="text-[5px] font-black text-black/25 tracking-widest mb-2 px-1">{m.history}</div>
+          {m.topics.map((t,i)=>(
+            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1.5 rounded-md truncate ${i===0?'bg-emerald-600 text-white':'text-black/40'}`}>{t}</div>
           ))}
         </div>
         <div className="w-[140px] bg-white/70 border-r border-black/5 p-3 flex flex-col gap-2 shrink-0">
           <div className="text-[6px] font-black text-emerald-600 tracking-widest">PLANNER</div>
           <div className="flex gap-1">
-            <div className="flex-1 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold">5 Класс</div>
-            <div className="flex-1 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold">45 Мин</div>
+            <div className="flex-1 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold truncate">{m.grade}</div>
+            <div className="flex-1 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold truncate">{m.duration}</div>
           </div>
-          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold">Математика</div>
-          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold">Дроби и части целого</div>
-          <div className="bg-slate-100 rounded text-[5px] text-black/20 px-1.5 py-5">Детали урока...</div>
-          <div className="bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-2 mt-auto border border-black shadow-[2px_2px_0_0_#000]">СОЗДАТЬ ПЛАН</div>
+          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold truncate">{m.subject}</div>
+          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold truncate">{m.topic}</div>
+          <div className="bg-slate-100 rounded text-[5px] text-black/20 px-1.5 py-5">{m.detailsPh}</div>
+          <div className="bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-2 mt-auto border border-black shadow-[2px_2px_0_0_#000]">{m.createPlan}</div>
         </div>
-        <div className="flex-1 bg-white/90 p-3 flex flex-col gap-1 overflow-hidden">
+        <div className="flex-1 min-w-0 bg-white/90 p-3 flex flex-col gap-1 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="text-[7px] font-black italic text-black/70">## План урока — Дроби и части целого</div>
-            <div className="ml-auto text-[5px] bg-green-100 text-green-700 font-black px-2 py-0.5 rounded-full border border-green-200">✓ ГОТОВО</div>
+            <div className="text-[7px] font-black italic text-black/70 truncate">{m.planTitleLong}</div>
+            <div className="ml-auto text-[5px] bg-green-100 text-green-700 font-black px-2 py-0.5 rounded-full border border-green-200 shrink-0">{m.done}</div>
           </div>
-          <div className="text-[5px] text-black/40 italic">Математика · 5 класс · 45 минут</div>
+          <div className="text-[5px] text-black/40 italic">{m.planMeta}</div>
           <div className="w-full h-px bg-black/8 my-1" />
-          <div className="text-[6px] font-black italic text-black/60 mb-0.5">## Цели урока</div>
-          {['- Познакомить с понятием дроби','- Формировать навык записи и чтения дробей','- Развить умение сравнивать дроби'].map((l,i)=>(
+          <div className="text-[6px] font-black italic text-black/60 mb-0.5">{m.goalsTitle}</div>
+          {m.goalsLong.map((l,i)=>(
             <div key={i} className="text-[5px] text-black/40 italic">{l}</div>
           ))}
           <div className="w-full h-px bg-black/8 my-1" />
-          <div className="text-[6px] font-black italic text-black/60 mb-0.5">## Ход урока</div>
-          {[['Организационный момент','2 мин'],['Актуализация знаний','8 мин'],['Изучение нового материала','15 мин'],['Практическая работа','15 мин'],['Итоги','5 мин']].map(([s,t],i)=>(
-            <div key={i} className="flex justify-between text-[5px] text-black/40 italic py-0.5 border-b border-black/4 last:border-0">
-              <span>{s}</span><span className="font-bold text-emerald-500">{t}</span>
+          <div className="text-[6px] font-black italic text-black/60 mb-0.5">{m.flowTitle}</div>
+          {m.flowLong.map(([s,t],i)=>(
+            <div key={i} className="flex justify-between gap-2 text-[5px] text-black/40 italic py-0.5 border-b border-black/4 last:border-0">
+              <span className="truncate">{s}</span><span className="font-bold text-emerald-500 shrink-0">{t}</span>
             </div>
           ))}
           <div className="mt-auto pt-2 border-t border-black/8 flex gap-1.5">
             <div className="flex-1 bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-1.5 border border-black shadow-[2px_2px_0_0_#000]">⬇ DOCX</div>
-            <div className="flex-1 bg-black/5 rounded text-[5.5px] text-black/40 font-black text-center py-1.5">КОПИРОВАТЬ</div>
+            <div className="flex-1 bg-black/5 rounded text-[5.5px] text-black/40 font-black text-center py-1.5">{m.copy}</div>
           </div>
         </div>
       </div>
@@ -273,31 +391,32 @@ function DashboardPreview() {
 }
 
 // ─── Feature visuals ───────────────────────────────────────────────────────────
-function PlanVisual() {
+function PlanVisual({ lang }) {
+  const m = mock(lang);
   return (
     <BrowserShell url="lessonplanner.kz/dashboard">
       <div className="flex h-full bg-[#f0f4f8]">
         <div className="w-[90px] bg-white/60 border-r border-black/5 p-2 flex flex-col gap-1 shrink-0">
-          <div className="text-[5px] font-black text-black/25 tracking-widest mb-2">ИСТОРИЯ</div>
-          {[['Дроби',true],['Периметр',false],['Площадь',false],['Углы',false]].map(([t,a],i)=>(
-            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1 rounded-md ${a?'bg-emerald-600 text-white':'text-black/35'}`}>{t}</div>
+          <div className="text-[5px] font-black text-black/25 tracking-widest mb-2">{m.history}</div>
+          {m.topics.slice(0,4).map((t,i)=>(
+            <div key={i} className={`text-[5.5px] font-bold px-1.5 py-1 rounded-md truncate ${i===0?'bg-emerald-600 text-white':'text-black/35'}`}>{t}</div>
           ))}
         </div>
-        <div className="flex-1 bg-white/90 p-3 flex flex-col gap-1 overflow-hidden">
+        <div className="flex-1 min-w-0 bg-white/90 p-3 flex flex-col gap-1 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <div className="text-[7px] font-black italic text-black/70">## План урока</div>
-            <div className="ml-auto text-[5px] bg-green-100 text-green-700 font-black px-2 py-0.5 rounded-full border border-green-200">✓ ГОТОВО</div>
+            <div className="text-[7px] font-black italic text-black/70 truncate">{m.planTitle}</div>
+            <div className="ml-auto text-[5px] bg-green-100 text-green-700 font-black px-2 py-0.5 rounded-full border border-green-200 shrink-0">{m.done}</div>
           </div>
-          {['## Цели урока','- Познакомить с понятием дроби','- Развить навыки вычислений','','## Ход урока'].map((l,i)=>(
+          {[m.goalsTitle, ...m.goalsShort, '', m.flowTitle].map((l,i)=>(
             <div key={i} className={`text-[5px] italic ${l.startsWith('##')?'font-black text-black/60':l===''?'my-0.5':l.startsWith('-')?'text-black/40 ml-2':'text-black/40'}`}>{l}</div>
           ))}
-          {[['Введение','5 мин'],['Объяснение','15 мин'],['Практика','20 мин'],['Итоги','5 мин']].map(([s,t],i)=>(
-            <div key={i} className="flex justify-between text-[5px] text-black/40 italic py-0.5 border-b border-black/4 last:border-0">
-              <span>{s}</span><span className="font-bold text-emerald-500">{t}</span>
+          {m.flowShort.map(([s,t],i)=>(
+            <div key={i} className="flex justify-between gap-2 text-[5px] text-black/40 italic py-0.5 border-b border-black/4 last:border-0">
+              <span className="truncate">{s}</span><span className="font-bold text-emerald-500 shrink-0">{t}</span>
             </div>
           ))}
           <div className="mt-auto pt-1.5 border-t border-black/8">
-            <div className="bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-1.5 border border-black shadow-[2px_2px_0_0_#000]">⬇ ВЫГРУЗИТЬ В DOCX</div>
+            <div className="bg-emerald-600 rounded text-[5.5px] text-white font-black text-center py-1.5 border border-black shadow-[2px_2px_0_0_#000]">{m.exportDocx}</div>
           </div>
         </div>
       </div>
@@ -305,50 +424,52 @@ function PlanVisual() {
   );
 }
 
-function TestVisual() {
+function TestVisual({ lang }) {
+  const m = mock(lang);
+  const students = MOCK_STUDENTS[lang] || MOCK_STUDENTS.RU;
   return (
     <BrowserShell url="lessonplanner.kz/create-test">
       <div className="flex h-full bg-[#faf7f2] gap-2 p-2">
-        <div className="flex-1 flex flex-col gap-2">
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
           <div className="bg-white rounded-xl border-[1.5px] border-black shadow-[2px_2px_0_0_#000] p-2">
             <div className="flex gap-1 mb-1.5">
-              <div className="flex-1 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold">Математика</div>
-              <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold">5 кл</div>
+              <div className="flex-1 min-w-0 bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold truncate">{m.subject}</div>
+              <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold shrink-0">{m.gradeShort}</div>
             </div>
-            <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold mb-1.5">Дроби и части целого</div>
-            <div className="bg-emerald-600 rounded text-[5px] text-white font-black text-center py-1.5 border border-black shadow-[1.5px_1.5px_0_0_#000]">СОЗДАТЬ ТЕСТ</div>
+            <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1 font-bold mb-1.5 truncate">{m.topic}</div>
+            <div className="bg-emerald-600 rounded text-[5px] text-white font-black text-center py-1.5 border border-black shadow-[1.5px_1.5px_0_0_#000]">{m.createTest}</div>
           </div>
           <div className="bg-white rounded-xl border-[1.5px] border-emerald-600 shadow-[2px_2px_0_0_#059669] p-2 flex-1 flex flex-col gap-1.5">
-            <div className="flex justify-between items-start border-b border-gray-100 pb-1.5">
-              <div>
-                <div className="text-[6px] font-black text-emerald-600">Математика</div>
-                <div className="text-[5px] text-black/40 font-bold">Дроби и части</div>
+            <div className="flex justify-between items-start gap-2 border-b border-gray-100 pb-1.5">
+              <div className="min-w-0">
+                <div className="text-[6px] font-black text-emerald-600 truncate">{m.subject}</div>
+                <div className="text-[5px] text-black/40 font-bold truncate">{m.topicShort}</div>
               </div>
-              <div className="bg-black rounded-lg px-2 py-1 text-center">
-                <div className="text-[4px] text-white/50 uppercase tracking-wide">код</div>
+              <div className="bg-black rounded-lg px-2 py-1 text-center shrink-0">
+                <div className="text-[4px] text-white/50 uppercase tracking-wide">{m.code}</div>
                 <div className="text-[11px] font-black font-mono text-yellow-400 tracking-[0.2em] leading-none">4279</div>
               </div>
             </div>
             <div className="bg-slate-50 rounded-lg border border-slate-100 overflow-hidden flex-1">
               <div className="flex items-center justify-between px-2 py-1 border-b border-gray-100">
-                <span className="text-[4.5px] font-black uppercase">📊 Результаты</span>
+                <span className="text-[4.5px] font-black uppercase">{m.results}</span>
                 <span className="text-[4px] bg-purple-600 text-white font-black px-1.5 py-0.5 rounded">AI Report</span>
               </div>
-              {[['Айгерим К.','9/10','green'],['Данияр М.','6/10','yellow'],['Зарина Т.','10/10','green'],['Ернар С.','7/10','green']].map(([n,s,c])=>(
+              {students.map(([n,s,c])=>(
                 <div key={n} className="flex items-center justify-between px-2 py-0.5 border-b border-gray-50 last:border-0">
-                  <span className="text-[5px] font-bold text-black/60">{n}</span>
-                  <span className={`text-[4.5px] font-black text-white px-1.5 rounded ${c==='green'?'bg-green-500':'bg-yellow-500'}`}>{s}</span>
+                  <span className="text-[5px] font-bold text-black/60 truncate">{n}</span>
+                  <span className={`text-[4.5px] font-black text-white px-1.5 rounded shrink-0 ${c==='green'?'bg-green-500':'bg-yellow-500'}`}>{s}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
         <div className="w-[52px] flex flex-col gap-1.5 shrink-0">
-          <div className="text-[4.5px] font-black text-black/25 tracking-widest">ИСТОРИЯ</div>
-          {[['Дроби','07/25',true],['Периметр','07/23',false],['Площадь','07/20',false],['Углы','07/18',false]].map(([t,d,a])=>(
-            <div key={t} className={`p-1.5 rounded-lg border-2 ${a?'bg-emerald-600 border-black text-white':'bg-white border-gray-100 text-black/50'}`}>
+          <div className="text-[4.5px] font-black text-black/25 tracking-widest">{m.history}</div>
+          {m.topics.slice(0,4).map((t,i)=>(
+            <div key={t} className={`p-1.5 rounded-lg border-2 ${i===0?'bg-emerald-600 border-black text-white':'bg-white border-gray-100 text-black/50'}`}>
               <div className="text-[5px] font-black truncate">{t}</div>
-              <div className="text-[4px] opacity-60">{d}</div>
+              <div className="text-[4px] opacity-60">{['07/25','07/23','07/20','07/18'][i]}</div>
             </div>
           ))}
         </div>
@@ -357,65 +478,65 @@ function TestVisual() {
   );
 }
 
-function SummaryVisual() {
+function SummaryVisual({ lang }) {
+  const m = mock(lang);
+  const struggling = MOCK_STRUGGLING[lang] || MOCK_STRUGGLING.RU;
+  const [coveredPre, coveredPct, coveredPost] = m.summaryCovered;
   return (
     <BrowserShell url="lessonplanner.kz/lesson-summary">
       <div className="flex h-full bg-[#faf7f2] gap-2 p-2">
-        <div className="flex-1 bg-white rounded-xl border-[1.5px] border-black shadow-[2px_2px_0_0_#000] p-3 flex flex-col gap-2">
-          <div className="text-[6px] font-black text-emerald-600 uppercase tracking-wider">Итог урока — AI Отчёт</div>
+        <div className="flex-1 min-w-0 bg-white rounded-xl border-[1.5px] border-black shadow-[2px_2px_0_0_#000] p-3 flex flex-col gap-2">
+          <div className="text-[6px] font-black text-emerald-600 uppercase tracking-wider truncate">{m.summaryTitle}</div>
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2">
-            <div className="text-[5.5px] font-black text-emerald-700 mb-1">📋 Математика · Дроби · 5А</div>
-            <div className="text-[5px] text-emerald-600 font-bold">Тема пройдена на <span className="font-black">82%</span> · 14 учеников</div>
+            <div className="text-[5.5px] font-black text-emerald-700 mb-1 truncate">{m.summaryHead}</div>
+            <div className="text-[5px] text-emerald-600 font-bold">{coveredPre}<span className="font-black">{coveredPct}</span>{coveredPost}</div>
           </div>
           <div className="bg-red-50 border border-red-100 rounded-xl p-2">
-            <div className="text-[5px] font-black text-red-500 uppercase mb-1">⚠ Нужна помощь</div>
-            {['Данияр М. — 60%','Ернар С. — 55%','Камила Б. — 50%'].map((s,i)=>(
+            <div className="text-[5px] font-black text-red-500 uppercase mb-1">{m.needHelp}</div>
+            {struggling.map((s,i)=>(
               <div key={i} className="text-[5px] text-red-400 font-bold">{s}</div>
             ))}
           </div>
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-2 flex-1">
-            <div className="text-[5px] font-black text-slate-500 uppercase mb-1">📝 Домашнее задание</div>
-            <div className="text-[5px] text-slate-500 font-bold leading-relaxed">Задачник с. 45, №3–7. Повторить правило сравнения дробей.</div>
+            <div className="text-[5px] font-black text-slate-500 uppercase mb-1">{m.homework}</div>
+            <div className="text-[5px] text-slate-500 font-bold leading-relaxed">{m.homeworkBody}</div>
           </div>
-          <div className="bg-emerald-600 rounded-lg text-[5.5px] text-white font-black text-center py-2 border border-black shadow-[2px_2px_0_0_#000]">Скопировать в Кунделик</div>
+          <div className="bg-emerald-600 rounded-lg text-[5.5px] text-white font-black text-center py-2 border border-black shadow-[2px_2px_0_0_#000]">{m.copyKundelik}</div>
         </div>
         <div className="w-[90px] bg-white rounded-xl border-[1.5px] border-black shadow-[2px_2px_0_0_#000] p-2 flex flex-col gap-1.5 shrink-0">
-          <div className="text-[5px] font-black text-black/25 tracking-widest">ПАРАМЕТРЫ</div>
-          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold">Математика</div>
-          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold">5А класс</div>
-          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold">Дроби</div>
-          <div className="bg-slate-100 rounded text-[5px] text-black/20 px-1.5 py-3">Контекст...</div>
-          <div className="bg-emerald-600 rounded text-[5px] text-white font-black text-center py-1.5 border border-black shadow-[1.5px_1.5px_0_0_#000] mt-auto">СОЗДАТЬ</div>
+          <div className="text-[5px] font-black text-black/25 tracking-widest">{m.params}</div>
+          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold truncate">{m.subject}</div>
+          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold truncate">{m.classroom}</div>
+          <div className="bg-slate-100 rounded text-[5px] text-black/50 px-1.5 py-1.5 font-bold truncate">{m.topics[0]}</div>
+          <div className="bg-slate-100 rounded text-[5px] text-black/20 px-1.5 py-3">{m.contextPh}</div>
+          <div className="bg-emerald-600 rounded text-[5px] text-white font-black text-center py-1.5 border border-black shadow-[1.5px_1.5px_0_0_#000] mt-auto">{m.create}</div>
         </div>
       </div>
     </BrowserShell>
   );
 }
 
-function WordleVisual() {
-  const grid = [
-    [{l:'С',s:'c'},{l:'А',s:'a'},{l:'Б',s:'p'},{l:'А',s:'a'},{l:'Қ',s:'a'}],
-    [{l:'С',s:'c'},{l:'А',s:'c'},{l:'Б',s:'c'},{l:'О',s:'a'},{l:'К',s:'a'}],
-    [{l:'С',s:'c'},{l:'А',s:'c'},{l:'Б',s:'c'},{l:'А',s:'c'},{l:'Қ',s:'c'}],
-    Array(5).fill({l:'',s:'e'}),
-    Array(5).fill({l:'',s:'e'}),
-    Array(5).fill({l:'',s:'e'}),
-  ];
+function WordleVisual({ lang }) {
+  const m = mock(lang);
+  const played = m.wordleGuesses.map(g => scoreGuess(g, m.wordleAnswer));
+  const empty = Array(m.wordleAnswer.length).fill({ l: '', s: 'e' });
+  const grid = [...played, empty, empty, empty];
+
   const bg = {c:'bg-green-500 border-green-600 text-white',p:'bg-yellow-400 border-yellow-500 text-black',a:'bg-slate-600 border-slate-700 text-white',e:'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-600 text-transparent'};
   return (
     <BrowserShell url="lessonplanner.kz/wordle">
       <div className="flex h-full bg-[#faf7f2] flex-col items-center justify-center gap-2 py-3">
-        <div className="text-[7px] font-black uppercase tracking-widest text-slate-500 mb-1">ВОРДЛ — КЛАСС</div>
+        <div className="text-[7px] font-black uppercase tracking-widest text-slate-500 mb-1">{m.wordleTitle}</div>
         <div className="flex flex-col gap-1.5">
           {grid.map((row,ri)=>(
             <div key={ri} className="flex gap-1.5">
               {row.map((cell,ci)=>(
-                <div key={ci} className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-sm border-2 ${bg[cell.s]}`}>{cell.l}</div>
+                <div key={ci} className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center font-black text-xs sm:text-sm border-2 ${bg[cell.s]}`}>{cell.l}</div>
               ))}
             </div>
           ))}
         </div>
-        <div className="text-[6px] text-slate-400 font-bold mt-1">3 / 6 попыток</div>
+        <div className="text-[6px] text-slate-400 font-bold mt-1">{m.wordleTries}</div>
       </div>
     </BrowserShell>
   );
@@ -490,13 +611,13 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
         setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} />
 
       {/* ── HERO ── */}
-      <section className="max-w-5xl mx-auto px-8 pt-16 pb-6 text-center">
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-10 sm:pt-16 pb-6 text-center">
         <motion.div {...fadeUp(0)}>
-          <div className="inline-block px-4 py-1.5 mb-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 text-[11px] font-bold tracking-[0.15em] uppercase border border-emerald-100 dark:border-emerald-900">
+          <div className="inline-block px-4 py-1.5 mb-6 sm:mb-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 text-[10px] sm:text-[11px] font-bold tracking-[0.15em] uppercase border border-emerald-100 dark:border-emerald-900">
             {c.badge}
           </div>
         </motion.div>
-        <div className="h-[160px] md:h-[180px] lg:h-[210px] flex items-center justify-center mb-6">
+        <div className="min-h-[120px] sm:min-h-[150px] md:min-h-[180px] lg:min-h-[210px] flex items-center justify-center mb-6">
           <AnimatePresence mode="wait">
             <motion.h1
               key={hlIdx}
@@ -504,18 +625,18 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -24 }}
               transition={{ duration: 0.38, ease: "easeInOut" }}
-              className="text-6xl md:text-7xl lg:text-[82px] font-black uppercase tracking-tighter leading-[0.95]"
+              className="text-[34px] sm:text-5xl md:text-7xl lg:text-[82px] font-black uppercase tracking-tighter leading-[0.95] break-words"
             >
               {headlines[hlIdx].a}<br />{headlines[hlIdx].b}
             </motion.h1>
           </AnimatePresence>
         </div>
-        <motion.p {...fadeUp(0.13)} className="text-lg md:text-xl text-slate-500 dark:text-zinc-400 max-w-lg mx-auto mb-10 leading-relaxed">
+        <motion.p {...fadeUp(0.13)} className="text-base sm:text-lg md:text-xl text-slate-500 dark:text-zinc-400 max-w-lg mx-auto mb-8 sm:mb-10 leading-relaxed">
           {c.sub}
         </motion.p>
         <motion.div {...fadeUp(0.18)}>
           <button onClick={handleCta}
-            className="inline-flex items-center gap-3 px-9 py-4 bg-emerald-600 text-white font-black uppercase tracking-widest rounded-xl border-[3px] border-black shadow-[5px_5px_0_0_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-sm">
+            className="inline-flex items-center gap-3 px-7 sm:px-9 py-4 bg-emerald-600 text-white font-black uppercase tracking-widest rounded-xl border-[3px] border-black shadow-[5px_5px_0_0_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-[13px] sm:text-sm">
             {c.cta}
           </button>
         </motion.div>
@@ -523,9 +644,9 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
 
 
       {/* ── BEFORE / AFTER ── */}
-      <motion.div {...fadeUp(0)} className="max-w-4xl mx-auto px-8 pb-20">
+      <motion.div {...fadeUp(0)} className="max-w-4xl mx-auto px-5 sm:px-8 pb-16 sm:pb-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 rounded-2xl border-[3px] border-black overflow-hidden shadow-[6px_6px_0_0_#000] dark:shadow-[6px_6px_0_0_rgba(255,255,255,0.07)]">
-          <div className="p-8 bg-slate-100 dark:bg-zinc-900 border-r-[3px] border-black">
+          <div className="p-6 sm:p-8 bg-slate-100 dark:bg-zinc-900 border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-black">
             <div className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400 mb-5">
               {lang === "KZ" ? "Бұрын" : lang === "EN" ? "Before" : "Раньше"}
             </div>
@@ -540,7 +661,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
               </div>
             ))}
           </div>
-          <div className="p-8 bg-white dark:bg-zinc-800">
+          <div className="p-6 sm:p-8 bg-white dark:bg-zinc-800">
             <div className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-600 mb-5">
               {lang === "KZ" ? "Қазір" : lang === "EN" ? "Now" : "Теперь"}
             </div>
@@ -559,16 +680,16 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
       </motion.div>
 
       {/* ── FEATURES ── */}
-      <div className="max-w-5xl mx-auto px-8 py-24 space-y-28">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-16 sm:py-24 space-y-20 sm:space-y-28">
         {features.map((f, i) => {
           const Icon = f.icon;
           const col = colMap[f.color];
           const flip = i % 2 !== 0;
           return (
             <motion.div key={i} {...fadeUp(0.05)}
-              className={`flex flex-col ${flip ? 'md:flex-row-reverse' : 'md:flex-row'} gap-12 items-center`}>
+              className={`flex flex-col ${flip ? 'md:flex-row-reverse' : 'md:flex-row'} gap-8 md:gap-12 items-center`}>
               {/* Text */}
-              <div>
+              <div className="w-full min-w-0">
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-black tracking-widest uppercase mb-5 ${col.tag}`}>
                   <Icon size={12} />
                   {f.tag}
@@ -587,8 +708,8 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
                 </ul>
               </div>
               {/* Visual */}
-              <div>
-                <f.Visual />
+              <div className="w-full min-w-0">
+                <f.Visual lang={lang} />
               </div>
             </motion.div>
           );
@@ -597,7 +718,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
 
       {/* ── STUDENT JOIN FLOW ── */}
       <section className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/40">
-        <div className="max-w-4xl mx-auto px-8 py-20">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
           <motion.div {...fadeUp(0)} className="mb-12 text-center">
             <div className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-600 mb-3">
               {lang === "KZ" ? "ОҚУШЫЛАР ҮШІН" : lang === "EN" ? "FOR STUDENTS" : "ДЛЯ УЧЕНИКОВ"}
@@ -633,7 +754,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
 
       {/* ── TESTIMONIALS ── */}
       <section className="border-t border-slate-100 dark:border-zinc-800">
-        <div className="max-w-5xl mx-auto px-8 py-20">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
           <motion.div {...fadeUp(0)} className="mb-12 text-center">
             <div className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-600 mb-3">
               {lang === "KZ" ? "МҰҒАЛІМДЕР АЙТАДЫ" : lang === "EN" ? "TEACHERS SAY" : "ГОВОРЯТ УЧИТЕЛЯ"}
@@ -660,7 +781,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
 
       {/* ── HOW IT WORKS ── */}
       <section className="bg-[#020617] text-white border-y-[4px] border-black">
-        <div className="max-w-3xl mx-auto px-8 py-20">
+        <div className="max-w-3xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
           <motion.div {...fadeUp(0)} className="mb-14">
             <div className="text-[10px] font-black tracking-[0.3em] text-emerald-400 uppercase mb-4">
               {lang === "KZ" ? "ҚАЛАЙ ЖҰМЫС ІСТЕЙДІ" : lang === "EN" ? "HOW IT WORKS" : "КАК ЭТО РАБОТАЕТ"}
@@ -684,7 +805,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
 
       {/* ── FAQ ── */}
       <section className="border-t border-slate-100 dark:border-zinc-800">
-        <div className="max-w-2xl mx-auto px-8 py-16">
+        <div className="max-w-2xl mx-auto px-5 sm:px-8 py-14 sm:py-16">
           <motion.div {...fadeUp(0)} className="mb-8">
             <h2 className="text-2xl font-black uppercase tracking-tighter">{c.faqT}</h2>
           </motion.div>
@@ -694,7 +815,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
         </div>
       </section>
 
-      <Footer />
+      <Footer lang={lang} />
     </div>
   );
 }

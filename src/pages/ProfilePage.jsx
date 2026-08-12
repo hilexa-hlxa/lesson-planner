@@ -1,53 +1,110 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Trophy, Award, Coins, User, Lock, Mail, Edit3, X } from "lucide-react";
+import {
+  ChevronLeft, ChevronRight, Trophy, Award, Coins, User, Lock,
+  Mail, Edit3, X, Zap, Timer, Target, Moon, BarChart3
+} from "lucide-react";
 import { I18N as t } from "../lib/i18n";
 import { invalidate } from "../apiCache";
+import api from "../api";
 import AchievementToast from "../components/AchievementToast";
 import Footer from "../components/Footer";
-import Header from "../components/Header"; // Импортируем Header
+import Header from "../components/Header";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const ACHIEVEMENT_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3';
 
-export default function ProfilePage({ lang, setLang, user, setUser }) {
-  // Переводы
+const T = {
+  RU: {
+    balance: "Твой баланс",
+    achievements: "Достижения",
+    unlocked: "Открыто", locked: "Закрыто",
+    teacher: "Учитель", student: "Ученик", parent: "Родитель",
+    editTitle: "Редактировать",
+    firstName: "Имя", lastName: "Фамилия",
+    saving: "Сохраняем...", saveError: "Не удалось сохранить. Попробуйте ещё раз.",
+    nameRequired: "Введите имя.",
+    toastTitle: "Ачивка разблокирована!", toastDesc: "Первое посещение профиля.",
+    progress: (a, b) => `${a} из ${b} открыто`,
+  },
+  KZ: {
+    balance: "Сіздің балансыңыз",
+    achievements: "Жетістіктер",
+    unlocked: "Ашық", locked: "Жабық",
+    teacher: "Мұғалім", student: "Оқушы", parent: "Ата-ана",
+    editTitle: "Өңдеу",
+    firstName: "Аты", lastName: "Тегі",
+    saving: "Сақталуда...", saveError: "Сақтау мүмкін болмады. Қайталап көріңіз.",
+    nameRequired: "Атыңызды енгізіңіз.",
+    toastTitle: "Жетістік ашылды!", toastDesc: "Профильге алғашқы кіру.",
+    progress: (a, b) => `${b} жетістіктің ${a} ашылды`,
+  },
+  EN: {
+    balance: "Your balance",
+    achievements: "Achievements",
+    unlocked: "Unlocked", locked: "Locked",
+    teacher: "Teacher", student: "Student", parent: "Parent",
+    editTitle: "Edit profile",
+    firstName: "First name", lastName: "Last name",
+    saving: "Saving...", saveError: "Could not save. Try again.",
+    nameRequired: "Enter your first name.",
+    toastTitle: "Achievement unlocked!", toastDesc: "First visit to your profile.",
+    progress: (a, b) => `${a} of ${b} unlocked`,
+  },
+};
+
+// Каталог достижений. Ключи совпадают с теми, что выдаёт grantAchievement и бэкенд.
+const ACHIEVEMENTS = [
+  { key: "visit_profile",   icon: Award,     color: "bg-purple-500", RU: ["В профиле", "Посетить профиль"],            KZ: ["Профильде", "Профильге кіру"],                 EN: ["Profile visit", "Open your profile"] },
+  { key: "architect_10",    icon: Trophy,    color: "bg-emerald-500",RU: ["Архитектор знаний", "10 планов уроков"],    KZ: ["Білім сәулетшісі", "10 сабақ жоспары"],         EN: ["Knowledge architect", "10 lesson plans"] },
+  { key: "ai_report_master",icon: BarChart3, color: "bg-blue-500",   RU: ["Аналитик", "Собрать AI-отчёт по классу"],   KZ: ["Талдаушы", "Сынып бойынша AI-есеп жасау"],      EN: ["Analyst", "Build an AI class report"] },
+  { key: "perfect_score",   icon: Target,    color: "bg-green-500",  RU: ["Высший пилотаж", "100% за тест"],           KZ: ["Жоғары шеберлік", "Тестке 100%"],               EN: ["Perfect run", "100% on a quiz"] },
+  { key: "speedrunner",     icon: Timer,     color: "bg-orange-500", RU: ["Сверхзвук", "Пройти тест меньше чем за минуту"], KZ: ["Дыбыстан жылдам", "Тестті бір минуттан аз уақытта аяқтау"], EN: ["Speedrunner", "Finish a quiz in under a minute"] },
+  { key: "night_owl",       icon: Moon,      color: "bg-indigo-500", RU: ["Ночная смена", "Сгенерировать план ночью"], KZ: ["Түнгі ауысым", "Түнде жоспар жасау"],           EN: ["Night shift", "Generate a plan after midnight"] },
+  { key: "rich",            icon: Coins,     color: "bg-yellow-500", RU: ["Богач", "Накопить 500 монет"],              KZ: ["Байлық", "500 монета жинау"],                   EN: ["Rich", "Save up 500 coins"] },
+];
+
+// Инициалы вместо внешней картинки — аватар всегда доступен и не тянет чужой домен
+function InitialsAvatar({ first, last }) {
+  const initials = `${(first || "").trim()[0] || ""}${(last || "").trim()[0] || ""}`.toUpperCase() || "?";
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-emerald-600 text-white font-black text-[64px] tracking-tighter select-none">
+      {initials}
+    </div>
+  );
+}
+
+export default function ProfilePage({ lang, setLang, user, setUser, ...accessProps }) {
   const cur = t[lang]?.prof || t.RU.prof;
-
-  // Данные профиля (локальный стейт для редактирования)
-  const [profileData, setProfileData] = useState({
-    firstName: user?.first_name || "Guest",
-    lastName: user?.last_name || "",
-    username: user?.email || "@guest",
-    avatar: "https://moyashkola.gosuslugi.ru/netcat_files/9/67/avatar_0.png",
-  });
+  const tr = T[lang] || T.RU;
 
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [tempData, setTempData] = useState(profileData);
-  const [coins, setCoins] = useState(user?.coins || 0);
-  const [toast, setToast] = useState({ show: false, reward: 0 });
+  const [tempData, setTempData] = useState({ firstName: "", lastName: "" });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  // Рефы
-  const audioRef = useRef(new Audio(ACHIEVEMENT_SOUND));
+  const [coins, setCoins] = useState(user?.coins || 0);
+  const [unlocked, setUnlocked] = useState(() => new Set(user?.achievements || []));
+  // Награда за только что открытую ачивку; заголовок берём из перевода при рендере
+  const [toastReward, setToastReward] = useState(null);
+
   const scrollContainerRef = useRef(null);
 
-  // Логика горизонтального скролла
+  // Синхронизируем локальное состояние, когда пользователь подгрузился/обновился
+  useEffect(() => {
+    setCoins(user?.coins || 0);
+    setUnlocked(new Set(user?.achievements || []));
+  }, [user?.coins, user?.achievements]);
+
   const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-        const { current } = scrollContainerRef;
-        const scrollAmount = 300;
-        if (direction === 'left') {
-            current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        } else {
-            current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
-    }
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction === 'left' ? -300 : 300, behavior: 'smooth' });
   };
 
-  // Проверка ачивки при входе
+  // Ачивка за первое посещение профиля
+  const userId = user?.id;
+
   useEffect(() => {
-    if (!user) return;
-    audioRef.current.preload = 'auto';
-    audioRef.current.volume = 0.5;
+    if (!userId) return;
 
     const checkAchievement = async () => {
       try {
@@ -58,55 +115,81 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
           body: JSON.stringify({ key: 'visit_profile' })
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          const data = result.data || result;
-          if (data.new) {
-            audioRef.current.play().catch(() => {});
-            setToast({ show: true, reward: data.reward });
-            if (data.coins !== undefined) {
-               setCoins(data.coins);
-               invalidate("me");
-            }
-          }
+        if (!response.ok) return;
+
+        const result = await response.json();
+        const data = result.data || result;
+        if (!data.new) return;
+
+        setToastReward(data.reward);
+        setUnlocked(prev => new Set(prev).add('visit_profile'));
+        if (data.coins !== undefined) {
+          setCoins(data.coins);
+          invalidate("me");
         }
       } catch (e) {
-        console.error("Err:", e);
+        console.error("Achievement check failed:", e);
       }
     };
     checkAchievement();
-  }, [user]);
+  }, [userId]);
 
-  // Сохранение профиля (пока локально + мок)
-  const handleSave = () => {
-    setProfileData(tempData);
-    setIsEditOpen(false);
-    // Тут можно добавить api.updateUser(tempData)...
+  const openEdit = () => {
+    setTempData({ firstName: user?.first_name || "", lastName: user?.last_name || "" });
+    setSaveError("");
+    setIsEditOpen(true);
   };
 
-  // Список ачивок
-  const achievements = [
-    { id: 1, title: "Первый шаг", desc: "Регистрация", icon: <User size={20} />, unlocked: true, color: "bg-emerald-500" },
-    { id: 2, title: "Богач", desc: "500 монет", icon: <Coins size={20} />, unlocked: coins >= 500, color: "bg-yellow-500" },
-    { id: 3, title: "В профиле", desc: "Посетить профиль", icon: <Award size={20} />, unlocked: true, color: "bg-purple-500" },
-    { id: 4, title: "Мастер", desc: "Сделать 5 тестов", icon: <Trophy size={20} />, unlocked: false, color: "bg-red-500" },
-    { id: 5, title: "Спидран", desc: "Тест < 1 мин", icon: <User size={20} />, unlocked: false, color: "bg-orange-500" },
-    { id: 6, title: "Эрудит", desc: "100% результат", icon: <Award size={20} />, unlocked: false, color: "bg-green-500" },
-    { id: 7, title: "Легенда", desc: "Топ-1 рейтинг", icon: <Award size={20} />, unlocked: false, color: "bg-pink-500" },
-  ];
+  const handleSave = async () => {
+    if (!tempData.firstName.trim()) {
+      setSaveError(tr.nameRequired);
+      return;
+    }
+    setSaving(true);
+    setSaveError("");
+    try {
+      const res = await api.updateMe({
+        first_name: tempData.firstName.trim(),
+        last_name: tempData.lastName.trim(),
+      });
+      invalidate("me");
+      setUser(prev => ({ ...prev, ...(res.user || {
+        first_name: tempData.firstName.trim(),
+        last_name: tempData.lastName.trim(),
+      }) }));
+      setIsEditOpen(false);
+    } catch (e) {
+      console.error(e);
+      setSaveError(tr.saveError);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (!user) return null;
 
+  const roleLabel = user.role === 'teacher' ? tr.teacher : user.role === 'parent' ? tr.parent : tr.student;
+
+  const achievements = ACHIEVEMENTS.map(a => ({
+    ...a,
+    title: (a[lang] || a.RU)[0],
+    desc: (a[lang] || a.RU)[1],
+    // "rich" считается по балансу, остальные — по выданным ключам
+    unlocked: a.key === 'rich' ? coins >= 500 : unlocked.has(a.key),
+  }));
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20">
-      
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
+
       {/* ХЕДЕР (showProfile={false}, чтобы не было кнопки профиля внутри профиля) */}
-      <Header 
-        lang={lang} 
-        setLang={setLang} 
-        user={user} 
-        setUser={setUser} 
-        showProfile={false} 
+      <Header
+        lang={lang}
+        setLang={setLang}
+        user={user}
+        setUser={setUser}
+        showProfile={false}
+        {...accessProps}
       />
 
       {/* CSS для скрытия скроллбара */}
@@ -115,54 +198,47 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* Тост ачивки */}
-      <AchievementToast 
-        show={toast.show} 
-        onClose={() => setToast(prev => ({ ...prev, show: false }))}
-        title="Ачивка разблокирована!"
-        reward={toast.reward}
-        description="Первое посещение профиля."
+      <AchievementToast
+        achievement={toastReward === null ? null : { title: tr.toastTitle, reward: toastReward }}
+        onClose={() => setToastReward(null)}
       />
 
-      <main className="max-w-[1300px] mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            
+      <main className="max-w-[1300px] mx-auto px-5 sm:px-6 py-8">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+
             {/* === ЛЕВАЯ КОЛОНКА (Инфо + Монеты) === */}
             <div className="w-full md:w-80 shrink-0 flex flex-col gap-6">
-              
+
               {/* Карточка юзера */}
               <div>
-                <div className="w-full aspect-square bg-slate-200 dark:bg-zinc-800 border-[4px] border-black dark:border-white rounded-xl overflow-hidden mb-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-                    <img src={profileData.avatar} alt="avatar" className="w-full h-full object-cover" />
+                <div className="w-full max-w-[260px] md:max-w-none mx-auto aspect-square bg-slate-200 dark:bg-zinc-800 border-[4px] border-black dark:border-white rounded-xl overflow-hidden mb-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                    <InitialsAvatar first={user.first_name} last={user.last_name} />
                 </div>
                 <div className="space-y-1 mb-6">
-                    <h1 className="text-3xl font-black tracking-tighter leading-tight break-words">
-                    {profileData.firstName} {profileData.lastName}
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tighter leading-tight break-words">
+                      {`${user.first_name || ""} ${user.last_name || ""}`.trim() || user.email}
                     </h1>
-                    <p className="text-sm opacity-50 font-bold tracking-tight flex items-center gap-2">
-                        <Mail size={14} /> {profileData.username}
+                    <p className="text-sm opacity-50 font-bold tracking-tight flex items-center gap-2 break-all">
+                        <Mail size={14} className="shrink-0" /> {user.email}
                     </p>
                     <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2 border-black mt-2
                         ${user.role === 'teacher' ? 'bg-emerald-100 text-emerald-700' : 'bg-green-100 text-green-700'}`}>
-                        {user.role === 'teacher' ? 'Учитель' : 'Ученик'}
+                        {roleLabel}
                     </div>
                 </div>
 
                 <button
-                    onClick={() => {
-                      setTempData(profileData);
-                      setIsEditOpen(true);
-                    }}
-                    className="w-full py-3 bg-white dark:bg-zinc-900 border-[3px] border-black dark:border-white rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-black hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2"
+                    onClick={openEdit}
+                    className="w-full py-3 bg-white dark:bg-zinc-900 border-[3px] border-black dark:border-white rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2"
                 >
-                    <Edit3 size={14} /> {cur.edit || "РЕДАКТИРОВАТЬ"}
+                    <Edit3 size={14} /> {cur.edit || tr.editTitle}
                 </button>
               </div>
 
               {/* Карточка монет */}
               <div className="bg-yellow-400 text-black p-6 rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_#000]">
-                 <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Твой баланс</span>
-                 <div className="text-5xl font-black flex items-center gap-2 mt-1">
+                 <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{tr.balance}</span>
+                 <div className="text-4xl sm:text-5xl font-black flex items-center gap-2 mt-1">
                     <Coins size={32} fill="white" className="text-black" />
                     {coins}
                  </div>
@@ -170,61 +246,69 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
             </div>
 
             {/* === ПРАВАЯ КОЛОНКА (Слайдер Ачивок) === */}
-            <div className="flex-1 w-full bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-xl shadow-[8px_8px_0px_0px_rgba(5,150,105,1)] p-8 overflow-hidden flex flex-col min-h-[400px]">
-              
-              <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100 dark:border-zinc-800">
-                 <div className="flex items-center gap-3">
-                    <Trophy size={32} className="text-emerald-600" />
-                    <h2 className="text-3xl font-black uppercase tracking-tighter italic">Достижения</h2>
+            <div className="flex-1 w-full min-w-0 bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-xl shadow-[8px_8px_0px_0px_rgba(5,150,105,1)] p-5 sm:p-8 overflow-hidden flex flex-col min-h-[400px]">
+
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 border-b-2 border-slate-100 dark:border-zinc-800">
+                 <div className="flex items-center gap-3 min-w-0">
+                    <Trophy size={28} className="text-emerald-600 shrink-0" />
+                    <div className="min-w-0">
+                      <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter italic">{tr.achievements}</h2>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                        {tr.progress(unlockedCount, achievements.length)}
+                      </p>
+                    </div>
                  </div>
-                 
+
                  {/* Кнопки навигации */}
-                 <div className="flex gap-2">
-                    <button onClick={() => scroll('left')} className="p-2 border-2 border-black dark:border-white rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition active:scale-95">
+                 <div className="hidden sm:flex gap-2 ml-auto">
+                    <button onClick={() => scroll('left')} aria-label="Scroll left" className="p-2 border-2 border-black dark:border-white rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition active:scale-95">
                         <ChevronLeft size={20} />
                     </button>
-                    <button onClick={() => scroll('right')} className="p-2 border-2 border-black dark:border-white rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition active:scale-95">
+                    <button onClick={() => scroll('right')} aria-label="Scroll right" className="p-2 border-2 border-black dark:border-white rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition active:scale-95">
                         <ChevronRight size={20} />
                     </button>
                  </div>
               </div>
 
               {/* КОНТЕЙНЕР ГОРИЗОНТАЛЬНОГО СКРОЛЛА */}
-              <div 
+              <div
                  ref={scrollContainerRef}
                  className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory scroll-smooth items-stretch h-full"
               >
-                 {achievements.map((ach) => (
-                     <div 
-                        key={ach.id}
-                        className={`min-w-[220px] max-w-[220px] snap-start relative p-5 rounded-xl border-[3px] transition-all flex flex-col items-center text-center gap-4 group shrink-0
-                        ${ach.unlocked 
-                            ? 'bg-slate-50 dark:bg-zinc-800 border-black dark:border-zinc-500' 
-                            : 'bg-transparent border-slate-200 dark:border-zinc-800 opacity-60 grayscale'
-                        }`}
-                     >
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white border-2 border-black/10 shadow-sm ${ach.unlocked ? ach.color : 'bg-slate-300'}`}>
-                            {React.cloneElement(ach.icon, { size: 28 })}
-                        </div>
-                        
-                        <div>
-                            <div className="font-black uppercase text-xs mb-1">{ach.title}</div>
-                            <div className="text-[10px] font-bold text-slate-400 leading-tight">{ach.desc}</div>
-                        </div>
+                 {achievements.map((ach) => {
+                     const Icon = ach.icon;
+                     return (
+                       <div
+                          key={ach.key}
+                          className={`min-w-[200px] max-w-[200px] sm:min-w-[220px] sm:max-w-[220px] snap-start relative p-5 rounded-xl border-[3px] transition-all flex flex-col items-center text-center gap-4 shrink-0
+                          ${ach.unlocked
+                              ? 'bg-slate-50 dark:bg-zinc-800 border-black dark:border-zinc-500'
+                              : 'bg-transparent border-slate-200 dark:border-zinc-800 opacity-60 grayscale'
+                          }`}
+                       >
+                          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white border-2 border-black/10 shadow-sm ${ach.unlocked ? ach.color : 'bg-slate-300'}`}>
+                              <Icon size={28} />
+                          </div>
 
-                        {ach.unlocked ? (
-                            <div className="mt-auto pt-2 text-green-500 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                 <Award size={12} /> Открыто
-                            </div>
-                        ) : (
-                            <div className="mt-auto pt-2 text-slate-300 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                 <Lock size={12} /> Закрыто
-                            </div>
-                        )}
-                     </div>
-                 ))}
+                          <div>
+                              <div className="font-black uppercase text-xs mb-1">{ach.title}</div>
+                              <div className="text-[10px] font-bold text-slate-400 leading-tight">{ach.desc}</div>
+                          </div>
+
+                          {ach.unlocked ? (
+                              <div className="mt-auto pt-2 text-green-500 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1">
+                                   <Award size={12} /> {tr.unlocked}
+                              </div>
+                          ) : (
+                              <div className="mt-auto pt-2 text-slate-300 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1">
+                                   <Lock size={12} /> {tr.locked}
+                              </div>
+                          )}
+                       </div>
+                     );
+                 })}
               </div>
-              
+
             </div>
           </div>
       </main>
@@ -232,40 +316,57 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
       {/* === МОДАЛКА РЕДАКТИРОВАНИЯ === */}
       {isEditOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white p-8 rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] relative">
-            <button 
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white p-6 sm:p-8 rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] relative">
+            <button
                 onClick={() => setIsEditOpen(false)}
+                aria-label="Close"
                 className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition"
             >
                 <X size={20} />
             </button>
 
-            <h2 className="text-2xl font-black uppercase mb-8 tracking-tighter">Редактировать</h2>
+            <h2 className="text-2xl font-black uppercase mb-8 tracking-tighter">{tr.editTitle}</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest ml-1 mb-1 block opacity-50">Имя</label>
+                <label className="text-[10px] font-black uppercase tracking-widest ml-1 mb-1 block opacity-50">{tr.firstName}</label>
                 <input
                     value={tempData.firstName}
-                    onChange={(e) => setTempData({ ...tempData, firstName: e.target.value })}
-                    className="w-full p-4 bg-slate-50 dark:bg-zinc-950 border-2 border-black rounded-xl font-bold outline-none"
+                    onChange={(e) => { setTempData({ ...tempData, firstName: e.target.value }); setSaveError(""); }}
+                    maxLength={80}
+                    className="w-full p-4 bg-slate-50 dark:bg-zinc-950 border-2 border-black dark:border-white rounded-xl font-bold outline-none focus:ring-4 ring-emerald-500/20"
                 />
               </div>
               <div>
-                 <label className="text-[10px] font-black uppercase tracking-widest ml-1 mb-1 block opacity-50">Фамилия</label>
+                 <label className="text-[10px] font-black uppercase tracking-widest ml-1 mb-1 block opacity-50">{tr.lastName}</label>
                  <input
                     value={tempData.lastName}
-                    onChange={(e) => setTempData({ ...tempData, lastName: e.target.value })}
-                    className="w-full p-4 bg-slate-50 dark:bg-zinc-950 border-2 border-black rounded-xl font-bold outline-none"
+                    onChange={(e) => { setTempData({ ...tempData, lastName: e.target.value }); setSaveError(""); }}
+                    maxLength={80}
+                    className="w-full p-4 bg-slate-50 dark:bg-zinc-950 border-2 border-black dark:border-white rounded-xl font-bold outline-none focus:ring-4 ring-emerald-500/20"
                  />
               </div>
 
+              {saveError && (
+                <p className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
+                  {saveError}
+                </p>
+              )}
+
               <div className="flex gap-4 pt-4">
-                <button onClick={() => setIsEditOpen(false)} className="flex-1 py-4 border-2 border-black rounded-xl font-black uppercase text-xs">
+                <button
+                  onClick={() => setIsEditOpen(false)}
+                  disabled={saving}
+                  className="flex-1 py-4 border-2 border-black dark:border-white rounded-xl font-black uppercase text-xs disabled:opacity-40"
+                >
                   {cur.cancel || "Отмена"}
                 </button>
-                <button onClick={handleSave} className="flex-1 py-4 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black uppercase text-xs">
-                  {cur.save || "Сохранить"}
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex-1 py-4 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black uppercase text-xs disabled:opacity-40"
+                >
+                  {saving ? tr.saving : (cur.save || "Сохранить")}
                 </button>
               </div>
             </div>
@@ -274,7 +375,7 @@ export default function ProfilePage({ lang, setLang, user, setUser }) {
       )}
 
       <div className="mt-16">
-        <Footer />
+        <Footer lang={lang} />
       </div>
     </div>
   );

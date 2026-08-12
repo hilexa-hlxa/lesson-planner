@@ -23,6 +23,9 @@ import StudentClassesPage from './pages/StudentClassesPage';
 import WordlePage from './pages/WordlePage';
 import LessonSummaryPage from './pages/LessonSummaryPage';
 import NotFoundPage from './pages/NotFoundPage';
+import PricingPage from './pages/PricingPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
 import ClassControlBar from './components/ClassControlBar';
@@ -57,6 +60,8 @@ export default function App() {
   const [activeAchievement, setActiveAchievement] = useState(null);
 
   // --- 2. ФУНКЦИИ ---
+  const resetAuthFields = () => { setEmail(""); setPass(""); setShowEmailError(false); };
+
   const grantAchievement = (achData) => {
   // 1. СТРОГАЯ ПРОВЕРКА: Если ачивка уже в процессе или получена — СТОП
   if (user?.achievements?.includes(achData.key)) return;
@@ -94,6 +99,36 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
+  // SEO: заголовок, описание и lang документа следуют за выбранным языком
+  useEffect(() => {
+    const META = {
+      RU: {
+        code: "ru",
+        title: "Lesson Planner — планы уроков, тесты и отчёты за минуту",
+        desc: "AI-платформа для учителей Казахстана: план урока за 60 секунд, тесты с кодом доступа без регистрации учеников, готовый отчёт для Кунделик.",
+      },
+      KZ: {
+        code: "kk",
+        title: "Lesson Planner — сабақ жоспарлары, тесттер және есептер бір минутта",
+        desc: "Қазақстан мұғалімдеріне арналған AI-платформа: 60 секундта сабақ жоспары, кодпен кіретін тесттер, Кунделикке дайын есеп.",
+      },
+      EN: {
+        code: "en",
+        title: "Lesson Planner — lesson plans, quizzes and reports in a minute",
+        desc: "AI platform for teachers in Kazakhstan: a lesson plan in 60 seconds, quizzes with an access code and no student signup, a ready report for Kundelik.",
+      },
+    };
+    const m = META[lang] || META.RU;
+
+    document.title = m.title;
+    document.documentElement.setAttribute("lang", m.code);
+    document.querySelector('meta[name="description"]')?.setAttribute("content", m.desc);
+    document.querySelector('meta[property="og:title"]')?.setAttribute("content", m.title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute("content", m.desc);
+
+    localStorage.setItem("app_lang", lang);
+  }, [lang]);
+
   // Настройка консольной команды и темы
   useEffect(() => {
     window.testAchievement = grantAchievement;
@@ -126,7 +161,7 @@ export default function App() {
 
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Page><LandingPage {...accessProps} setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={() => { setEmail(""); setPass(""); setShowEmailError(false); }} /></Page>} />
+          <Route path="/" element={<Page><LandingPage {...accessProps} setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} /></Page>} />
           <Route path="/hub" element={<Page><Protected authReady={authReady} user={user}><HubPage {...accessProps} /></Protected></Page>} />
           <Route path="/tools" element={<Page><Protected authReady={authReady} user={user}><ToolsPage {...accessProps} /></Protected></Page>} />
           <Route path="/games" element={<Page><Protected authReady={authReady} user={user}><GamesPage {...accessProps} /></Protected></Page>} />
@@ -145,7 +180,12 @@ export default function App() {
           <Route path="/wordle" element={<Page><Protected authReady={authReady} user={user}><WordlePage {...accessProps} /></Protected></Page>} />
           <Route path="/lesson-summary" element={<Page><Protected authReady={authReady} user={user}><LessonSummaryPage {...accessProps} /></Protected></Page>} />
           <Route path="/play" element={<QuizPlayer {...accessProps} />} />
-          <Route path="*" element={<Page><NotFoundPage user={user} /></Page>} />
+
+          <Route path="/pricing" element={<Page><PricingPage {...accessProps} setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} /></Page>} />
+          <Route path="/privacy" element={<Page><PrivacyPage {...accessProps} /></Page>} />
+          <Route path="/terms" element={<Page><TermsPage {...accessProps} /></Page>} />
+
+          <Route path="*" element={<Page><NotFoundPage user={user} lang={lang} /></Page>} />
         </Routes>
       </AnimatePresence>
 

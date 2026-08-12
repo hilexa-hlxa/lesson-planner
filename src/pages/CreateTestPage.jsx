@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Play, RefreshCw, Eye, X, History, Sparkles, Copy, Check, ClipboardList } from 'lucide-react';
+import { ChevronLeft, Play, RefreshCw, Eye, X, History, Sparkles, Copy, Check, ClipboardList, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 import { I18N as t } from '../lib/i18n';
@@ -10,6 +10,30 @@ import Header from "../components/Header";
 
 const API_URL = 'http://localhost:8000/api';
 
+// Сообщения об ошибках страницы (вместо браузерных alert)
+const ERR = {
+  RU: {
+    generate: "Не удалось создать тест. Попробуйте ещё раз через минуту.",
+    session: "Сервер не смог запустить сессию. Попробуйте ещё раз.",
+    network: "Нет связи с сервером. Проверьте интернет и повторите.",
+    noResults: "Пока нет данных. Отчёт можно собрать после того, как ученики завершат тест.",
+    report: "Не удалось сформировать отчёт. Попробуйте ещё раз.",
+  },
+  KZ: {
+    generate: "Тест жасау мүмкін болмады. Бір минуттан кейін қайталаңыз.",
+    session: "Сервер сессияны іске қоса алмады. Қайталап көріңіз.",
+    network: "Сервермен байланыс жоқ. Интернетті тексеріп, қайталаңыз.",
+    noResults: "Әзірге дерек жоқ. Есепті оқушылар тестті аяқтаған соң жасауға болады.",
+    report: "Есепті құру мүмкін болмады. Қайталап көріңіз.",
+  },
+  EN: {
+    generate: "Could not create the quiz. Try again in a minute.",
+    session: "The server could not start the session. Try again.",
+    network: "No connection to the server. Check your internet and retry.",
+    noResults: "No data yet. The report can be built once students finish the quiz.",
+    report: "Could not generate the report. Try again.",
+  },
+};
 
 const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }) => {
   const navigate = useNavigate();
@@ -43,6 +67,10 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
   });
 
   const cur = t[lang] || t.RU;
+  const err = ERR[lang] || ERR.RU;
+
+  const [error, setError] = useState("");
+  const [reportError, setReportError] = useState("");
 
   // --- Effects ---
   useEffect(() => { loadSavedTests(); }, []);
@@ -58,7 +86,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
   // --- Handlers ---
 
   const handleGenerate = async () => {
-    setLoading(true); setAccessCode(null); setActiveTest(null); setTestResults(null); setSelectedStudent(null);
+    setLoading(true); setError(""); setAccessCode(null); setActiveTest(null); setTestResults(null); setSelectedStudent(null);
     try {
       const vars = { lang, subject, topic, grade, details: "" };
       const mergedCfg = { ...promptConfig, tests: { ...promptConfig?.tests, ...testUi } };
@@ -79,11 +107,12 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
       setActiveTest({ id: test.id, result_md: accumulatedText, topic, subject, access_code: null });
       loadSavedTests();
 
-    } catch (e) { console.error(e); alert("Generation Error"); } finally { setLoading(false); }
+    } catch (e) { console.error(e); setError(err.generate); } finally { setLoading(false); }
   };
 
   const handleStartSession = async () => {
     if (!activeTest) return;
+    setError("");
     try {
       const res = await fetch(`${API_URL}/quiz/start`, {
         method: 'POST',
@@ -91,14 +120,14 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
         body: JSON.stringify({ id: activeTest.id }),
         credentials: 'include'
       });
-      if (!res.ok) { alert("Server Error"); return; }
+      if (!res.ok) { setError(err.session); return; }
       const data = await res.json();
       const code = data.data?.code || data.code;
       if (code) {
         setAccessCode(code);
         setActiveTest(prev => ({ ...prev, access_code: code }));
       }
-    } catch (e) { console.error(e); alert("Network Error"); }
+    } catch (e) { console.error(e); setError(err.network); }
   };
 
   const handleSelectOldTest = async (item) => {
@@ -156,10 +185,11 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
   // --- AI Report Logic ---
   const generateReport = async (type) => {
     if (!testResults || testResults.length === 0) {
-      alert("No data available. Students must finish the test first.");
+      setReportError(err.noResults);
       return;
     }
     setIsGeneratingReport(true);
+    setReportError("");
     setReport("");
 
     try {
@@ -222,7 +252,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
     } catch (e) {
       console.error(e);
-      alert("Report generation failed");
+      setReportError(err.report);
     } finally {
       setIsGeneratingReport(false);
     }
@@ -231,7 +261,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-6 md:p-10 font-sans flex flex-col md:flex-row gap-8">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white p-5 sm:p-6 md:p-10 pt-[100px] lg:pt-[130px] font-sans flex flex-col md:flex-row gap-8">
 
     <Header {...accessProps} />
       
@@ -265,14 +295,21 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
            <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{cur.t || "Topic"}</label>
            <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Topic..." className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none mb-6" />
            
-           <button 
-                onClick={handleGenerate} 
-                disabled={loading || !topic} 
-                className={`w-full py-5 tactical-button text-white 
+           <button
+                onClick={handleGenerate}
+                disabled={loading || !topic}
+                className={`w-full py-5 tactical-button text-white
                 ${loading || !topic ? 'bg-gray-400 opacity-50' : 'bg-emerald-600 hover:bg-emerald-500'}`}
             >
                 {loading ? "ГЕНЕРАЦИЯ..." : "СОЗДАТЬ ТЕСТ"}
             </button>
+
+            {error && (
+              <div className="mt-5 flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
+                <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
         </div>
 
         {/* Active Test View */}
@@ -419,8 +456,15 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             <p className="text-xs text-gray-400 font-bold mt-1">Dry facts, statistics, table for administration.</p>
                         </button>
                         
+                        {reportError && (
+                          <div className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
+                            <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                            <span>{reportError}</span>
+                          </div>
+                        )}
+
                         {isGeneratingReport && <div className="text-center font-black animate-pulse mt-4 text-purple-600">AI IS ANALYZING...</div>}
-                        {!isGeneratingReport && <button onClick={() => setShowReportModal(false)} className="mt-2 w-full py-3 font-bold text-gray-400 hover:text-red-500">Cancel</button>}
+                        {!isGeneratingReport && <button onClick={() => { setShowReportModal(false); setReportError(""); }} className="mt-2 w-full py-3 font-bold text-gray-400 hover:text-red-500">Cancel</button>}
                     </div>
                 ) : (
                     <div className="animate-in zoom-in flex flex-col h-full">

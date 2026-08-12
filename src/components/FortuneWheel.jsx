@@ -14,12 +14,10 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
   const [isSpinning, setIsSpinning] = useState(false);
 
   const segments = textInput.split('\n').filter(name => name.trim() !== "");
+  const tooFewNames = segments.length < 2;
 
   const spin = () => {
-    if (segments.length < 2) {
-        alert("Need at least 2 names!");
-        return;
-    }
+    if (tooFewNames) return;
     if (isSpinning) return;
 
     setIsSpinning(true);
@@ -79,8 +77,9 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
             className="flex-1 w-full border-[4px] border-black rounded-2xl p-4 text-xl font-bold resize-none focus:outline-none focus:ring-4 ring-yellow-400 mb-4 bg-white"
             placeholder="Names here..."
           />
-          <div className="text-right font-bold text-gray-400 uppercase tracking-widest text-xs">
-            {segments.length} Players
+          <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-widest">
+            {tooFewNames && <span className="text-red-500 normal-case tracking-normal">Add at least 2 names to spin.</span>}
+            <span className="text-gray-400 ml-auto">{segments.length} Players</span>
           </div>
         </div>
 
@@ -141,7 +140,8 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
 
           <button
             onClick={spin}
-            disabled={isSpinning}
+            disabled={isSpinning || tooFewNames}
+            title={tooFewNames ? "Add at least 2 names to spin." : undefined}
             className="absolute bottom-10 px-16 py-6 bg-emerald-600 text-white font-black text-3xl uppercase rounded-full border-[5px] border-black shadow-[8px_8px_0_0_#000] hover:-translate-y-1 active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSpinning ? "..." : "SPIN!"}

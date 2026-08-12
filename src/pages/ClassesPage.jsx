@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Copy, Check, Users, Clock } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { SkeletonCardGrid } from "../components/Skeleton";
 import api from "../api";
 
 const T = {
@@ -23,7 +24,10 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
   const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
-    api.classes.list().then(r => setClasses(r.items || [])).finally(() => setLoading(false));
+    api.classes.list()
+      .then(r => setClasses(r.items || []))
+      .catch(() => setClasses([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleCreate = async (e) => {
@@ -48,27 +52,27 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl">
-              <Users size={32} />
+      <main className="max-w-5xl mx-auto px-5 sm:px-6 py-8 sm:py-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-10">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="p-2.5 sm:p-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl shrink-0">
+              <Users className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
-            <h1 className="text-6xl font-black uppercase tracking-tighter italic">{t.title}</h1>
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-black uppercase tracking-tighter italic break-words">{t.title}</h1>
           </div>
           <button
             onClick={() => setShowForm(v => !v)}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 bg-emerald-600 text-white font-black text-xs sm:text-sm uppercase tracking-widest rounded-2xl border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all shrink-0"
           >
             <Plus size={18} strokeWidth={3} /> {t.create}
           </button>
         </div>
 
         {showForm && (
-          <form onSubmit={handleCreate} className="mb-8 flex gap-3">
+          <form onSubmit={handleCreate} className="mb-8 flex flex-col sm:flex-row gap-3">
             <input
               autoFocus
               value={name}
@@ -88,9 +92,20 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
         )}
 
         {loading ? (
-          <div className="text-center py-20 text-slate-400 font-bold text-xl animate-pulse">...</div>
+          <SkeletonCardGrid count={4} />
         ) : classes.length === 0 ? (
-          <div className="text-center py-20 text-slate-400 font-bold text-xl">{t.empty}</div>
+          <div className="flex flex-col items-center text-center py-16 sm:py-20 px-6 rounded-[32px] border-4 border-dashed border-black/10 dark:border-white/10">
+            <div className="p-4 bg-slate-100 dark:bg-zinc-800 rounded-3xl mb-5 text-slate-400">
+              <Users size={36} />
+            </div>
+            <p className="text-slate-500 dark:text-zinc-400 font-bold text-lg max-w-sm mb-6">{t.empty}</p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            >
+              <Plus size={16} strokeWidth={3} /> {t.create}
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {classes.map(cls => (
@@ -129,7 +144,7 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
           </div>
         )}
       </main>
-      <Footer />
+      <Footer lang={lang} />
     </div>
   );
 }

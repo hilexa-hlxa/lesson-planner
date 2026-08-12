@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { GraduationCap, Clock, CheckCircle, ChevronDown, ChevronUp, Trophy, AlertCircle } from "lucide-react";
+import { GraduationCap, Clock, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { SkeletonRows } from "../components/Skeleton";
 import api from "../api";
-import { parseMarkdownQuiz } from "../lib/quizParser";
 
 const T = {
   RU: {
@@ -12,7 +12,7 @@ const T = {
     alreadyApplied: "Вы уже подали заявку в этот класс.", alreadyMember: "Вы уже состоите в этом классе.",
     notFound: "Класс не найден.", pending: "Ожидает одобрения", history: "История тестов",
     noHistory: "В этом классе тестов ещё не было.", score: "Баллы", date: "Дата", seeMore: "Разбор", hide: "Скрыть",
-    wrongQ: "Ошибки:", yourAnswer: "Ваш ответ:", correct: "Правильно:",
+    wrongQ: "Ошибки:", yourAnswer: "Ваш ответ:", correct: "Правильно:", question: "Вопрос",
   },
   KZ: {
     title: "МЕНІҢ СЫНЫПТАРЫМ", join: "Сыныпқа кіру", codePlaceholder: "Сынып коды (6 таңба)", joinBtn: "Өтінім беру",
@@ -20,7 +20,7 @@ const T = {
     alreadyApplied: "Сіз бұл сыныпқа өтінім бердіңіз.", alreadyMember: "Сіз бұл сыныпта бар.",
     notFound: "Сынып табылмады.", pending: "Мақұлдауды күтуде", history: "Тест тарихы",
     noHistory: "Бұл сыныпта тест болмады.", score: "Ұпай", date: "Күні", seeMore: "Талдау", hide: "Жасыру",
-    wrongQ: "Қателер:", yourAnswer: "Сіздің жауабыңыз:", correct: "Дұрысы:",
+    wrongQ: "Қателер:", yourAnswer: "Сіздің жауабыңыз:", correct: "Дұрысы:", question: "Сұрақ",
   },
   EN: {
     title: "MY CLASSES", join: "Join a Class", codePlaceholder: "Class code (6 characters)", joinBtn: "Apply",
@@ -28,7 +28,7 @@ const T = {
     alreadyApplied: "You already applied to this class.", alreadyMember: "You are already a member of this class.",
     notFound: "Class not found.", pending: "Pending approval", history: "Test History",
     noHistory: "No tests in this class yet.", score: "Score", date: "Date", seeMore: "Review", hide: "Hide",
-    wrongQ: "Mistakes:", yourAnswer: "Your answer:", correct: "Correct:",
+    wrongQ: "Mistakes:", yourAnswer: "Your answer:", correct: "Correct:", question: "Question",
   },
 };
 
@@ -68,7 +68,7 @@ function HistoryRow({ item, t }) {
           {wrong.map((a, i) => (
             <div key={i} className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700">
               <p className="font-bold text-sm mb-1.5 dark:text-white">
-                {a.questionText || `Вопрос ${a.questionId + 1}`}
+                {a.questionText || `${t.question} ${a.questionId + 1}`}
               </p>
               <p className="text-xs text-red-500 font-bold">{t.yourAnswer} {a.selectedText || '—'}</p>
               <p className="text-xs text-green-600 font-bold">{t.correct} {a.correctText || '—'}</p>
@@ -91,7 +91,7 @@ function ClassHistory({ classId, t }) {
       .finally(() => setLoading(false));
   }, [classId]);
 
-  if (loading) return <div className="py-6 text-center text-slate-400 font-black animate-pulse">...</div>;
+  if (loading) return <SkeletonRows count={2} className="pt-4" />;
   if (!history.length) return <p className="py-6 text-center text-slate-400 font-bold text-sm">{t.noHistory}</p>;
 
   return (
@@ -112,7 +112,10 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
   const [expandedClass, setExpandedClass] = useState(null);
 
   useEffect(() => {
-    api.classes.list().then(r => setClasses(r.items || [])).finally(() => setLoading(false));
+    api.classes.list()
+      .then(r => setClasses(r.items || []))
+      .catch(() => setClasses([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleJoin = async (e) => {
@@ -136,21 +139,21 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
   const pending = classes.filter(c => c.status === 'pending');
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[120px] pb-20">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-3xl mx-auto px-6 py-12">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="p-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl">
-            <GraduationCap size={32} />
+      <main className="max-w-3xl mx-auto px-5 sm:px-6 py-8 sm:py-12">
+        <div className="flex items-center gap-3 sm:gap-4 mb-10 min-w-0">
+          <div className="p-2.5 sm:p-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl shrink-0">
+            <GraduationCap className="w-7 h-7 sm:w-8 sm:h-8" />
           </div>
-          <h1 className="text-6xl font-black uppercase tracking-tighter italic">{t.title}</h1>
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-black uppercase tracking-tighter italic break-words">{t.title}</h1>
         </div>
 
         {/* Join form */}
-        <div className="mb-10 p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)]">
-          <h2 className="font-black text-xl uppercase mb-5">{t.join}</h2>
-          <form onSubmit={handleJoin} className="flex gap-3">
+        <div className="mb-10 p-6 sm:p-8 bg-white dark:bg-zinc-900 rounded-[28px] sm:rounded-[32px] border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)]">
+          <h2 className="font-black text-lg sm:text-xl uppercase mb-5">{t.join}</h2>
+          <form onSubmit={handleJoin} className="flex flex-col sm:flex-row gap-3">
             <input
               value={code}
               onChange={e => setCode(e.target.value.toUpperCase())}
@@ -174,7 +177,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
         </div>
 
         {loading ? (
-          <div className="text-center py-10 text-slate-400 font-black text-xl animate-pulse">...</div>
+          <SkeletonRows count={3} />
         ) : (
           <>
             {pending.length > 0 && (
@@ -193,9 +196,14 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
               </div>
             )}
 
-            {approved.length === 0 ? (
-              <p className="text-slate-400 font-bold text-center py-8">{t.noClasses}</p>
-            ) : (
+            {approved.length === 0 && pending.length === 0 ? (
+              <div className="flex flex-col items-center text-center py-14 px-6 rounded-[28px] border-4 border-dashed border-black/10 dark:border-white/10">
+                <div className="p-4 bg-slate-100 dark:bg-zinc-800 rounded-3xl mb-5 text-slate-400">
+                  <GraduationCap size={32} />
+                </div>
+                <p className="text-slate-500 dark:text-zinc-400 font-bold max-w-xs">{t.noClasses}</p>
+              </div>
+            ) : approved.length === 0 ? null : (
               <div className="space-y-4">
                 {approved.map(cls => (
                   <div key={cls.id} className="rounded-[24px] border-2 border-black/10 dark:border-white/10 overflow-hidden">
@@ -226,7 +234,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
           </>
         )}
       </main>
-      <Footer />
+      <Footer lang={lang} />
     </div>
   );
 }

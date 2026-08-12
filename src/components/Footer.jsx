@@ -1,41 +1,119 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Mail, Send, Instagram } from "lucide-react";
 
-export default function Footer() {
+// ─── Контакты и соцсети ───────────────────────────────────────────────────────
+// Заполните ссылки на реальные аккаунты — пустые значения не отображаются.
+export const CONTACT_EMAIL = "hello@lessonplanner.kz";
+const SOCIALS = [
+  { key: "telegram", label: "Telegram", href: "", Icon: Send },
+  { key: "instagram", label: "Instagram", href: "", Icon: Instagram },
+];
+
+const T = {
+  RU: {
+    tagline: "AI-платформа для учителей Казахстана.",
+    platform: "Платформа",
+    hub: "Хаб", tools: "Инструменты", games: "Игры", classes: "Классы",
+    account: "Аккаунт",
+    profile: "Профиль", joinTest: "Войти в тест",
+    company: "О сервисе",
+    pricing: "Тарифы", privacy: "Конфиденциальность", terms: "Условия", contact: "Связаться",
+    rights: "© 2026 LESSON.LAB — Все права защищены",
+    made: "Сделано для учителей Казахстана",
+  },
+  KZ: {
+    tagline: "Қазақстан мұғалімдеріне арналған AI-платформа.",
+    platform: "Платформа",
+    hub: "Хаб", tools: "Құралдар", games: "Ойындар", classes: "Сыныптар",
+    account: "Аккаунт",
+    profile: "Профиль", joinTest: "Тестке кіру",
+    company: "Сервис туралы",
+    pricing: "Тарифтер", privacy: "Құпиялылық", terms: "Шарттар", contact: "Байланыс",
+    rights: "© 2026 LESSON.LAB — Барлық құқықтар қорғалған",
+    made: "Қазақстан мұғалімдері үшін жасалған",
+  },
+  EN: {
+    tagline: "AI platform for teachers in Kazakhstan.",
+    platform: "Platform",
+    hub: "Hub", tools: "Tools", games: "Games", classes: "Classes",
+    account: "Account",
+    profile: "Profile", joinTest: "Join a quiz",
+    company: "About",
+    pricing: "Pricing", privacy: "Privacy", terms: "Terms", contact: "Contact",
+    rights: "© 2026 LESSON.LAB — All rights reserved",
+    made: "Made for Kazakhstan teachers",
+  },
+};
+
+export default function Footer({ lang = "RU" }) {
+  const t = T[lang] || T.RU;
+  const socials = SOCIALS.filter(s => s.href);
+
+  const linkCls = "opacity-50 hover:opacity-100 transition-opacity";
+
   return (
     <footer className="border-t border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-md">
-      <div className="max-w-5xl mx-auto px-8 py-12">
-        <div className="flex flex-col md:flex-row justify-between gap-8 mb-10">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12">
+        <div className="flex flex-col md:flex-row justify-between gap-10 mb-10">
 
           <div className="flex flex-col gap-3">
             <Link to="/" className="flex items-center gap-2 font-black text-lg italic tracking-tighter text-emerald-600">
               <GraduationCap size={22} /> LESSON.LAB
             </Link>
-            <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">
-              AI-платформа для учителей Казахстана.
+            <p className="text-xs text-slate-400 max-w-[220px] leading-relaxed">
+              {t.tagline}
             </p>
+
+            {socials.length > 0 && (
+              <div className="flex gap-2 mt-2">
+                {socials.map((s) => {
+                  const Icon = s.Icon;
+                  return (
+                    <a
+                      key={s.key}
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={s.label}
+                      className="p-2 rounded-xl border-2 border-black/10 dark:border-white/10 hover:border-emerald-600 hover:text-emerald-600 transition-colors"
+                    >
+                      <Icon size={16} />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <div className="flex gap-12 text-[11px] font-black uppercase tracking-widest">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12 text-[11px] font-black uppercase tracking-widest">
             <div className="flex flex-col gap-3">
-              <span className="opacity-30 mb-1">Платформа</span>
-              <Link to="/hub" className="opacity-50 hover:opacity-100 transition-opacity">Хаб</Link>
-              <Link to="/tools" className="opacity-50 hover:opacity-100 transition-opacity">Инструменты</Link>
-              <Link to="/games" className="opacity-50 hover:opacity-100 transition-opacity">Игры</Link>
-              <Link to="/classes" className="opacity-50 hover:opacity-100 transition-opacity">Классы</Link>
+              <span className="opacity-30 mb-1">{t.platform}</span>
+              <Link to="/hub" className={linkCls}>{t.hub}</Link>
+              <Link to="/tools" className={linkCls}>{t.tools}</Link>
+              <Link to="/games" className={linkCls}>{t.games}</Link>
+              <Link to="/classes" className={linkCls}>{t.classes}</Link>
             </div>
             <div className="flex flex-col gap-3">
-              <span className="opacity-30 mb-1">Аккаунт</span>
-              <Link to="/profile" className="opacity-50 hover:opacity-100 transition-opacity">Профиль</Link>
-              <Link to="/join-test" className="opacity-50 hover:opacity-100 transition-opacity">Войти в тест</Link>
+              <span className="opacity-30 mb-1">{t.account}</span>
+              <Link to="/profile" className={linkCls}>{t.profile}</Link>
+              <Link to="/join-test" className={linkCls}>{t.joinTest}</Link>
+            </div>
+            <div className="flex flex-col gap-3">
+              <span className="opacity-30 mb-1">{t.company}</span>
+              <Link to="/pricing" className={linkCls}>{t.pricing}</Link>
+              <Link to="/privacy" className={linkCls}>{t.privacy}</Link>
+              <Link to="/terms" className={linkCls}>{t.terms}</Link>
+              <a href={`mailto:${CONTACT_EMAIL}`} className={`${linkCls} flex items-center gap-1.5`}>
+                <Mail size={12} /> {t.contact}
+              </a>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-100 dark:border-zinc-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 opacity-30 text-[10px] font-black uppercase tracking-[0.2em]">
-          <span>© 2026 LESSON.LAB — All rights reserved</span>
-          <span>Made for Kazakhstan teachers</span>
+        <div className="border-t border-slate-100 dark:border-zinc-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 opacity-30 text-[10px] font-black uppercase tracking-[0.2em] text-center sm:text-left">
+          <span>{t.rights}</span>
+          <span>{t.made}</span>
         </div>
       </div>
     </footer>

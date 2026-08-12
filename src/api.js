@@ -81,6 +81,13 @@ const api = {
     return request('/me');
   },
 
+  updateMe({ first_name, last_name }) {
+    return request('/me', {
+      method: 'PATCH',
+      body: JSON.stringify({ first_name, last_name })
+    });
+  },
+
   logout() {
     return request('/auth/logout', {
       method: 'POST'
