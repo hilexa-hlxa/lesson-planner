@@ -9,19 +9,48 @@ function escapeJsonString(s) {
     .replace(/\n/g, "\\n");
 }
 
+// Как настройки со страницы /prompts звучат для модели
+const PLAN_STYLE = {
+  strict:   `Formal and methodical, the way an inspection-ready plan reads.`,
+  friendly: `Warm and conversational, as if explaining the lesson to a colleague.`,
+  short:    `Terse. Short bullet points, no elaboration.`,
+};
+
+const PLAN_DETAIL = {
+  low:    `Keep it brief: 1-2 short bullets per section, 6 timeline stages.`,
+  medium: `Moderate depth: 2-3 bullets per section, 6-8 timeline stages.`,
+  high:   `Thorough: 3-5 bullets per section, 8-10 timeline stages, concrete examples.`,
+};
+
 export function buildPrompt(type, vars, cfg) {
   // 1. Lesson Plan Generation
   if (type === "lesson_plan") {
-    // TODO: настройки плана урока (стиль, детализация, поминутный тайминг)
-    // со страницы /prompts сюда пока не подставляются — см. ROADMAP.
+    const c = { ...DEFAULT_PROMPT_CONFIG.lesson_plan, ...(cfg?.lesson_plan || {}) };
+
     const gradeInt = Number.isFinite(Number(vars.grade)) ? Number(vars.grade) : 0;
     const durationInt = Number.isFinite(Number(vars.duration)) ? Number(vars.duration) : 0;
+
+    // Секции, которые учитель отключил, просим оставить пустыми —
+    // Dashboard такие в готовый документ не выводит
+    const skipped = [
+      !c.includeDifferentiation && "differentiation",
+      !c.includeAssessment && "assessment",
+      !c.includeHomework && "homework",
+    ].filter(Boolean);
 
     return [
       `You are a professional lesson planner (methodologist).`,
       `Generate a lesson plan strictly as VALID JSON.`,
       ``,
       `Language of ALL text inside JSON: ${langWord(vars.lang)}.`,
+      `Tone: ${PLAN_STYLE[c.style] || PLAN_STYLE.strict}`,
+      `Depth: ${PLAN_DETAIL[c.detailLevel] || PLAN_DETAIL.high}`,
+      c.includeTiming
+        ? `Timing: every timeline item MUST carry a minute range in "minutes", e.g. "0-5", and the ranges MUST add up to ${durationInt} minutes.`
+        : `Timing: leave "minutes" as "" for every timeline item — the teacher does not want a per-minute breakdown.`,
+      skipped.length
+        ? `Leave these sections as empty arrays, the teacher turned them off: ${skipped.join(", ")}.`
+        : null,
       ``,
       `INPUT (use these values exactly in meta):`,
       `- subject: ${vars.subject}`,
@@ -37,7 +66,7 @@ export function buildPrompt(type, vars, cfg) {
       `4) meta.topic MUST equal the input topic.`,
       `5) meta.grade MUST equal the input grade (integer).`,
       `6) meta.duration MUST equal the input duration (integer).`,
-      `7) timeline MUST contain 6-10 items.`,
+      `7) timeline MUST contain ${c.detailLevel === "low" ? "6" : c.detailLevel === "medium" ? "6-8" : "8-10"} items.`,
       `8) Each timeline item MUST include: stage, minutes, teacher, student, assessment, resources.`,
       `9) teacher/student/assessment/resources MUST be arrays of strings (bullet points).`,
       `10) Do NOT use null. Use "" or [] instead.`,
@@ -83,7 +112,9 @@ export function buildPrompt(type, vars, cfg) {
       `  ]`,
       `}`,
       ``,
-      `IMPORTANT: Replace all empty strings/arrays with real content. Keep the same structure.`,
+      skipped.length
+        ? `IMPORTANT: Replace empty strings/arrays with real content, EXCEPT the sections listed as turned off. Keep the same structure.`
+        : `IMPORTANT: Replace all empty strings/arrays with real content. Keep the same structure.`,
     ].filter(Boolean).join("\n");
   }
 

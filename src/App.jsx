@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
+import api from "./api";
 import { meCached } from "./apiCache"; // Импортируем ме-кэш
 
 import AuthModal from "./components/AuthModal";
@@ -107,6 +108,30 @@ export default function App() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Настройки генерации живут на пользователе. Раньше они существовали только
+  // в этом стейте и сбрасывались при каждом обновлении вкладки.
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) { setPromptConfig(DEFAULT_PROMPT_CONFIG); return; }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await api.promptConfig.get();
+        if (cancelled || !r?.config) return;
+        // Мержим с дефолтами: сохранённый конфиг мог быть записан до появления
+        // новых полей, и без слияния они оказались бы undefined
+        setPromptConfig({
+          lesson_plan: { ...DEFAULT_PROMPT_CONFIG.lesson_plan, ...(r.config.lesson_plan || {}) },
+          tests:       { ...DEFAULT_PROMPT_CONFIG.tests,       ...(r.config.tests || {}) },
+        });
+      } catch (e) {
+        console.error("Failed to load prompt config:", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   // SEO: заголовок, описание и lang документа следуют за выбранным языком
   useEffect(() => {

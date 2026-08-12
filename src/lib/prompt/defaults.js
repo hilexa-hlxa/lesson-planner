@@ -6,7 +6,6 @@ export const DEFAULT_PROMPT_CONFIG = {
     includeAssessment: true,
     includeHomework: true,
     detailLevel: "high",      // low | medium | high
-    markdown: true,
     sections: [
       "goals",
       "equipment",

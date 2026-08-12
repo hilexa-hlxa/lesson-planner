@@ -87,6 +87,17 @@
   promise — advertised on the landing, pricing and privacy pages — was unreachable for the
   people it was built for. The route is public now, like `/play` beside it, and the back arrow
   points home for guests instead of into the members-only games section.
+- **The /prompts page did nothing** — two separate faults. `buildPrompt` loaded
+  `cfg.lesson_plan` and never substituted any of it, so style, detail level and the section
+  toggles had no effect on the prompt (the quiz half always worked). And nothing persisted:
+  `api.promptConfig.get/set` pointed at `/api/prompt-config`, a route that did not exist, and
+  no one called them — settings lived in React state and reset on reload. Migration `005` adds
+  `users.prompt_config`, the route exists now, the app loads the config on sign-in and saves it
+  with feedback on the button. `payloadToMarkdown` moved to `src/lib/lessonPlanDoc.js` and skips
+  sections the teacher turned off instead of printing a heading with a dash, and drops the
+  Minutes column when per-minute timing is off. The lesson-plan card also lost its "Markdown"
+  toggle: that pipeline always emits JSON and the app renders the document itself, so the
+  control could never have done anything.
 - **Plans and quizzes were indistinguishable** — both pages sent `type` on create, but there was
   no column to hold it, so `POST /api/generations` dropped it and the GET never returned it. The
   Dashboard history therefore listed everything and the `/create-test` library listed nothing.
@@ -101,7 +112,3 @@
 - **Contact address and socials** — `CONTACT_EMAIL` and `SOCIALS` now live in
   `src/siteConfig.js`, the only file to edit. The address is still the placeholder
   `hello@lessonplanner.kz` and both social URLs are empty (empty ones render nothing).
-- **Lesson-plan prompt settings do nothing** — `/prompts` lets you set style, detail level and
-  per-minute timing, and `buildPrompt` loads `cfg.lesson_plan`, but the `lesson_plan` branch of
-  `templates.js` never substitutes any of it into the prompt. The quiz branch does use its
-  config. Either wire the values in or drop that half of the settings page.

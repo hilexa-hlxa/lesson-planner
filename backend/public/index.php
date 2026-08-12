@@ -574,6 +574,38 @@ try {
     Response::ok(['user' => $auth->currentUser()]);
   }
 
+  // Настройки генерации (страница /prompts). Хранятся на пользователе,
+  // чтобы не сбрасывались при обновлении вкладки.
+  if ($method === 'GET' && $path === '/api/prompt-config') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $st = $db->pdo()->prepare("SELECT prompt_config FROM users WHERE id = :id");
+    $st->execute([':id' => $u['id']]);
+    $raw = $st->fetchColumn();
+
+    Response::ok(['config' => $raw ? json_decode((string)$raw, true) : null]);
+  }
+
+  if ($method === 'PUT' && $path === '/api/prompt-config') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $config = $body['config'] ?? null;
+    if (!is_array($config)) Response::error('Config must be an object', 400);
+
+    $encoded = json_encode($config, JSON_UNESCAPED_UNICODE);
+    // Настройки маленькие; всё, что больше, — явно не они
+    if ($encoded === false || strlen($encoded) > 8192) {
+      Response::error('Config is too large', 400);
+    }
+
+    $st = $db->pdo()->prepare("UPDATE users SET prompt_config = :cfg WHERE id = :id");
+    $st->execute([':cfg' => $encoded, ':id' => $u['id']]);
+
+    Response::ok(['config' => $config]);
+  }
+
   // ======================================================
   // Economy & Coins Routes
   // ======================================================

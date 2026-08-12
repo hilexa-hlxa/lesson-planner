@@ -9,6 +9,7 @@ import { cached, invalidatePrefixRaw, lessonPlansListCached } from "../apiCache"
 import Header from "../components/Header";
 import { Skeleton } from "../components/Skeleton";
 import { I18N as t, tr } from "../lib/i18n";
+import { payloadToMarkdown } from "../lib/lessonPlanDoc";
 import { buildPrompt } from "../lib/prompt";
 
 // Строки самой страницы генерации (не покрытые общим i18n)
@@ -39,47 +40,6 @@ const GEN = {
   },
 };
 
-function payloadToMarkdown(p, lang) {
-  const sec = p?.sections || {};
-  const sm = (t[lang] || t.RU)?.doc?.sections || t.RU.doc.sections;
-
-  const lines = [];
-  lines.push(`## ${tr(lang,"doc.lessonPlan","План урока")}`);
-  lines.push(`**${tr(lang,"s","Предмет")}:** ${p?.meta?.subject || ""}`);
-  lines.push(`**${tr(lang,"t","Тема")}:** ${p?.meta?.topic || ""}`);
-  lines.push(`**Grade:** ${p?.meta?.grade ?? ""}  **Duration:** ${p?.meta?.duration ?? ""} min`);
-  if (p?.meta?.details) lines.push(`**${tr(lang,"d","Детали")}:** ${p.meta.details}`);
-  lines.push("");
-
-  const renderList = (title, arr) => {
-    lines.push(`## ${title}`);
-    const a = Array.isArray(arr) ? arr : [];
-    if (!a.length) { lines.push("-"); lines.push(""); return; }
-    for (const x of a) lines.push(`- ${String(x)}`);
-    lines.push("");
-  };
-
-  renderList(sm.goals, sec.goals);
-  renderList(sm.equipment, sec.equipment);
-  renderList(sm.key_concepts, sec.key_concepts);
-
-  // timeline как таблица markdown
-  lines.push(`## ${sm.timeline}`);
-  lines.push(`| Stage | Minutes | Teacher | Student | Assessment | Resources |`);
-  lines.push(`|---|---|---|---|---|---|`);
-  const tl = Array.isArray(p?.timeline) ? p.timeline : [];
-  for (const r of tl) {
-    lines.push(`| ${r.stage||""} | ${r.minutes||""} | ${r.teacher||""} | ${r.student||""} | ${r.assessment||""} | ${r.resources||""} |`);
-  }
-  lines.push("");
-
-  renderList(sm.tasks, sec.tasks);
-  renderList(sm.differentiation, sec.differentiation);
-  renderList(sm.assessment, sec.assessment);
-  renderList(sm.homework, sec.homework);
-
-  return lines.join("\n");
-}
 
 function extractJsonObject(s) {
   if (!s) return "";
