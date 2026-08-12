@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Timer, CheckCircle, XCircle, Trophy, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactConfetti from 'react-confetti';
 import { parseMarkdownQuiz } from '../lib/quizParser';
-import api from "../api"; // Импортируем твой апи
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -85,17 +84,8 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
     
     const percent = (score / questions.length) * 100;
 
-    // 1. Ачивки
-    if (grantAchievement) {
-      if (percent === 100 && questions.length >= 5) {
-        grantAchievement({ title: "Высший пилотаж", reward: 150, key: "perfect_score" });
-      }
-      if (elapsedTime < 60 && percent >= 80) {
-        grantAchievement({ title: "Сверхзвук", reward: 200, key: "speedrunner" });
-      }
-    }
-
-    // 2. Отправка на сервер
+    // 1. Отправка на сервер — ПЕРВЫМ ДЕЛОМ.
+    // Результат ученика важнее ачивок: что бы ни случилось дальше, балл уже у учителя.
     try {
         await fetch(`${API_URL}/api/quiz/submit`, {
             method: 'POST',
@@ -104,19 +94,29 @@ const QuizPlayer = ({ grantAchievement, ...accessProps }) => {
             body: JSON.stringify({
                 quiz_id: session.quiz.id,
                 student_name: session.studentName,
-                score: score, 
+                score: score,
                 total: questions.length,
                 duration: elapsedTime,
                 details: answersLog
             })
         });
-        
-        // Если есть апи для монет, сохраняем результат
-        if (percent === 100) {
-            await api.post('/achievements/grant', { key: 'perfect_score' }).catch(() => {});
-        }
     } catch (e) {
         console.error("Submission failed", e);
+    }
+
+    // 2. Ачивки — только для залогиненных. У гостя аккаунта нет, grantAchievement
+    // молча выйдет. Отдельный try, чтобы ошибка здесь не влияла на отправку выше.
+    try {
+      if (grantAchievement) {
+        if (percent === 100 && questions.length >= 5) {
+          grantAchievement({ title: "Высший пилотаж", reward: 150, key: "perfect_score" });
+        }
+        if (elapsedTime < 60 && percent >= 80) {
+          grantAchievement({ title: "Сверхзвук", reward: 200, key: "speedrunner" });
+        }
+      }
+    } catch (e) {
+      console.error("Achievement grant failed", e);
     }
   };
 

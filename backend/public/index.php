@@ -57,9 +57,14 @@ function readJsonBodyOrFail(): array {
 $body = in_array($method, ['POST','PUT','PATCH'], true) ? readJsonBodyOrFail() : [];
 
 // ---------------- SSE Stream Route ----------------
+// Обязательно требуем сессию: без этой проверки эндпоинт был открытым прокси
+// к Gemini — любой мог слать произвольные промпты за счёт нашего API-ключа.
 if ($method === 'POST' && preg_match('#^/api/generate/stream/?$#', $path)) {
+  if (!$auth->currentUser()) {
+    Response::error('Unauthorized', 401);
+  }
   require __DIR__ . '/../src/GenerateStream.php';
-  \App\GenerateStream::handle($config, $body); 
+  \App\GenerateStream::handle($config, $body);
   exit;
 }
 

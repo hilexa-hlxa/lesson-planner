@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -62,23 +62,33 @@ export default function App() {
   // --- 2. ФУНКЦИИ ---
   const resetAuthFields = () => { setEmail(""); setPass(""); setShowEmailError(false); };
 
+  // Ключи, выданные в этой сессии. Ref, а не стейт: setUser асинхронный, и без
+  // синхронной отметки два вызова в одном тике выдали бы ачивку дважды.
+  const grantedKeysRef = useRef(new Set());
+
+  // Сбрасываем при смене пользователя (выход / вход под другим аккаунтом)
+  useEffect(() => { grantedKeysRef.current = new Set(); }, [user?.id]);
+
   const grantAchievement = (achData) => {
-  // 1. СТРОГАЯ ПРОВЕРКА: Если ачивка уже в процессе или получена — СТОП
-  if (user?.achievements?.includes(achData.key)) return;
-  if (activeAchievement?.key === achData.key) return;
+    if (!achData?.key) return;
 
-  // 2. Локально сразу помечаем, чтобы повторные вызовы в ту же миллисекунду не прошли
-  user.achievements = [...(user.achievements || []), achData.key];
+    // Гость (ученик, вошедший в тест по коду) — аккаунта для начисления нет.
+    // Раньше здесь была мутация user.achievements, которая падала с TypeError
+    // и обрывала завершение теста ДО отправки результата на сервер.
+    if (!user) return;
 
-  setActiveAchievement(achData);
+    if (grantedKeysRef.current.has(achData.key)) return;
+    if (user.achievements?.includes(achData.key)) return;
 
-  // 3. Обновляем стейт (React сам сгруппирует обновления)
-  setUser(prev => ({
-    ...prev,
-    coins: (prev?.coins || 0) + (achData.reward || 0),
-    achievements: [...(prev?.achievements || []), achData.key]
-  }));
-};
+    grantedKeysRef.current.add(achData.key);
+    setActiveAchievement(achData);
+
+    setUser(prev => prev ? ({
+      ...prev,
+      coins: (prev.coins || 0) + (achData.reward || 0),
+      achievements: [...(prev.achievements || []), achData.key]
+    }) : prev);
+  };
 
   // --- 3. ЭФФЕКТЫ ---
 
