@@ -87,6 +87,13 @@ return [
 
 ## База данных
 
+## Тесты
+
+```
+npm test                                          # чистые функции фронтенда (vitest)
+php backend/extras/tests/quiz_parser_test.php     # разбор теста и ключ ответов
+```
+
 Миграции находятся в `backend/extras/migrations/`. Запускать по порядку через Supabase SQL Editor:
 
 - `000_initial_schema.sql` — основные таблицы

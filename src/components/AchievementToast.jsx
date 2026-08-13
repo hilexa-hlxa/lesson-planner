@@ -3,7 +3,14 @@ import { Trophy, X } from 'lucide-react';
 
 const VISIBLE_MS = 5000;
 
-const AchievementToast = ({ achievement, onClose }) => {
+const T = {
+  RU: { unlocked: "Достижение!", coins: "монет" },
+  KZ: { unlocked: "Жетістік!", coins: "монета" },
+  EN: { unlocked: "Achievement!", coins: "coins" },
+};
+
+const AchievementToast = ({ achievement, onClose, lang = "RU" }) => {
+  const tr = T[lang] || T.RU;
   // Появление отдаём CSS-анимации, а не стейту: раньше видимость
   // выставлялась прямо в эффекте, что вызывало лишний каскад рендеров.
   useEffect(() => {
@@ -22,9 +29,9 @@ const AchievementToast = ({ achievement, onClose }) => {
         </div>
 
         <div className="flex-1">
-           <h4 className="font-black uppercase text-[10px] tracking-widest opacity-60 leading-none">Achievement!</h4>
+           <h4 className="font-black uppercase text-[10px] tracking-widest opacity-60 leading-none">{tr.unlocked}</h4>
            <p className="font-black text-lg leading-tight mt-1">{achievement.title}</p>
-           <p className="text-[10px] font-bold mt-1 uppercase">+ {achievement.reward || 100} Coins</p>
+           <p className="text-[10px] font-bold mt-1 uppercase">+ {achievement.reward || 100} {tr.coins}</p>
         </div>
 
         <button onClick={onClose} aria-label="Close" className="p-1 hover:bg-black/10 rounded-full transition">

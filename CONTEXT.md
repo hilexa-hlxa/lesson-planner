@@ -18,8 +18,18 @@ An AI-generated set of questions on a topic and grade level. Created by a Teache
 ## Access Code
 A 4-digit code that activates a Test for live play. A Teacher generates it; Students enter it to join the session. Expires after 4 hours. Lives on the `generations` record (`access_code`, `code_expires_at`).
 
+It doubles as the shared secret between Teacher and class: presenting a live Access Code is what authorises joining. Wrong codes are rate limited, correct ones never are — see ADR-0003.
+
+## Generation Settings
+Per-Teacher preferences for how content is generated: tone, level of detail, which sections a Lesson Plan should contain, and quiz difficulty and length. Edited on the Prompts page, stored in `users.prompt_config`, and substituted into the prompt at generation time.
+
+## Test Attempt
+One Student's run through a live Test, from entering the Access Code to finishing. Holds the position they have reached and the options they have chosen so far, so the server — not the browser — decides what is correct. Identified by a one-time token issued at join; the database stores only its hash. Stored in `quiz_attempts`. See ADR-0002.
+
+An Attempt is in progress until it is submitted; a submitted Attempt becomes a Test Result. One finished Attempt per name per Access Code session.
+
 ## Test Result
-The record of one Student's attempt at a Test. Captures score, percentage, duration, and per-question answers. Stored in `quiz_results`. Multiple Test Results exist per Test (one per Student who participated).
+The record of one Student's completed attempt at a Test. Captures score, percentage, duration, and per-question answers. Scored by the server from its own answer key — never from figures sent by the browser. Stored in `quiz_results`. Multiple Test Results exist per Test (one per Student who participated).
 
 ## Report
 An AI-generated summary produced after a Test session ends. Shows the class average score, a list of questions, and which students answered each correctly or not. Written in the Teacher's active language. Derived from the set of Test Results for a given Test.

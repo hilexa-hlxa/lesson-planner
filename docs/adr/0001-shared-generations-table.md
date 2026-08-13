@@ -20,3 +20,7 @@ To contain the leak: the frontend uses `api.lessonPlans.*` and `api.tests.*` —
 ## When to revisit
 
 If Lesson Plans and Tests diverge significantly in structure (e.g., Tests gain question banks, scoring rubrics, or versioning that Lesson Plans don't need), split the table then. Not before.
+
+## Implementation note (2026-08-12)
+
+The `type` column this ADR describes did not exist until migration `004`. `POST /api/generations` accepted the field and dropped it, and the GET never returned it — so the discriminator was documented but never real. The Dashboard listed everything and the Create Test library listed nothing. The column, the insert and a `?type=` filter now exist, and the two `api.*` namespaces described above each ask for their own kind.

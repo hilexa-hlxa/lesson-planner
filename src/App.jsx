@@ -237,6 +237,7 @@ export default function App() {
           reward: achievementReward(activeAchievement),
         }}
         onClose={() => setActiveAchievement(null)}
+        lang={lang}
       />
       
       {isWidgetVisible && <ClassControlBar />}

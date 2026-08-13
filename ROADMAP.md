@@ -106,6 +106,16 @@
   `p-10`, `text-6xl`/`text-7xl` and fixed `h-[360px]` cards with no responsive variants. Fixed by
   inspection: they sit behind auth, so they could not be measured in a browser the way the public
   pages were.
+- **The student player was Russian-only** — every label in `QuizPlayer` was a hardcoded Russian
+  literal, and the component no longer received `lang` at all, so a Kazakh or English class still
+  sat a Russian-looking test. Both fixed; `AchievementToast` was likewise hardcoded English.
+- **No automated tests** — everything was verified with throwaway scripts. `npm test` now covers
+  the document renderer, prompt substitution and the achievement catalog (11 checks), and
+  `php backend/extras/tests/quiz_parser_test.php` covers the parser that derives the answer key
+  (13 checks, correct answers deliberately at different positions so a reordering bug fails).
+- **Domain docs were stale** — `CONTEXT.md` gained Test Attempt and Generation Settings, ADR-0002
+  and ADR-0003 record the scoring and rate-limiting decisions, and ADR-0001 now notes that the
+  `type` column it described was only actually created in migration `004`.
 - **Plans and quizzes were indistinguishable** — both pages sent `type` on create, but there was
   no column to hold it, so `POST /api/generations` dropped it and the GET never returned it. The
   Dashboard history therefore listed everything and the `/create-test` library listed nothing.

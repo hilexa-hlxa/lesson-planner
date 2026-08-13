@@ -4,8 +4,37 @@ import { Timer, CheckCircle, XCircle, Trophy, LogOut, ChevronDown, ChevronUp } f
 import ReactConfetti from 'react-confetti';
 import api from '../api';
 
-// ДОБАВИЛИ grantAchievement В ПРОПСЫ
-const QuizPlayer = ({ grantAchievement }) => {
+// Экран ученика. Раньше все подписи были захардкожены по-русски: класс с
+// казахским интерфейсом всё равно видел русский тест.
+const T = {
+  RU: {
+    loading: "Загрузка...", finish: "Финиш!",
+    correctOf: "Правильно", time: "Время", sec: "с",
+    breakdown: "Разбор ошибок", question: "Вопрос",
+    yourAnswer: "Ваш ответ:", correctAnswer: "Правильно:",
+    exit: "Выход", next: "Дальше", finishBtn: "Завершить",
+    answerFailed: "Не удалось записать ответ. Нажмите вариант ещё раз.",
+  },
+  KZ: {
+    loading: "Жүктелуде...", finish: "Аяқталды!",
+    correctOf: "Дұрыс", time: "Уақыт", sec: "с",
+    breakdown: "Қателерді талдау", question: "Сұрақ",
+    yourAnswer: "Сіздің жауабыңыз:", correctAnswer: "Дұрысы:",
+    exit: "Шығу", next: "Келесі", finishBtn: "Аяқтау",
+    answerFailed: "Жауапты жазу мүмкін болмады. Нұсқаны қайта басыңыз.",
+  },
+  EN: {
+    loading: "Loading...", finish: "Finished!",
+    correctOf: "Correct", time: "Time", sec: "s",
+    breakdown: "Review mistakes", question: "Question",
+    yourAnswer: "Your answer:", correctAnswer: "Correct:",
+    exit: "Exit", next: "Next", finishBtn: "Finish",
+    answerFailed: "Could not record the answer. Tap an option again.",
+  },
+};
+
+const QuizPlayer = ({ grantAchievement, lang = "RU" }) => {
+  const tr = T[lang] || T.RU;
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -79,7 +108,7 @@ const QuizPlayer = ({ grantAchievement }) => {
       // ученик пошёл бы дальше, а выбор нигде не сохранился. Даём выбрать снова.
       console.error("Answer check failed", e);
       setSelectedOption(null);
-      setAnswerError("Не удалось записать ответ. Нажмите вариант ещё раз.");
+      setAnswerError(tr.answerFailed);
     } finally {
       setChecking(false);
     }
@@ -143,7 +172,7 @@ const QuizPlayer = ({ grantAchievement }) => {
     navigate('/join-test');
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-bold dark:text-white">Загрузка...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-bold dark:text-white">{tr.loading}</div>;
 
   if (quizFinished) {
     // Показываем то, что записал сервер; локальный подсчёт — запасной вариант,
@@ -158,12 +187,12 @@ const QuizPlayer = ({ grantAchievement }) => {
         <ReactConfetti recycle={false} numberOfPieces={500} />
         <div className="max-w-lg w-full bg-white dark:bg-zinc-900 p-10 rounded-[40px] shadow-2xl border-[4px] border-black dark:border-white animate-in zoom-in">
            <div className="mb-6 flex justify-center"><Trophy size={64} className="text-yellow-400 fill-yellow-400 animate-bounce" /></div>
-           <h1 className="text-4xl font-black uppercase mb-2 dark:text-white text-center">Финиш!</h1>
+           <h1 className="text-4xl font-black uppercase mb-2 dark:text-white text-center">{tr.finish}</h1>
            <p className="text-gray-500 font-bold uppercase tracking-widest mb-8 text-center">{session.studentName}</p>
            <div className="bg-slate-100 dark:bg-zinc-800 p-6 rounded-2xl mb-6 text-center">
               <div className="text-6xl font-black text-emerald-600 mb-2">{percentage}%</div>
-              <p className="font-bold text-sm text-gray-400 uppercase">Правильно: {finalScore} / {totalQuestions}</p>
-              <p className="font-bold text-sm text-gray-400 uppercase mt-1">Время: {elapsedTime}с</p>
+              <p className="font-bold text-sm text-gray-400 uppercase">{tr.correctOf}: {finalScore} / {totalQuestions}</p>
+              <p className="font-bold text-sm text-gray-400 uppercase mt-1">{tr.time}: {elapsedTime}{tr.sec}</p>
            </div>
 
            {wrong.length > 0 && (
@@ -172,7 +201,7 @@ const QuizPlayer = ({ grantAchievement }) => {
                  onClick={() => setShowBreakdown(v => !v)}
                  className="w-full flex items-center justify-between px-5 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 font-black text-sm text-red-600 dark:text-red-400"
                >
-                 <span>Разбор ошибок ({wrong.length})</span>
+                 <span>{tr.breakdown} ({wrong.length})</span>
                  {showBreakdown ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
                </button>
                {showBreakdown && (
@@ -180,13 +209,13 @@ const QuizPlayer = ({ grantAchievement }) => {
                    {wrong.map((a, i) => (
                      <div key={i} className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-left">
                        <p className="font-bold text-sm mb-2 dark:text-white">
-                         {a.questionText || `Вопрос ${a.questionId + 1}`}
+                         {a.questionText || `${tr.question} ${a.questionId + 1}`}
                        </p>
                        <p className="text-xs text-red-500 font-bold">
-                         Ваш ответ: {a.selectedText || '—'}
+                         {tr.yourAnswer} {a.selectedText || '—'}
                        </p>
                        <p className="text-xs text-green-600 font-bold">
-                         Правильно: {a.correctText || '—'}
+                         {tr.correctAnswer} {a.correctText || '—'}
                        </p>
                      </div>
                    ))}
@@ -195,7 +224,7 @@ const QuizPlayer = ({ grantAchievement }) => {
              </div>
            )}
 
-           <button onClick={handleExit} className="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black uppercase tracking-widest hover:scale-105 transition">Выход</button>
+           <button onClick={handleExit} className="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-xl font-black uppercase tracking-widest hover:scale-105 transition">{tr.exit}</button>
         </div>
       </div>
     );
@@ -218,7 +247,7 @@ const QuizPlayer = ({ grantAchievement }) => {
        </div>
 
        <div className="bg-white dark:bg-zinc-900 p-6 md:p-10 rounded-[30px] border-[3px] border-black dark:border-white shadow-[6px_6px_0_0_#000] mb-6 flex-1">
-          <div className="flex justify-between mb-4"><span className="font-black text-gray-400 text-xs uppercase tracking-widest">Вопрос {currentIndex + 1}</span></div>
+          <div className="flex justify-between mb-4"><span className="font-black text-gray-400 text-xs uppercase tracking-widest">{tr.question} {currentIndex + 1}</span></div>
           <h2 className="text-2xl font-black mb-8 leading-tight">{currentQ.question}</h2>
           <div className="space-y-3">
              {currentQ.options.map((opt, idx) => {
@@ -251,7 +280,7 @@ const QuizPlayer = ({ grantAchievement }) => {
        <div className="h-20 flex items-center justify-end">
           {isAnswered && (
              <button onClick={handleNext} className="px-8 py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl font-black uppercase tracking-widest shadow-lg hover:translate-y-1 hover:shadow-none transition animate-in fade-in slide-in-from-bottom-2">
-                {currentIndex + 1 === questions.length ? "Завершить" : "Дальше"}
+                {currentIndex + 1 === questions.length ? tr.finishBtn : tr.next}
              </button>
           )}
        </div>
