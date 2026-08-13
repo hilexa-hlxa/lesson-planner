@@ -135,6 +135,13 @@
 
 ## Open
 
+- **PRO tariff is a placeholder** — the plans block on the landing and `/pricing` render PRO as
+  "coming soon" with no price, because none exists yet. The planned differentiators (generation
+  quotas, class and student limits, school accounts) are **not enforced anywhere in the code** —
+  free is genuinely unlimited today. Before PRO can be sold, those limits have to exist, and the
+  copy in `src/lib/plans.js`, `/pricing` and `/terms` has to change together.
+
+
 - **Real testimonials** — the landing still uses invented teachers. Replace the entries in
   `TESTIMONIALS` (`LandingPage.jsx`) with real quotes once teachers are using the product.
 - **Contact address and socials** — `CONTACT_EMAIL` and `SOCIALS` now live in

@@ -1,7 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, School, Mail } from "lucide-react";
+import { School, Mail } from "lucide-react";
 import StaticPage, { Section, Bullets } from "../components/StaticPage";
+import PlansComparison from "../components/PlansComparison";
 import { CONTACT_EMAIL } from "../siteConfig";
 
 const T = {
@@ -129,33 +130,8 @@ export default function PricingPage({ lang = "RU", user, setIsAuthOpen, setAuthM
       title={t.title}
       subtitle={t.subtitle}
     >
-      {/* Карточка тарифа */}
-      <div className="rounded-[32px] border-[3px] border-black dark:border-white bg-white dark:bg-zinc-900 p-7 sm:p-10 shadow-[8px_8px_0_0_#000] dark:shadow-[8px_8px_0_0_rgba(255,255,255,0.15)]">
-        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 mb-3">{t.planName}</div>
-        <div className="flex items-end gap-3 mb-2 flex-wrap">
-          <span className="text-5xl sm:text-6xl font-black tracking-tighter">{t.price}</span>
-          <span className="text-slate-400 font-bold text-sm mb-2">{t.period}</span>
-        </div>
-        <p className="text-slate-500 dark:text-zinc-400 text-sm mb-8">{t.planNote}</p>
-
-        <ul className="space-y-3 mb-9">
-          {t.included.map((item, i) => (
-            <li key={i} className="flex items-start gap-3 text-[15px]">
-              <span className="w-5 h-5 bg-emerald-600 rounded-full flex items-center justify-center shrink-0 border-2 border-black mt-0.5">
-                <Check size={10} color="white" strokeWidth={3.5} />
-              </span>
-              <span className="text-slate-700 dark:text-zinc-300 font-medium">{item}</span>
-            </li>
-          ))}
-        </ul>
-
-        <button
-          onClick={handleCta}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 bg-emerald-600 text-white font-black uppercase tracking-widest rounded-xl border-[3px] border-black shadow-[5px_5px_0_0_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-sm"
-        >
-          {user ? t.ctaAuthed : t.cta}
-        </button>
-      </div>
+      {/* Одна и та же таблица, что на лендинге — чтобы обещания не разошлись */}
+      <PlansComparison lang={lang} user={user} onStart={handleCta} showHeading={false} />
 
       <Section title={t.limitsTitle}><Bullets items={t.limits} /></Section>
       <Section title={t.whyTitle}><p>{t.whyBody}</p></Section>

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileQuestion, ClipboardList, Gamepad2, Plus, Minus, Check } from "lucide-react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import PlansComparison from "../components/PlansComparison";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
@@ -801,6 +802,16 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── ТАРИФЫ ── перед FAQ: человек уже увидел, что умеет продукт,
+           и логично спросить «а сколько это стоит» до частых вопросов */}
+      <section className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/40">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
+          <motion.div {...fadeUp(0)}>
+            <PlansComparison lang={lang} user={user} onStart={handleCta} />
+          </motion.div>
         </div>
       </section>
 
