@@ -123,6 +123,16 @@
   have an access code to `test`), the insert stores it, and `GET /api/generations?type=` filters
   in the database — so each page asks for its own kind and no client-side filtering is left.
 
+## Needs you
+
+- **Rotate the Supabase database password.** It was committed in plaintext in `docker-compose.yml`
+  and is in git history from commit `24b8e5a` onward, including current `origin/main`. The value
+  is out of the tracked file now (`.env`, gitignored, with `.env.example` alongside) — but that
+  does not remove it from history. Rotation in Supabase → Project Settings → Database is the only
+  real fix, then update your local `.env`. The GitHub API returns 404 unauthenticated, so the repo
+  is private or does not exist under that name; either way a committed credential should be
+  treated as burned.
+
 ## Open
 
 - **Real testimonials** — the landing still uses invented teachers. Replace the entries in
