@@ -57,7 +57,14 @@ if ($cfg['auth']['cookie_secure'] === null) {
     : $https;
 }
 
-// 4) validate DB (строго обязательно)
+// 4) COOKIE_SAMESITE env override.
+// On Render the frontend and backend live on different subdomains, so cookies
+// need SameSite=None; Secure. Set COOKIE_SAMESITE=None in the backend service.
+if (($envSameSite = getenv('COOKIE_SAMESITE')) !== false) {
+  $cfg['auth']['cookie_samesite'] = $envSameSite;
+}
+
+// 5) validate DB (строго обязательно)
 if (!$cfg['db']['dsn'] || !$cfg['db']['user'] || !$cfg['db']['pass']) {
   throw new RuntimeException(
     'Database config is not set. Provide in config.local.php or env vars: DB_DSN, DB_USER, DB_PASS'

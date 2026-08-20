@@ -1,0 +1,39 @@
+services:
+  # ── Backend (PHP 8.2 + Apache via Docker) ─────────────────────────────────
+  - type: web
+    name: lessonlab-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: DB_DSN
+        sync: false          # set manually in Render dashboard
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: ALLOWED_ORIGIN
+        sync: false          # set to the frontend Render URL after first deploy
+      - key: COOKIE_SAMESITE
+        value: None          # required for cross-origin cookie (frontend ≠ backend domain)
+      - key: COOKIE_SECURE
+        value: "true"        # Render always serves over HTTPS
+
+  # ── Frontend (React + Vite → static site) ─────────────────────────────────
+  - type: web
+    name: lessonlab-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false          # set to the backend Render URL after first deploy
+    routes:
+      - type: rewrite        # SPA fallback — all paths serve index.html
+        source: /*
+        destination: /index.html

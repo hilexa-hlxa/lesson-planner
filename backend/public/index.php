@@ -34,11 +34,12 @@ try {
 
 // ---------------- CORS Configuration ----------------
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowedOrigins = [
+$allowedOrigins = array_values(array_filter([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:8000',
-];
+  getenv('ALLOWED_ORIGIN') ?: null,   // e.g. https://lessonlab-frontend.onrender.com
+]));
 
 if (in_array($origin, $allowedOrigins, true)) {
   header("Access-Control-Allow-Origin: {$origin}");
