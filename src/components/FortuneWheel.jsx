@@ -7,13 +7,18 @@ const SEGMENT_COLORS = [
   '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'
 ];
 
-const FortuneWheel = ({ initialNames, onClose, onWin }) => {
+// participants — необязательный ростер класса [{id, name}]. Если он передан,
+// колесо крутит реальных учеников, и onWin получает их student_id — только
+// так учитель может по-настоящему начислить монеты, а не просто показать
+// красивую надпись поверх произвольного текста из textarea.
+const FortuneWheel = ({ initialNames, participants, onClose, onWin }) => {
   const [textInput, setTextInput] = useState(initialNames || "Ali\nMaria\nDamir\nAlina\nTimur\nSanzhar");
   const [winner, setWinner] = useState(null);
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
 
-  const segments = textInput.split('\n').filter(name => name.trim() !== "");
+  const usingRoster = Array.isArray(participants) && participants.length > 0;
+  const segments = usingRoster ? participants.map((p) => p.name) : textInput.split('\n').filter(name => name.trim() !== "");
   const tooFewNames = segments.length < 2;
 
   const spin = () => {
@@ -46,7 +51,7 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
       
       const winName = segments[winningIndex];
       setWinner(winName);
-      if (onWin) onWin(winName); 
+      if (onWin) onWin(usingRoster ? { name: winName, id: participants[winningIndex].id } : { name: winName, id: null });
     }, 5000);
   };
 
@@ -70,14 +75,22 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
         {/* LEFT PANEL: Input */}
         <div className="w-1/3 bg-gray-50 border-r-[4px] border-black p-8 flex flex-col hidden md:flex">
           <h2 className="text-4xl font-black uppercase italic mb-6">Participants</h2>
-          <textarea
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            disabled={isSpinning}
-            className="flex-1 w-full border-[4px] border-black rounded-2xl p-4 text-xl font-bold resize-none focus:outline-none focus:ring-4 ring-yellow-400 mb-4 bg-white"
-            placeholder="Names here..."
-          />
-          <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-widest">
+          {usingRoster ? (
+            <div className="flex-1 w-full border-[4px] border-black rounded-2xl p-4 bg-white overflow-y-auto flex flex-col gap-2">
+              {participants.map((p) => (
+                <div key={p.id} className="px-3 py-2 rounded-xl bg-gray-100 font-bold text-sm">{p.name}</div>
+              ))}
+            </div>
+          ) : (
+            <textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              disabled={isSpinning}
+              className="flex-1 w-full border-[4px] border-black rounded-2xl p-4 text-xl font-bold resize-none focus:outline-none focus:ring-4 ring-yellow-400 mb-4 bg-white"
+              placeholder="Names here..."
+            />
+          )}
+          <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-widest mt-4">
             {tooFewNames && <span className="text-red-500 normal-case tracking-normal">Add at least 2 names to spin.</span>}
             <span className="text-gray-400 ml-auto">{segments.length} Players</span>
           </div>
@@ -161,7 +174,7 @@ const FortuneWheel = ({ initialNames, onClose, onWin }) => {
                   <div className="text-2xl font-black text-gray-400 uppercase mb-2">Winner</div>
                   <div className="text-7xl font-black uppercase text-emerald-600 tracking-tighter mb-4">{winner}</div>
                   
-                  {onWin && (
+                  {usingRoster && (
                       <div className="flex items-center justify-center gap-2 font-black text-green-600 bg-green-100 px-6 py-3 rounded-2xl border-2 border-green-500">
                           <Trophy size={24} /> +10 Coins Sent!
                       </div>

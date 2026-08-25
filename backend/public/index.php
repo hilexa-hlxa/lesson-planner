@@ -23,6 +23,7 @@ require __DIR__ . '/../src/AuthService.php';
 require __DIR__ . '/../src/Response.php';
 require __DIR__ . '/../src/QuizParser.php';
 require __DIR__ . '/../src/RateLimiter.php';
+require __DIR__ . '/../src/MathProblemGenerator.php';
 
 try {
   $db   = new DB($config['db']);
@@ -814,7 +815,27 @@ try {
     $key = (string)($body['key'] ?? '');
     if ($key === '') Response::error('Achievement key required', 400);
 
-    $rewards = ['visit_profile' => 100];
+    // Держим в синхроне с src/lib/achievements.js — иначе grantAchievement()
+    // на фронте выдаёт монеты локально, а сервер отклоняет ключ как неизвестный
+    // и откатывает их обратно при следующей загрузке.
+    $rewards = [
+        'visit_profile'    => 100,
+        'architect_10'     => 250,
+        'ai_report_master' => 300,
+        'perfect_score'    => 150,
+        'speedrunner'      => 200,
+        'night_owl'        => 100,
+        'rich'             => 0,
+        'math_whiz'        => 200,
+        'memory_master'    => 100,
+        'hangman_hero'     => 150,
+        'word_sprint_ace'  => 150,
+        'sorter_supreme'   => 150,
+        'trivia_champion'  => 250,
+        'streak_3'         => 100,
+        'streak_7'         => 250,
+        'streak_30'        => 500,
+    ];
     if (!isset($rewards[$key])) Response::error('Unknown achievement', 404);
 
     try {
@@ -1180,6 +1201,607 @@ try {
 
     if (!$session) Response::error('Session not found or expired', 404);
     Response::ok(['word' => $session['word'], 'lang' => $session['lang']]);
+  }
+
+  // ======================================================
+  // Hangman Routes — та же идея, что и Wordle (см. выше), но своя таблица
+  // сессий: это отдельное понятие в CONTEXT.md, и общая таблица стёрла бы
+  // границу между "Wordle Game" и "Hangman Game". Слова берутся из того же
+  // word_bank — банк общий для языка, а не для конкретной игры.
+  // ======================================================
+
+  // GET /api/hangman/word?lang=RU — random word for solo mode
+  if ($method === 'GET' && $path === '/api/hangman/word') {
+    $lang = strtoupper(trim($_GET['lang'] ?? 'RU'));
+    if (!in_array($lang, ['RU', 'KZ', 'EN'], true)) $lang = 'RU';
+
+    $stmt = $db->pdo()->prepare("SELECT word FROM word_bank WHERE lang = :lang ORDER BY RANDOM() LIMIT 1");
+    $stmt->execute([':lang' => $lang]);
+    $word = $stmt->fetchColumn();
+
+    if (!$word) Response::error('No words available', 404);
+    Response::ok(['word' => $word]);
+  }
+
+  // POST /api/hangman/session — teacher creates class hangman session
+  if ($method === 'POST' && $path === '/api/hangman/session') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    $word = strtoupper(trim((string)($body['word'] ?? '')));
+    $lang = strtoupper(trim((string)($body['lang'] ?? 'RU')));
+    if (!in_array($lang, ['RU', 'KZ', 'EN'], true)) $lang = 'RU';
+    if (mb_strlen($word) < 3) Response::error('Word too short (min 3 letters)', 400);
+
+    $code = '';
+    $attempts = 0;
+    do {
+      $code = (string)rand(1000, 9999);
+      $s = $db->pdo()->prepare("SELECT 1 FROM hangman_sessions WHERE access_code = :c AND expires_at > NOW()");
+      $s->execute([':c' => $code]);
+      if ($attempts++ > 10) Response::error('Server busy, try again', 503);
+    } while ($s->fetchColumn());
+
+    $db->pdo()->prepare("DELETE FROM hangman_sessions WHERE teacher_id = :uid")->execute([':uid' => $u['id']]);
+
+    $stmt = $db->pdo()->prepare("
+      INSERT INTO hangman_sessions (teacher_id, word, lang, access_code)
+      VALUES (:uid, :word, :lang, :code)
+      RETURNING access_code, expires_at
+    ");
+    $stmt->execute([':uid' => $u['id'], ':word' => $word, ':lang' => $lang, ':code' => $code]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    Response::ok(['code' => $row['access_code'], 'expires_at' => $row['expires_at']]);
+  }
+
+  // POST /api/hangman/join — student joins class hangman with code
+  // Раньше у /api/wordle/join не было лимита на перебор кода вообще; здесь
+  // сразу заводим тот же паттерн неудачи-считаем-успех-сбрасываем, что и в
+  // /api/quiz/join, чтобы не повторять тот же пробел.
+  if ($method === 'POST' && $path === '/api/hangman/join') {
+    $ip           = \App\RateLimiter::clientIp();
+    $failBurstKey = 'hangman_join_fail_5m:' . $ip;
+    $failHourKey  = 'hangman_join_fail_1h:' . $ip;
+
+    $code = (string)($body['code'] ?? '');
+    if (strlen($code) !== 4) {
+      \App\RateLimiter::fail($db->pdo(), $failBurstKey, 300);
+      \App\RateLimiter::fail($db->pdo(), $failHourKey, 3600);
+      Response::error('Invalid format', 400);
+    }
+    \App\RateLimiter::guard($db->pdo(), $failBurstKey, 30, 300);
+    \App\RateLimiter::guard($db->pdo(), $failHourKey, 120, 3600);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT word, lang FROM hangman_sessions
+      WHERE access_code = :code AND expires_at > NOW()
+      LIMIT 1
+    ");
+    $stmt->execute([':code' => $code]);
+    $session = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    if (!$session) {
+      \App\RateLimiter::fail($db->pdo(), $failBurstKey, 300);
+      \App\RateLimiter::fail($db->pdo(), $failHourKey, 3600);
+      Response::error('Session not found or expired', 404);
+    }
+
+    \App\RateLimiter::reset($db->pdo(), $failBurstKey);
+    Response::ok(['word' => $session['word'], 'lang' => $session['lang']]);
+  }
+
+  // ======================================================
+  // Math Battle Routes — соло считается и хранится только в браузере (как
+  // Wordle-соло): личный рекорд уходит на /api/game-scores, но правильные
+  // ответы там никому не нужно скрывать. Дуэль иначе: задачи и ответы
+  // генерируются один раз на сервере при создании сессии и остаются там же —
+  // клиент получает вопросы без ответов и присылает решения по одному, как в
+  // /api/quiz/answer.
+  // ======================================================
+
+  // GET /api/math-battle/practice?grade=5&count=15 — solo mode. Answers are
+  // included in the response, same trust tier as /api/wordle/word: there's no
+  // opponent to cheat against, so there's nothing to gain by hiding them.
+  if ($method === 'GET' && $path === '/api/math-battle/practice') {
+    $grade = (int)($_GET['grade'] ?? 5);
+    if ($grade < 1 || $grade > 11) $grade = 5;
+    $count = (int)($_GET['count'] ?? 15);
+    if ($count < 1 || $count > 30) $count = 15;
+
+    Response::ok(['problems' => \App\MathProblemGenerator::generate($grade, $count)]);
+  }
+
+  // POST /api/math-battle/session — teacher creates a duel session
+  if ($method === 'POST' && $path === '/api/math-battle/session') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    $grade = (int)($body['grade'] ?? 5);
+    if ($grade < 1 || $grade > 11) $grade = 5;
+    $count = 15;
+
+    $problems = \App\MathProblemGenerator::generate($grade, $count);
+
+    $code = '';
+    $attempts = 0;
+    do {
+      $code = (string)rand(1000, 9999);
+      $s = $db->pdo()->prepare("SELECT 1 FROM math_battle_sessions WHERE access_code = :c AND expires_at > NOW()");
+      $s->execute([':c' => $code]);
+      if ($attempts++ > 10) Response::error('Server busy, try again', 503);
+    } while ($s->fetchColumn());
+
+    $stmt = $db->pdo()->prepare("
+      INSERT INTO math_battle_sessions (teacher_id, access_code, grade, problem_count, problems_json)
+      VALUES (:uid, :code, :grade, :count, :problems)
+      RETURNING id, access_code, expires_at
+    ");
+    $stmt->execute([
+      ':uid' => $u['id'], ':code' => $code, ':grade' => $grade, ':count' => $count,
+      ':problems' => json_encode($problems),
+    ]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    Response::ok(['session_id' => (int)$row['id'], 'code' => $row['access_code'], 'expires_at' => $row['expires_at']]);
+  }
+
+  // POST /api/math-battle/join — student joins duel with code
+  if ($method === 'POST' && $path === '/api/math-battle/join') {
+    $ip           = \App\RateLimiter::clientIp();
+    $failBurstKey = 'mathbattle_join_fail_5m:' . $ip;
+    $failHourKey  = 'mathbattle_join_fail_1h:' . $ip;
+
+    $code = (string)($body['code'] ?? '');
+    $name = trim((string)($body['student_name'] ?? ''));
+    if ($name === '') $name = 'Guest';
+    if (mb_strlen($name) > 160) $name = mb_substr($name, 0, 160);
+
+    if (strlen($code) !== 4) {
+      \App\RateLimiter::fail($db->pdo(), $failBurstKey, 300);
+      \App\RateLimiter::fail($db->pdo(), $failHourKey, 3600);
+      Response::error('Invalid format', 400);
+    }
+    \App\RateLimiter::guard($db->pdo(), $failBurstKey, 30, 300);
+    \App\RateLimiter::guard($db->pdo(), $failHourKey, 120, 3600);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT id, problem_count, problems_json FROM math_battle_sessions
+      WHERE access_code = :code AND expires_at > NOW()
+      LIMIT 1
+    ");
+    $stmt->execute([':code' => $code]);
+    $session = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    if (!$session) {
+      \App\RateLimiter::fail($db->pdo(), $failBurstKey, 300);
+      \App\RateLimiter::fail($db->pdo(), $failHourKey, 3600);
+      Response::error('Session not found or expired', 404);
+    }
+    \App\RateLimiter::reset($db->pdo(), $failBurstKey);
+
+    $submitter = $auth->currentUser();
+    $studentId = ($submitter && $submitter['role'] === 'student') ? (int)$submitter['id'] : null;
+
+    $ins = $db->pdo()->prepare("
+      INSERT INTO math_battle_players (session_id, student_name, student_id)
+      VALUES (:sid, :name, :uid)
+      RETURNING id
+    ");
+    $ins->execute([':sid' => $session['id'], ':name' => $name, ':uid' => $studentId]);
+    $playerId = (int)$db->pdo()->lastInsertId();
+
+    $problems = json_decode((string)$session['problems_json'], true) ?: [];
+    $withoutAnswers = array_map(fn($p) => ['question' => $p['question']], $problems);
+
+    Response::ok([
+      'player_id'  => $playerId,
+      'session_id' => (int)$session['id'],
+      'problems'   => $withoutAnswers,
+    ]);
+  }
+
+  // POST /api/math-battle/answer — check one answer, advance solved_count
+  if ($method === 'POST' && $path === '/api/math-battle/answer') {
+    $playerId = (int)($body['player_id'] ?? 0);
+    $index    = (int)($body['index'] ?? -1);
+    $answer   = (int)($body['answer'] ?? PHP_INT_MIN);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT p.id, p.solved_count, p.finished_at, s.problem_count, s.problems_json
+      FROM math_battle_players p
+      JOIN math_battle_sessions s ON s.id = p.session_id
+      WHERE p.id = :pid
+      LIMIT 1
+    ");
+    $stmt->execute([':pid' => $playerId]);
+    $player = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if (!$player) Response::error('Player not found', 404);
+    if ($player['finished_at']) Response::error('Already finished', 409);
+
+    // Тот же приём, что и в /api/quiz/answer: раскрываем только следующую по
+    // порядку задачу, иначе весь пул решений можно перебрать заранее
+    if ($index !== (int)$player['solved_count']) Response::error('Out of sequence', 409);
+
+    $problems = json_decode((string)$player['problems_json'], true) ?: [];
+    if (!isset($problems[$index])) Response::error('Invalid index', 400);
+
+    $isCorrect = ((int)$problems[$index]['answer'] === $answer);
+    $newCount  = $isCorrect ? (int)$player['solved_count'] + 1 : (int)$player['solved_count'];
+    $finished  = $newCount >= (int)$player['problem_count'];
+
+    $upd = $db->pdo()->prepare("
+      UPDATE math_battle_players
+      SET solved_count = :cnt,
+          finished_at = CASE WHEN :fin::int = 1 THEN NOW() ELSE finished_at END
+      WHERE id = :pid
+    ");
+    $upd->execute([':cnt' => $newCount, ':fin' => $finished ? 1 : 0, ':pid' => $playerId]);
+
+    Response::ok(['is_correct' => $isCorrect, 'solved_count' => $newCount, 'finished' => $finished]);
+  }
+
+  // GET /api/math-battle/status?session_id=X — poll all players' progress
+  if ($method === 'GET' && $path === '/api/math-battle/status') {
+    $sessionId = (int)($_GET['session_id'] ?? 0);
+    $stmt = $db->pdo()->prepare("
+      SELECT id, student_name, solved_count, finished_at
+      FROM math_battle_players
+      WHERE session_id = :sid
+      ORDER BY finished_at ASC NULLS LAST, solved_count DESC
+    ");
+    $stmt->execute([':sid' => $sessionId]);
+    Response::ok(['players' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+  }
+
+  // ======================================================
+  // Trivia Race Routes — вопросы не дублируются, а берутся из уже
+  // существующего Теста учителя (generations.type='test'), тем же
+  // QuizParser, что и обычная викторина. Правильность ответа проверяется
+  // на сервере и двигает "фишку" игрока по игровому полю.
+  // ======================================================
+
+  // POST /api/trivia-race/session — teacher hosts a race using one of their Tests
+  if ($method === 'POST' && $path === '/api/trivia-race/session') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    $quizId = (int)($body['quiz_id'] ?? 0);
+    $stmt = $db->pdo()->prepare("
+      SELECT id, result_md FROM generations
+      WHERE id = :id AND user_id = :uid AND type = 'test'
+      LIMIT 1
+    ");
+    $stmt->execute([':id' => $quizId, ':uid' => $u['id']]);
+    $quiz = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if (!$quiz) Response::error('Test not found', 404);
+
+    $parsed = \App\QuizParser::parse($quiz['result_md']);
+    if (count($parsed) < 3) Response::error('This test needs at least 3 questions', 400);
+
+    $boardLength = max(10, min(40, count($parsed) * 2));
+
+    $code = '';
+    $attempts = 0;
+    do {
+      $code = (string)rand(1000, 9999);
+      $s = $db->pdo()->prepare("SELECT 1 FROM trivia_race_sessions WHERE access_code = :c AND expires_at > NOW()");
+      $s->execute([':c' => $code]);
+      if ($attempts++ > 10) Response::error('Server busy, try again', 503);
+    } while ($s->fetchColumn());
+
+    $ins = $db->pdo()->prepare("
+      INSERT INTO trivia_race_sessions (teacher_id, quiz_id, access_code, board_length)
+      VALUES (:uid, :qid, :code, :len)
+      RETURNING id, access_code, expires_at, board_length
+    ");
+    $ins->execute([':uid' => $u['id'], ':qid' => $quizId, ':code' => $code, ':len' => $boardLength]);
+    $row = $ins->fetch(\PDO::FETCH_ASSOC);
+
+    Response::ok([
+      'session_id'   => (int)$row['id'],
+      'code'         => $row['access_code'],
+      'expires_at'   => $row['expires_at'],
+      'board_length' => (int)$row['board_length'],
+    ]);
+  }
+
+  // POST /api/trivia-race/join — student joins with code
+  if ($method === 'POST' && $path === '/api/trivia-race/join') {
+    $ip           = \App\RateLimiter::clientIp();
+    $failBurstKey = 'trivia_join_fail_5m:' . $ip;
+    $failHourKey  = 'trivia_join_fail_1h:' . $ip;
+
+    $code = (string)($body['code'] ?? '');
+    $name = trim((string)($body['student_name'] ?? ''));
+    if ($name === '') $name = 'Guest';
+    if (mb_strlen($name) > 160) $name = mb_substr($name, 0, 160);
+
+    if (strlen($code) !== 4) {
+      \App\RateLimiter::fail($db->pdo(), $failBurstKey, 300);
+      \App\RateLimiter::fail($db->pdo(), $failHourKey, 3600);
+      Response::error('Invalid format', 400);
+    }
+    \App\RateLimiter::guard($db->pdo(), $failBurstKey, 30, 300);
+    \App\RateLimiter::guard($db->pdo(), $failHourKey, 120, 3600);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT s.id, s.board_length, g.result_md
+      FROM trivia_race_sessions s
+      JOIN generations g ON g.id = s.quiz_id
+      WHERE s.access_code = :code AND s.expires_at > NOW()
+      LIMIT 1
+    ");
+    $stmt->execute([':code' => $code]);
+    $session = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    if (!$session) {
+      \App\RateLimiter::fail($db->pdo(), $failBurstKey, 300);
+      \App\RateLimiter::fail($db->pdo(), $failHourKey, 3600);
+      Response::error('Session not found or expired', 404);
+    }
+    \App\RateLimiter::reset($db->pdo(), $failBurstKey);
+
+    $submitter = $auth->currentUser();
+    $studentId = ($submitter && $submitter['role'] === 'student') ? (int)$submitter['id'] : null;
+
+    $ins = $db->pdo()->prepare("
+      INSERT INTO trivia_race_players (session_id, student_name, student_id)
+      VALUES (:sid, :name, :uid)
+      RETURNING id
+    ");
+    $ins->execute([':sid' => $session['id'], ':name' => $name, ':uid' => $studentId]);
+    $playerId = (int)$db->pdo()->lastInsertId();
+
+    $parsed = \App\QuizParser::parse($session['result_md']);
+
+    Response::ok([
+      'player_id'    => $playerId,
+      'session_id'   => (int)$session['id'],
+      'board_length' => (int)$session['board_length'],
+      'questions'    => \App\QuizParser::withoutAnswers($parsed),
+    ]);
+  }
+
+  // POST /api/trivia-race/answer — check one answer, move token forward
+  if ($method === 'POST' && $path === '/api/trivia-race/answer') {
+    $playerId = (int)($body['player_id'] ?? 0);
+    $index    = (int)($body['question_index'] ?? -1);
+    $selected = (int)($body['selected'] ?? -1);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT p.id, p.position, p.answered_count, p.finished_at,
+             s.board_length, g.result_md
+      FROM trivia_race_players p
+      JOIN trivia_race_sessions s ON s.id = p.session_id
+      JOIN generations g ON g.id = s.quiz_id
+      WHERE p.id = :pid
+      LIMIT 1
+    ");
+    $stmt->execute([':pid' => $playerId]);
+    $player = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if (!$player) Response::error('Player not found', 404);
+    if ($player['finished_at']) Response::error('Already finished', 409);
+
+    if ($index !== (int)$player['answered_count']) Response::error('Out of sequence', 409);
+
+    $parsed = \App\QuizParser::parse($player['result_md']);
+    if (count($parsed) === 0) Response::error('Invalid index', 400);
+    // Поле обычно длиннее вопросника (board_length = 2× вопросов), поэтому
+    // вопросы идут по кругу — answered_count растёт без остановки и остаётся
+    // честным счётчиком порядка, а вопрос берётся по остатку от деления
+    $qIndex = $index % count($parsed);
+
+    $isCorrect   = ((int)$parsed[$qIndex]['correctIndex'] === $selected);
+    $newPos      = $isCorrect ? (int)$player['position'] + 1 : (int)$player['position'];
+    $newAnswered = (int)$player['answered_count'] + 1;
+    $finished    = $newPos >= (int)$player['board_length'];
+
+    $upd = $db->pdo()->prepare("
+      UPDATE trivia_race_players
+      SET position = :pos, answered_count = :ans,
+          finished_at = CASE WHEN :fin::int = 1 THEN NOW() ELSE finished_at END
+      WHERE id = :pid
+    ");
+    $upd->execute([':pos' => $newPos, ':ans' => $newAnswered, ':fin' => $finished ? 1 : 0, ':pid' => $playerId]);
+
+    Response::ok([
+      'is_correct'    => $isCorrect,
+      'correct_index' => (int)$parsed[$qIndex]['correctIndex'],
+      'position'      => $newPos,
+      'finished'      => $finished,
+    ]);
+  }
+
+  // GET /api/trivia-race/state?session_id=X — poll everyone's position for the board
+  if ($method === 'GET' && $path === '/api/trivia-race/state') {
+    $sessionId = (int)($_GET['session_id'] ?? 0);
+    $stmt = $db->pdo()->prepare("
+      SELECT s.board_length, p.id, p.student_name, p.position, p.finished_at
+      FROM trivia_race_sessions s
+      LEFT JOIN trivia_race_players p ON p.session_id = s.id
+      WHERE s.id = :sid
+    ");
+    $stmt->execute([':sid' => $sessionId]);
+    $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    if (!$rows) Response::error('Session not found', 404);
+
+    $boardLength = (int)$rows[0]['board_length'];
+    $players = array_values(array_filter(array_map(fn($r) => $r['id'] ? [
+      'id' => (int)$r['id'], 'name' => $r['student_name'],
+      'position' => (int)$r['position'], 'finished' => (bool)$r['finished_at'],
+    ] : null, $rows)));
+    usort($players, fn($a, $b) => $b['position'] <=> $a['position']);
+
+    Response::ok(['board_length' => $boardLength, 'players' => $players]);
+  }
+
+  // ======================================================
+  // Generic Game Scores — общий журнал личных рекордов для соло-игр, у
+  // которых нет реального игрового сеанса (Memory Match, Word Sprint, Sort
+  // It Out, соло Math Battle). Одна таблица вместо пяти: им нужно только
+  // хранить лучший результат, а не состояние партии.
+  // ======================================================
+
+  if ($method === 'POST' && $path === '/api/game-scores') {
+    $u = $auth->currentUser();
+    if (!$u) Response::ok(['saved' => false]); // гость — сохранять некуда, это не ошибка
+
+    $gameKey = (string)($body['game_key'] ?? '');
+    $allowedGames = ['math_battle', 'memory_match', 'word_sprint', 'sort_it_out', 'hangman'];
+    if (!in_array($gameKey, $allowedGames, true)) Response::error('Unknown game', 400);
+
+    $score = (int)($body['score'] ?? 0);
+    $meta  = is_array($body['meta'] ?? null) ? $body['meta'] : [];
+
+    $stmt = $db->pdo()->prepare("
+      INSERT INTO game_scores (user_id, game_key, score, meta)
+      VALUES (:uid, :game, :score, :meta)
+    ");
+    $stmt->execute([
+      ':uid' => $u['id'], ':game' => $gameKey, ':score' => $score,
+      ':meta' => json_encode($meta),
+    ]);
+
+    Response::ok(['saved' => true]);
+  }
+
+  if ($method === 'GET' && $path === '/api/game-scores/best') {
+    $u = $auth->currentUser();
+    if (!$u) Response::ok(['best' => null]);
+
+    $gameKey = (string)($_GET['game_key'] ?? '');
+    $stmt = $db->pdo()->prepare("
+      SELECT score, meta, created_at FROM game_scores
+      WHERE user_id = :uid AND game_key = :game
+      ORDER BY score DESC LIMIT 1
+    ");
+    $stmt->execute([':uid' => $u['id'], ':game' => $gameKey]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    Response::ok(['best' => $row ?: null]);
+  }
+
+  // ======================================================
+  // Coin Awards — teacher spins Spin & Answer, picks a real student from a
+  // class roster, and can send them a fixed reward. Ownership of the class is
+  // checked so a teacher can't award coins to a student outside their own
+  // roster; enforce() (not guard+fail) because this is an authenticated
+  // action tied to one account, not a shared-IP join endpoint.
+  // ======================================================
+
+  if ($method === 'POST' && $path === '/api/coins/award') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    \App\RateLimiter::enforce($db->pdo(), 'coin_award:' . $u['id'], 20, 3600);
+
+    $studentId = (int)($body['student_id'] ?? 0);
+    $amount = 10; // фиксировано: см. текст "+10 Coins Sent!" в FortuneWheel
+
+    $chk = $db->pdo()->prepare("
+      SELECT 1 FROM class_members cm
+      JOIN classes c ON c.id = cm.class_id
+      WHERE c.teacher_id = :tid AND cm.student_id = :sid AND cm.status = 'approved'
+      LIMIT 1
+    ");
+    $chk->execute([':tid' => $u['id'], ':sid' => $studentId]);
+    if (!$chk->fetchColumn()) Response::error('Student not in your class', 403);
+
+    $db->pdo()->beginTransaction();
+    try {
+      $db->pdo()->prepare("UPDATE users SET coins = coins + :amt WHERE id = :sid")
+        ->execute([':amt' => $amount, ':sid' => $studentId]);
+      $db->pdo()->prepare("
+        INSERT INTO coin_awards (teacher_id, student_id, amount) VALUES (:tid, :sid, :amt)
+      ")->execute([':tid' => $u['id'], ':sid' => $studentId, ':amt' => $amount]);
+      $db->pdo()->commit();
+    } catch (Throwable $e) {
+      $db->pdo()->rollBack();
+      throw $e;
+    }
+
+    Response::ok(['awarded' => $amount]);
+  }
+
+  // ======================================================
+  // Daily Streak Challenge — content is a static, date-seeded bank on the
+  // frontend (no server round trip needed to pick "today's" quiz); the streak
+  // itself IS checked here, against the server's own clock, so a student
+  // can't extend it by turning their phone's date forward.
+  // ======================================================
+
+  if ($method === 'POST' && $path === '/api/streak/complete') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $db->pdo()->beginTransaction();
+    try {
+      $stmt = $db->pdo()->prepare("
+        SELECT current_streak, longest_streak, last_completed_date
+        FROM user_streaks WHERE user_id = :uid FOR UPDATE
+      ");
+      $stmt->execute([':uid' => $u['id']]);
+      $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+      $today = new DateTimeImmutable('today');
+      $current = $row ? (int)$row['current_streak'] : 0;
+      $longest = $row ? (int)$row['longest_streak'] : 0;
+      $last = $row && $row['last_completed_date'] ? new DateTimeImmutable($row['last_completed_date']) : null;
+
+      if ($last !== null && $last->format('Y-m-d') === $today->format('Y-m-d')) {
+        // Уже отмечено сегодня — не двойной счёт, просто возвращаем текущее состояние
+        $db->pdo()->commit();
+        Response::ok(['current_streak' => $current, 'longest_streak' => $longest, 'already_done' => true]);
+      }
+
+      $isConsecutive = $last !== null && $last->format('Y-m-d') === $today->modify('-1 day')->format('Y-m-d');
+      $current = $isConsecutive ? $current + 1 : 1;
+      $longest = max($longest, $current);
+
+      $db->pdo()->prepare("
+        INSERT INTO user_streaks (user_id, current_streak, longest_streak, last_completed_date, updated_at)
+        VALUES (:uid, :cur, :long, CURRENT_DATE, NOW())
+        ON CONFLICT (user_id) DO UPDATE SET
+          current_streak = :cur, longest_streak = :long,
+          last_completed_date = CURRENT_DATE, updated_at = NOW()
+      ")->execute([':uid' => $u['id'], ':cur' => $current, ':long' => $longest]);
+
+      $db->pdo()->commit();
+      Response::ok(['current_streak' => $current, 'longest_streak' => $longest, 'already_done' => false]);
+    } catch (Throwable $e) {
+      if ($db->pdo()->inTransaction()) $db->pdo()->rollBack();
+      throw $e;
+    }
+  }
+
+  if ($method === 'GET' && $path === '/api/streak') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT current_streak, longest_streak, last_completed_date
+      FROM user_streaks WHERE user_id = :uid
+    ");
+    $stmt->execute([':uid' => $u['id']]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    $today = (new DateTimeImmutable('today'))->format('Y-m-d');
+    $current = $row ? (int)$row['current_streak'] : 0;
+    // Полночь прошла, а сегодняшний день ещё не пройден — серия формально жива,
+    // но фронту нужно знать, что "сегодня" ещё не закрыто (не сбрасываем здесь:
+    // сброс произойдёт естественно, если пропустят день, при следующем complete)
+    $doneToday = $row && $row['last_completed_date'] === $today;
+
+    Response::ok([
+      'current_streak' => $current,
+      'longest_streak'  => $row ? (int)$row['longest_streak'] : 0,
+      'done_today'      => $doneToday,
+    ]);
   }
 
   // ======================================================

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Lock, Gamepad2, LetterText } from 'lucide-react';
+import { Play, Gamepad2, LetterText, Zap, Brain, LifeBuoy, Keyboard, LayoutGrid, Flag } from 'lucide-react';
 import { tr } from "../lib/i18n";
 import Header from "../components/Header";
 
@@ -75,14 +75,143 @@ const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
             </div>
           </Link>
 
-          {/* 3. ЗАГЛУШКА */}
-          <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[32px] sm:rounded-[40px] p-7 sm:p-10 flex flex-col items-center justify-center text-slate-400 min-h-[280px] sm:h-[360px] cursor-not-allowed select-none">
-            <Lock size={64} className="mb-6 opacity-30" />
-            <span className="font-black uppercase text-2xl tracking-widest opacity-50">Math Battle</span>
-            <div className="mt-4 px-4 py-1 bg-slate-200 dark:bg-zinc-800 rounded-full text-xs font-black uppercase tracking-widest">
-                {lang === 'EN' ? "Soon" : lang === 'KZ' ? "Жақында" : "Скоро"}
+          {/* 3. MATH BATTLE */}
+          <Link
+            to="/math-battle"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
+          >
+            <div>
+              <div className="w-20 h-20 bg-rose-500 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+                <Zap size={40} />
+              </div>
+              <h3 className="text-4xl font-black uppercase tracking-tight mb-4">
+                {lang === 'EN' ? "Math Battle" : lang === 'KZ' ? "Сандар шайқасы" : "Битва Чисел"}
+              </h3>
+              <p className="text-slate-500 font-bold text-lg leading-tight">
+                {lang === 'EN' ? "Beat the clock solo, or duel your class by code." :
+                 lang === 'KZ' ? "Жалғыз уақытпен жарыс, немесе сыныппен код арқылы дуэльде." :
+                 "Обгони время в одиночку или устрой дуэль с классом по коду."}
+              </p>
             </div>
-          </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-sm tracking-widest bg-black text-white px-6 py-3 rounded-full">GO!</span>
+            </div>
+          </Link>
+
+          {/* 4. HANGMAN */}
+          <Link
+            to="/hangman"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
+          >
+            <div>
+              <div className="w-20 h-20 bg-cyan-600 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+                <LifeBuoy size={40} />
+              </div>
+              <h3 className="text-4xl font-black uppercase tracking-tight mb-4">
+                {lang === 'EN' ? "Hangman" : lang === 'KZ' ? "Дарға асу" : "Виселица"}
+              </h3>
+              <p className="text-slate-500 font-bold text-lg leading-tight">
+                {lang === 'EN' ? "Guess letters before the robot gets built." :
+                 lang === 'KZ' ? "Робот жиналып бітпей тұрып әріптерді тап." :
+                 "Угадай буквы, пока не собрался робот."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-sm tracking-widest bg-black text-white px-6 py-3 rounded-full">GO!</span>
+            </div>
+          </Link>
+
+          {/* 5. MEMORY MATCH */}
+          <Link
+            to="/memory-match"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
+          >
+            <div>
+              <div className="w-20 h-20 bg-fuchsia-500 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+                <Brain size={40} />
+              </div>
+              <h3 className="text-4xl font-black uppercase tracking-tight mb-4">
+                {lang === 'EN' ? "Memory Match" : lang === 'KZ' ? "Жад ойыны" : "Игра на Память"}
+              </h3>
+              <p className="text-slate-500 font-bold text-lg leading-tight">
+                {lang === 'EN' ? "Flip cards, match term to definition by subject." :
+                 lang === 'KZ' ? "Карталарды аш, терминді анықтамамен сәйкестендір." :
+                 "Открывай карточки, находи пары термин-определение."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-sm tracking-widest bg-black text-white px-6 py-3 rounded-full">GO!</span>
+            </div>
+          </Link>
+
+          {/* 6. WORD SPRINT */}
+          <Link
+            to="/word-sprint"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
+          >
+            <div>
+              <div className="w-20 h-20 bg-sky-500 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+                <Keyboard size={40} />
+              </div>
+              <h3 className="text-4xl font-black uppercase tracking-tight mb-4">
+                {lang === 'EN' ? "Word Sprint" : lang === 'KZ' ? "Сөз спринті" : "Спринт Слов"}
+              </h3>
+              <p className="text-slate-500 font-bold text-lg leading-tight">
+                {lang === 'EN' ? "Type the sentence as fast and accurately as you can." :
+                 lang === 'KZ' ? "Сөйлемді мүмкіндігінше жылдам әрі дәл тер." :
+                 "Напечатай предложение максимально быстро и точно."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-sm tracking-widest bg-black text-white px-6 py-3 rounded-full">GO!</span>
+            </div>
+          </Link>
+
+          {/* 7. SORT IT OUT */}
+          <Link
+            to="/sort-it-out"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
+          >
+            <div>
+              <div className="w-20 h-20 bg-lime-600 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+                <LayoutGrid size={40} />
+              </div>
+              <h3 className="text-4xl font-black uppercase tracking-tight mb-4">
+                {lang === 'EN' ? "Sort It Out" : lang === 'KZ' ? "Орнына қой" : "Разложи по Полочкам"}
+              </h3>
+              <p className="text-slate-500 font-bold text-lg leading-tight">
+                {lang === 'EN' ? "Pick a subject, then sort terms into the right category." :
+                 lang === 'KZ' ? "Пәнді таңда да, терминдерді дұрыс санатқа орналастыр." :
+                 "Выбери предмет и разложи термины по нужным категориям."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-sm tracking-widest bg-black text-white px-6 py-3 rounded-full">GO!</span>
+            </div>
+          </Link>
+
+          {/* 8. TRIVIA RACE */}
+          <Link
+            to="/trivia-race"
+            className="group bg-white dark:bg-zinc-900 p-7 sm:p-10 rounded-[32px] sm:rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between min-h-[280px] sm:h-[360px]"
+          >
+            <div>
+              <div className="w-20 h-20 bg-amber-500 text-white rounded-3xl flex items-center justify-center mb-8 border-4 border-black dark:border-white/20">
+                <Flag size={40} />
+              </div>
+              <h3 className="text-4xl font-black uppercase tracking-tight mb-4">
+                {lang === 'EN' ? "Trivia Race" : lang === 'KZ' ? "Білгірлер жарысы" : "Гонка Эрудитов"}
+              </h3>
+              <p className="text-slate-500 font-bold text-lg leading-tight">
+                {lang === 'EN' ? "Answer your class's Test questions to race your token forward." :
+                 lang === 'KZ' ? "Сыныптың Тест сұрақтарына жауап беріп, фишкаңды алға жылжыт." :
+                 "Отвечай на вопросы Теста класса и продвигай свою фишку вперёд."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-sm tracking-widest bg-black text-white px-6 py-3 rounded-full">GO!</span>
+            </div>
+          </Link>
 
         </div>
       </main>

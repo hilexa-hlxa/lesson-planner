@@ -185,6 +185,41 @@ const api = {
     joinSession: (code) => request('/wordle/join', { method: 'POST', body: JSON.stringify({ code }) }),
   },
 
+  hangman: {
+    getWord: (lang) => request(`/hangman/word?lang=${encodeURIComponent(lang)}`, { method: 'GET' }),
+    createSession: (word, lang) => request('/hangman/session', { method: 'POST', body: JSON.stringify({ word, lang }) }),
+    joinSession: (code) => request('/hangman/join', { method: 'POST', body: JSON.stringify({ code }) }),
+  },
+
+  mathBattle: {
+    practice: (grade, count = 15) => request(`/math-battle/practice?grade=${encodeURIComponent(grade)}&count=${encodeURIComponent(count)}`, { method: 'GET' }),
+    createSession: (grade) => request('/math-battle/session', { method: 'POST', body: JSON.stringify({ grade }) }),
+    join: (code, student_name) => request('/math-battle/join', { method: 'POST', body: JSON.stringify({ code, student_name }) }),
+    answer: (player_id, index, answer) => request('/math-battle/answer', { method: 'POST', body: JSON.stringify({ player_id, index, answer }) }),
+    status: (session_id) => request(`/math-battle/status?session_id=${encodeURIComponent(session_id)}`, { method: 'GET' }),
+  },
+
+  triviaRace: {
+    createSession: (quiz_id) => request('/trivia-race/session', { method: 'POST', body: JSON.stringify({ quiz_id }) }),
+    join: (code, student_name) => request('/trivia-race/join', { method: 'POST', body: JSON.stringify({ code, student_name }) }),
+    answer: (player_id, question_index, selected) => request('/trivia-race/answer', { method: 'POST', body: JSON.stringify({ player_id, question_index, selected }) }),
+    state: (session_id) => request(`/trivia-race/state?session_id=${encodeURIComponent(session_id)}`, { method: 'GET' }),
+  },
+
+  gameScores: {
+    save: (game_key, score, meta = {}) => request('/game-scores', { method: 'POST', body: JSON.stringify({ game_key, score, meta }) }),
+    best: (game_key) => request(`/game-scores/best?game_key=${encodeURIComponent(game_key)}`, { method: 'GET' }),
+  },
+
+  coins: {
+    award: (student_id) => request('/coins/award', { method: 'POST', body: JSON.stringify({ student_id }) }),
+  },
+
+  streak: {
+    complete: () => request('/streak/complete', { method: 'POST' }),
+    get: () => request('/streak', { method: 'GET' }),
+  },
+
   student: {
     history: (classId) => request(`/student/history${classId ? `?class_id=${classId}` : ''}`, { method: 'GET' }),
   },

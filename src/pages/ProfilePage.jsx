@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft, ChevronRight, Trophy, Award, Coins, User, Lock,
-  Mail, Edit3, X, Zap, Timer, Target, Moon, BarChart3
+  Mail, Edit3, X, Zap, Timer, Target, Moon, BarChart3,
+  Calculator, Brain, LifeBuoy, Keyboard, LayoutGrid, Crown, Flame
 } from "lucide-react";
 import { I18N as t } from "../lib/i18n";
 import { invalidate } from "../apiCache";
@@ -59,6 +60,15 @@ const ACHIEVEMENT_ORDER = [
   { key: "speedrunner",      icon: Timer,     color: "bg-orange-500" },
   { key: "night_owl",        icon: Moon,      color: "bg-indigo-500" },
   { key: "rich",             icon: Coins,     color: "bg-yellow-500" },
+  { key: "math_whiz",        icon: Calculator, color: "bg-rose-500" },
+  { key: "memory_master",    icon: Brain,      color: "bg-fuchsia-500" },
+  { key: "hangman_hero",     icon: LifeBuoy,   color: "bg-cyan-600" },
+  { key: "word_sprint_ace",  icon: Keyboard,   color: "bg-sky-500" },
+  { key: "sorter_supreme",   icon: LayoutGrid, color: "bg-lime-600" },
+  { key: "trivia_champion",  icon: Crown,      color: "bg-amber-500" },
+  { key: "streak_3",         icon: Flame,      color: "bg-orange-400" },
+  { key: "streak_7",         icon: Flame,      color: "bg-orange-500" },
+  { key: "streak_30",        icon: Flame,      color: "bg-orange-600" },
 ];
 
 // Инициалы вместо внешней картинки — аватар всегда доступен и не тянет чужой домен

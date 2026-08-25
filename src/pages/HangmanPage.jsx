@@ -1,0 +1,251 @@
+import { useState } from 'react';
+import { ArrowLeft, Users, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import HangmanGame from '../components/HangmanGame';
+import api from '../api';
+
+const T = {
+  RU: {
+    title: 'ВИСЕЛИЦА',
+    solo: 'Играть одному',
+    soloDesc: 'Угадай случайное слово из банка.',
+    classJoin: 'Войти в игру класса',
+    classJoinDesc: 'Введи 4-значный код учителя.',
+    classHost: 'Провести в классе',
+    classHostDesc: 'Задай слово — поделись кодом.',
+    wordPlaceholder: 'Введи слово (3-10 букв)',
+    codePlaceholder: '4-значный код',
+    start: 'Начать',
+    join: 'Войти',
+    createCode: 'Создать код',
+    generating: '...',
+    codeFor: 'Код для учеников:',
+    share: 'Поделись этим кодом со своим классом!',
+    back: 'Назад',
+  },
+  KZ: {
+    title: 'ДАРҒА АСУ',
+    solo: 'Жалғыз ойнау',
+    soloDesc: 'Сөз банкінен кездейсоқ сөзді тап.',
+    classJoin: 'Сынып ойынына кіру',
+    classJoinDesc: 'Мұғалімнің 4 санды кодын енгіз.',
+    classHost: 'Сыныпта өткізу',
+    classHostDesc: 'Сөз берсең — кодты бөліс.',
+    wordPlaceholder: 'Сөзді енгіз (3-10 әріп)',
+    codePlaceholder: '4 санды код',
+    start: 'Бастау',
+    join: 'Кіру',
+    createCode: 'Код жасау',
+    generating: '...',
+    codeFor: 'Оқушыларға код:',
+    share: 'Бұл кодты сыныбыңмен бөліс!',
+    back: 'Артқа',
+  },
+  EN: {
+    title: 'HANGMAN',
+    solo: 'Play Solo',
+    soloDesc: 'Guess a random word from the bank.',
+    classJoin: 'Join Class Game',
+    classJoinDesc: "Enter your teacher's 4-digit code.",
+    classHost: 'Host for Class',
+    classHostDesc: 'Set a word — share the code.',
+    wordPlaceholder: 'Enter word (3-10 letters)',
+    codePlaceholder: '4-digit code',
+    start: 'Start',
+    join: 'Join',
+    createCode: 'Create code',
+    generating: '...',
+    codeFor: 'Code for students:',
+    share: 'Share this code with your class!',
+    back: 'Back',
+  },
+};
+
+const STREAK_KEY = 'lp_hangman_win_streak';
+
+export default function HangmanPage({ lang, setLang, user, setUser, grantAchievement, ...accessProps }) {
+  const t = T[lang] || T.RU;
+  const navigate = useNavigate();
+
+  const [mode, setMode] = useState(null);
+  const [gameState, setGameState] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const startSolo = async () => {
+    setLoading(true); setError('');
+    try {
+      const r = await api.hangman.getWord(lang);
+      setGameState({ word: r.word, lang });
+    } catch (e) {
+      setError(e.message || 'Error');
+    } finally { setLoading(false); }
+  };
+
+  const [joinCode, setJoinCode] = useState('');
+  const joinClass = async () => {
+    if (joinCode.length !== 4) return;
+    setLoading(true); setError('');
+    try {
+      const r = await api.hangman.joinSession(joinCode);
+      setGameState({ word: r.word, lang: r.lang });
+    } catch (e) {
+      setError(e.message || 'Session not found');
+    } finally { setLoading(false); }
+  };
+
+  const [hostWord, setHostWord] = useState('');
+  const [hostCode, setHostCode] = useState(null);
+  const hostClass = async () => {
+    const w = hostWord.trim().toUpperCase();
+    if (w.length < 3) return;
+    setLoading(true); setError('');
+    try {
+      const r = await api.hangman.createSession(w, lang);
+      setHostCode(r.code);
+    } catch (e) {
+      setError(e.message || 'Error');
+    } finally { setLoading(false); }
+  };
+  const startHostGame = () => {
+    if (!hostWord.trim()) return;
+    setGameState({ word: hostWord.trim().toUpperCase(), lang });
+  };
+
+  const reset = () => { setMode(null); setGameState(null); setHostCode(null); setHostWord(''); setJoinCode(''); setError(''); };
+
+  // Серия побед подряд живёт в localStorage — это разминочная мини-игра, а не
+  // оцениваемый тест, поэтому подделка через devtools не стоит того, чтобы
+  // тащить это состояние на сервер.
+  const handleComplete = (won) => {
+    if (won === null) return; // "Играть снова" сбрасывает раунд, но не результат
+    if (won) {
+      const streak = (parseInt(localStorage.getItem(STREAK_KEY) || '0', 10) || 0) + 1;
+      localStorage.setItem(STREAK_KEY, String(streak));
+      if (streak >= 3) grantAchievement?.('hangman_hero');
+    } else {
+      localStorage.setItem(STREAK_KEY, '0');
+    }
+  };
+
+  const isTeacher = user?.role === 'teacher';
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
+      <Header lang={lang} setLang={setLang} user={user} setUser={setUser} grantAchievement={grantAchievement} {...accessProps} />
+
+      <main className="max-w-xl mx-auto px-6">
+        <div className="flex items-center gap-4 mb-8">
+          <button onClick={gameState || mode ? reset : () => navigate(-1)}
+            className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter italic break-words">{t.title}</h1>
+        </div>
+
+        {gameState ? (
+          <HangmanGame word={gameState.word} lang={gameState.lang} onExit={reset} onComplete={handleComplete} />
+        ) : mode === null ? (
+          <div className="flex flex-col gap-4">
+            <button onClick={() => { setMode('solo'); startSolo(); }}
+              className="group p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-[4px] border-black dark:border-white shadow-[6px_6px_0_0_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-left flex items-start gap-5">
+              <div className="w-14 h-14 bg-cyan-600 text-white rounded-2xl flex items-center justify-center shrink-0">
+                <User size={28} />
+              </div>
+              <div>
+                <h3 className="text-xl font-black uppercase mb-1">{t.solo}</h3>
+                <p className="text-slate-500 dark:text-zinc-400 font-bold text-sm">{t.soloDesc}</p>
+              </div>
+            </button>
+
+            {!isTeacher && (
+              <button onClick={() => setMode('join')}
+                className="group p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-[4px] border-black dark:border-white shadow-[6px_6px_0_0_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-left flex items-start gap-5">
+                <div className="w-14 h-14 bg-purple-600 text-white rounded-2xl flex items-center justify-center shrink-0">
+                  <Users size={28} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black uppercase mb-1">{t.classJoin}</h3>
+                  <p className="text-slate-500 dark:text-zinc-400 font-bold text-sm">{t.classJoinDesc}</p>
+                </div>
+              </button>
+            )}
+
+            {isTeacher && (
+              <button onClick={() => setMode('host')}
+                className="group p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-[4px] border-black dark:border-white shadow-[6px_6px_0_0_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all text-left flex items-start gap-5">
+                <div className="w-14 h-14 bg-green-600 text-white rounded-2xl flex items-center justify-center shrink-0">
+                  <Users size={28} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black uppercase mb-1">{t.classHost}</h3>
+                  <p className="text-slate-500 dark:text-zinc-400 font-bold text-sm">{t.classHostDesc}</p>
+                </div>
+              </button>
+            )}
+          </div>
+        ) : mode === 'solo' ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-2xl font-black animate-pulse">{loading ? t.generating : error || ''}</div>
+          </div>
+        ) : mode === 'join' ? (
+          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
+            <h2 className="font-black text-xl uppercase mb-6">{t.classJoin}</h2>
+            <input
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder={t.codePlaceholder}
+              className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none"
+              maxLength={4}
+            />
+            {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
+            <button onClick={joinClass} disabled={loading || joinCode.length !== 4}
+              className="w-full py-4 bg-purple-600 text-white font-black text-lg uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40 transition-opacity">
+              {loading ? t.generating : t.join}
+            </button>
+          </div>
+        ) : mode === 'host' ? (
+          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
+            <h2 className="font-black text-xl uppercase mb-6">{t.classHost}</h2>
+
+            {!hostCode ? (
+              <>
+                <input
+                  value={hostWord}
+                  onChange={(e) => setHostWord(e.target.value.toUpperCase())}
+                  placeholder={t.wordPlaceholder}
+                  maxLength={10}
+                  className="w-full text-center text-2xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-widest mb-4 outline-none uppercase"
+                />
+                {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
+                <div className="flex gap-3">
+                  <button onClick={hostClass} disabled={loading || hostWord.trim().length < 3}
+                    className="flex-1 py-4 bg-green-600 text-white font-black uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40">
+                    {loading ? t.generating : t.createCode}
+                  </button>
+                  <button onClick={startHostGame} disabled={hostWord.trim().length < 3}
+                    className="flex-1 py-4 bg-black text-white dark:bg-white dark:text-black font-black uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40">
+                    {t.start}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <p className="font-bold text-sm text-slate-400 uppercase mb-2">{t.codeFor}</p>
+                  <div className="text-5xl sm:text-6xl lg:text-7xl font-mono font-black tracking-[0.2em] sm:tracking-[0.3em] break-all text-cyan-600 mb-2">{hostCode}</div>
+                  <p className="text-slate-500 font-bold text-sm">{t.share}</p>
+                </div>
+                <button onClick={startHostGame}
+                  className="w-full py-4 bg-black text-white dark:bg-white dark:text-black font-black uppercase text-lg rounded-2xl border-4 border-black dark:border-white">
+                  {t.start}
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
+      </main>
+    </div>
+  );
+}

@@ -21,6 +21,13 @@ import ClassesPage from './pages/ClassesPage';
 import ClassDetailPage from './pages/ClassDetailPage';
 import StudentClassesPage from './pages/StudentClassesPage';
 import WordlePage from './pages/WordlePage';
+import HangmanPage from './pages/HangmanPage';
+import MathBattlePage from './pages/MathBattlePage';
+import MemoryMatchPage from './pages/MemoryMatchPage';
+import WordSprintPage from './pages/WordSprintPage';
+import SortItOutPage from './pages/SortItOutPage';
+import TriviaRacePage from './pages/TriviaRacePage';
+import DailyChallengePage from './pages/DailyChallengePage';
 import LessonSummaryPage from './pages/LessonSummaryPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PricingPage from './pages/PricingPage';
@@ -93,6 +100,21 @@ export default function App() {
       coins: (prev.coins || 0) + reward,
       achievements: [...(prev.achievements || []), key]
     }) : prev);
+
+    // Раньше начисление жило только в этом optimistic setUser — коины и ачивки
+    // переживали до первого обновления страницы, а после логина заново их не
+    // было (кроме visit_profile, который персистился отдельно на ProfilePage).
+    // Теперь каждый грант доходит и до сервера; при отказе — откатываем
+    // локально, чтобы можно было попробовать снова.
+    api.achievements.grant(key).catch((e) => {
+      console.error("Achievement grant failed to persist", key, e);
+      grantedKeysRef.current.delete(key);
+      setUser(prev => prev ? ({
+        ...prev,
+        coins: Math.max(0, (prev.coins || 0) - reward),
+        achievements: (prev.achievements || []).filter(k => k !== key),
+      }) : prev);
+    });
   }, [user]);
 
   // --- 3. ЭФФЕКТЫ ---
@@ -220,6 +242,13 @@ export default function App() {
           <Route path="/classes/:id" element={<Page><Protected authReady={authReady} user={user}><ClassDetailPage {...accessProps} /></Protected></Page>} />
           <Route path="/my-classes" element={<Page><Protected authReady={authReady} user={user}><StudentClassesPage {...accessProps} /></Protected></Page>} />
           <Route path="/wordle" element={<Page><Protected authReady={authReady} user={user}><WordlePage {...accessProps} /></Protected></Page>} />
+          <Route path="/hangman" element={<Page><Protected authReady={authReady} user={user}><HangmanPage {...accessProps} /></Protected></Page>} />
+          <Route path="/math-battle" element={<Page><Protected authReady={authReady} user={user}><MathBattlePage {...accessProps} /></Protected></Page>} />
+          <Route path="/memory-match" element={<Page><Protected authReady={authReady} user={user}><MemoryMatchPage {...accessProps} /></Protected></Page>} />
+          <Route path="/word-sprint" element={<Page><Protected authReady={authReady} user={user}><WordSprintPage {...accessProps} /></Protected></Page>} />
+          <Route path="/sort-it-out" element={<Page><Protected authReady={authReady} user={user}><SortItOutPage {...accessProps} /></Protected></Page>} />
+          <Route path="/trivia-race" element={<Page><Protected authReady={authReady} user={user}><TriviaRacePage {...accessProps} /></Protected></Page>} />
+          <Route path="/daily-challenge" element={<Page><Protected authReady={authReady} user={user}><DailyChallengePage {...accessProps} /></Protected></Page>} />
           <Route path="/lesson-summary" element={<Page><Protected authReady={authReady} user={user}><LessonSummaryPage {...accessProps} /></Protected></Page>} />
           <Route path="/play" element={<QuizPlayer {...accessProps} />} />
 

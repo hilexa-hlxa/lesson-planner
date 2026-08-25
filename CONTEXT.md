@@ -51,6 +51,45 @@ A classroom word-guessing game. Two modes:
 ## Word Bank
 A curated set of school-appropriate words stored in the database, used for Wordle solo mode. 10 words per language (Russian, Kazakh, English) — seeded once by AI, never regenerated. Language follows the student's active language setting.
 
+## Game Session
+A Teacher-hosted round of a classroom game, joined by an Access Code: a 4-digit code, a 4-hour TTL, and one active session per Teacher per game. Wordle Game, Hangman, Math Battle (duel mode), and Trivia Race are each backed by their own Game Session table (`wordle_sessions`, `hangman_sessions`, `math_battle_sessions`, `trivia_race_sessions`) rather than one shared table — see ADR-0004.
+
+## Hangman
+A classroom word-guessing game, structurally a Game Session identical to Wordle Game but tracked as its own concept: wrong letters progressively reveal a friendly robot instead of ending the round outright. Same Word Bank, same Class/Solo split as Wordle Game.
+
+## Math Battle
+A timed arithmetic game. Solo mode is a personal best against the clock, scored in the browser. Duel mode is a Game Session: the Teacher picks a grade, the server generates and holds the problem set, and Students race to answer — only a correct answer advances a Student past a problem.
+
+## Memory Match
+A flip-card pairing game: match a term to its definition from a Practice Subject. Solo only — no Game Session, no Teacher hosting; the score is a personal best.
+
+## Word Sprint
+A typing-speed game: retype a displayed sentence as fast and accurately as possible. Solo only, scored by words-per-minute and accuracy.
+
+## Sort It Out
+A categorisation game: assign each term from a Practice Subject to its correct category by tapping. Solo only; a "perfect" run has zero mistaken placements.
+
+## Trivia Race
+A Game Session built on an existing Test rather than on its own content: the Teacher picks one of their Tests, and Students who answer correctly move a token forward along a shared board. First to the end wins; a wrong answer doesn't end the round, it just doesn't move you.
+
+## Spin & Answer
+A Teacher-only tool, not a Student Game: a spinning wheel that randomly picks either a Student from a Class roster (to call on) or an entry from a free-typed list (e.g. topics). Picking a real Student lets the Teacher award them Coins on the spot.
+
+## Practice Subject
+One of a small, curated set (Biology, Chemistry, Math, History, Geography) used by Memory Match and Sort It Out, each with its own fixed bank of terms and categories. Distinct from the free-text `subject` a Teacher types when creating a Lesson Plan or Test — a Practice Subject is a fixed catalog entry, not arbitrary text. "Subject" alone is ambiguous between the two; say "Practice Subject" when this is the one meant.
+
+## Daily Challenge
+A short, five-question quiz that is the same for every Student on a given calendar day, chosen deterministically from a fixed bank by day-of-year rather than generated per request. Not a Test — there is no Access Code, no Test Result, and no per-question review; its only lasting effect is extending a Streak.
+
+## Streak
+The count of consecutive calendar days a Student has completed the Daily Challenge. Decided by the server against its own clock (`user_streaks.last_completed_date` compared with `CURRENT_DATE`), never by a date the client reports — otherwise setting a phone's clock forward would extend it for free.
+
+## Achievement
+A one-time milestone a user unlocks, each worth a fixed Coins reward, defined once per language in a single catalog (`ACHIEVEMENTS`) rather than duplicated at each call site. Always granted through one persisted path (`POST /api/achievements/grant`); an earlier client-only path credited Coins in memory without saving them; it no longer exists.
+
+## Coins
+A Student's spendable point balance (`users.coins`). Earned by unlocking an Achievement, or awarded directly by a Teacher through Spin & Answer. Not tied to a Test Result — only to Achievements and Teacher discretion.
+
 ## Lesson Summary
 An AI-generated write-up of what happened in a single lesson. Contains: topic covered, homework set, and (when a Test was run) which students are struggling and at what topics. Generated in the Teacher's active language.
 

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { GraduationCap, FileText, ChevronRight, LayoutGrid, Gamepad2, Users, X, Sparkles } from "lucide-react";
+import { GraduationCap, FileText, ChevronRight, LayoutGrid, Gamepad2, Users, X, Sparkles, Flame } from "lucide-react";
 import { I18N as t } from "../lib/i18n";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import api from "../api";
 
 const ONBOARDING_KEY = "lp_onboarding_dismissed_v1";
 
@@ -53,10 +54,18 @@ export default function HubPage({ lang, setLang, user, setUser, ...accessProps }
   const ob = ONBOARDING[lang] || ONBOARDING.RU;
 
   const hubT = {
-    RU: { teacher: "ДЛЯ УЧИТЕЛЕЙ", teacherDesc: "Создание и автоматизация уроков, AI помощник, планы", student: "ДЛЯ УЧЕНИКОВ", studentDesc: "Обучающие игры, тесты, награды и прогресс", denied: "ТОЛЬКО ДЛЯ УЧИТЕЛЕЙ", gamesTitle: "ИГРОТЕКА", classes: "МОИ КЛАССЫ", classesTeacherDesc: "Управление классами, ученики, история тестов", classesStudentDesc: "Ваши классы и заявки" },
-    KZ: { teacher: "МҰҒАЛІМДЕРГЕ", teacherDesc: "Сабақтарды құрастыру және автоматтандыру, AI көмекші", student: "ОҚУШЫЛАРҒА", studentDesc: "Оқу ойындары, тесттер, марапаттар", denied: "МҰҒАЛІМДЕРГЕ ҒАНА", gamesTitle: "ОЙЫН ХАБЫ", classes: "МЕНІҢ СЫНЫПТАРЫМ", classesTeacherDesc: "Сыныптарды басқару, оқушылар, тест тарихы", classesStudentDesc: "Сіздің сыныптарыңыз және өтініштер" },
-    EN: { teacher: "FOR TEACHERS", teacherDesc: "Lesson planning, automation, AI assistant", student: "FOR STUDENTS", studentDesc: "Learning games, quizzes, rewards", denied: "TEACHERS ONLY", gamesTitle: "GAME LIBRARY", classes: "MY CLASSES", classesTeacherDesc: "Manage classes, students, quiz history", classesStudentDesc: "Your classes and applications" }
+    RU: { teacher: "ДЛЯ УЧИТЕЛЕЙ", teacherDesc: "Создание и автоматизация уроков, AI помощник, планы", student: "ДЛЯ УЧЕНИКОВ", studentDesc: "Обучающие игры, тесты, награды и прогресс", denied: "ТОЛЬКО ДЛЯ УЧИТЕЛЕЙ", gamesTitle: "ИГРОТЕКА", classes: "МОИ КЛАССЫ", classesTeacherDesc: "Управление классами, ученики, история тестов", classesStudentDesc: "Ваши классы и заявки", streakLabel: "дней подряд", streakCta: "Пройти вызов дня" },
+    KZ: { teacher: "МҰҒАЛІМДЕРГЕ", teacherDesc: "Сабақтарды құрастыру және автоматтандыру, AI көмекші", student: "ОҚУШЫЛАРҒА", studentDesc: "Оқу ойындары, тесттер, марапаттар", denied: "МҰҒАЛІМДЕРГЕ ҒАНА", gamesTitle: "ОЙЫН ХАБЫ", classes: "МЕНІҢ СЫНЫПТАРЫМ", classesTeacherDesc: "Сыныптарды басқару, оқушылар, тест тарихы", classesStudentDesc: "Сіздің сыныптарыңыз және өтініштер", streakLabel: "күн қатарынан", streakCta: "Күндік сынақты өту" },
+    EN: { teacher: "FOR TEACHERS", teacherDesc: "Lesson planning, automation, AI assistant", student: "FOR STUDENTS", studentDesc: "Learning games, quizzes, rewards", denied: "TEACHERS ONLY", gamesTitle: "GAME LIBRARY", classes: "MY CLASSES", classesTeacherDesc: "Manage classes, students, quiz history", classesStudentDesc: "Your classes and applications", streakLabel: "day streak", streakCta: "Take today's challenge" }
   }[lang] || {};
+
+  // Серия показывается только ученикам — Daily Streak Challenge их фича;
+  // молча пропускаем ошибку, если запрос не удался, чиповка просто не появится
+  const [streak, setStreak] = useState(null);
+  useEffect(() => {
+    if (!isStudent) return;
+    api.streak.get().then(setStreak).catch(() => {});
+  }, [isStudent]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px]">
@@ -101,6 +110,18 @@ export default function HubPage({ lang, setLang, user, setUser, ...accessProps }
                 {ob.dismiss}
               </button>
             </div>
+          </div>
+        )}
+
+        {isStudent && streak && (
+          <div className="flex justify-center mb-5">
+            <Link
+              to="/daily-challenge"
+              title={hubT.streakCta}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-[3px] border-black dark:border-white bg-orange-100 dark:bg-orange-900/30 font-black text-orange-600 dark:text-orange-300 text-sm hover:-translate-y-0.5 transition-transform"
+            >
+              <Flame size={18} /> {streak.current_streak > 0 ? `${streak.current_streak} ${hubT.streakLabel}` : hubT.streakCta}
+            </Link>
           </div>
         )}
 
