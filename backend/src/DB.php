@@ -13,14 +13,21 @@ final class DB {
         \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
         \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
 
-        // Постоянные соединения выключены намеренно. Supabase работает через
-        // transaction pooler, который сам закрывает простаивающие соединения:
-        // воркер PHP продолжал держать мёртвый дескриптор и отдавал 500
-        // ("SSL SYSCALL error: EOF detected") на каждый запрос, пока не
-        // перезапустится. Пул на то и пул — соединение на запрос дешёвое.
-        \PDO::ATTR_PERSISTENT => false,
+        // Раньше здесь стояло false: DB_DSN шёл через transaction pooler
+        // (порт 6543), который сам закрывает простаивающие соединения между
+        // транзакциями — постоянное PHP-соединение переживало сервер и
+        // отдавало 500 ("SSL SYSCALL error: EOF detected") на каждый запрос,
+        // пока воркер не перезапустится. А без ATTR_PERSISTENT каждый запрос
+        // платил ~2с за новый TCP+TLS+auth хендшейк до Supabase в Мумбаи —
+        // именно поэтому всё в приложении казалось медленным.
+        // Теперь DB_DSN указывает на session pooler (порт 5432) — он держит
+        // выделенное соединение на сессию и безопасен для ATTR_PERSISTENT:
+        // PHP переиспользует то же TCP-соединение между запросами в рамках
+        // одного воркера вместо хендшейка на каждый запрос.
+        \PDO::ATTR_PERSISTENT => true,
 
-        // Нужно для transaction pooler: он не держит серверные prepared statements
+        // Нужно для pgbouncer-пулеров (и transaction, и session mode):
+        // они не держат серверные prepared statements между использованиями.
         \PDO::ATTR_EMULATE_PREPARES => true,
       ]
     );
