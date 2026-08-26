@@ -16,23 +16,26 @@ function shuffle(arr) {
   return a;
 }
 
-// round: { categories: string[], items: [{id, term, categoryIndex}] } — same
-// shape SortItOutGame uses. Each term gets a card, each item ALSO contributes
-// a "topic name" card carrying its category. A term card matches ANY topic
-// card of the same category — not one fixed, hidden partner — so a match is
-// "does this term belong to this topic", answered by a short label, not a
-// full sentence. That's the whole fix: the old version paired a term with a
-// prose definition, which tested reading comprehension and subject knowledge
-// on top of memory. Matching two short labels is just memory again.
-export default function MemoryMatchGame({ round, lang = 'RU', onFinish, onExit, onReplay }) {
+// labels: string[] — topic names and terms, used as plain interchangeable
+// text. Classic Concentration rules: every label is duplicated into two
+// identical cards, and a match is "these two say the same thing" — nothing
+// to know, nothing to read and reason about, just where you last saw it.
+//
+// Two earlier versions of this game both still tested subject knowledge:
+// term↔definition needed reading comprehension, term↔topic-name needed
+// knowing the curriculum's categorisation. Neither is what "memory game"
+// means. This one has no relationship between the two card faces at all —
+// only identity — so knowing biology/math/history gives zero advantage.
+export default function MemoryMatchGame({ labels, lang = 'RU', onFinish, onExit, onReplay }) {
   const t = T[lang] || T.RU;
-  const totalPairs = round.items.length;
+  const totalPairs = labels.length;
 
-  const cards = useMemo(() => {
-    const termCards = round.items.map((it) => ({ key: `term-${it.id}`, kind: 'term', categoryIndex: it.categoryIndex, text: it.term }));
-    const labelCards = round.items.map((it) => ({ key: `label-${it.id}`, kind: 'label', categoryIndex: it.categoryIndex, text: round.categories[it.categoryIndex] }));
-    return shuffle([...termCards, ...labelCards]);
-  }, [round]);
+  const cards = useMemo(() => shuffle(
+    labels.flatMap((text, i) => [
+      { key: `${i}-a`, pairId: i, text },
+      { key: `${i}-b`, pairId: i, text },
+    ])
+  ), [labels]);
 
   const [flipped, setFlipped] = useState([]); // board indices currently face-up, max 2
   const [matchedIdx, setMatchedIdx] = useState(new Set()); // board indices already resolved
@@ -61,7 +64,7 @@ export default function MemoryMatchGame({ round, lang = 'RU', onFinish, onExit, 
       lockRef.current = true;
       setMoves((m) => m + 1);
       const [a, b] = next;
-      const isMatch = cards[a].categoryIndex === cards[b].categoryIndex && cards[a].kind !== cards[b].kind;
+      const isMatch = cards[a].pairId === cards[b].pairId;
 
       setTimeout(() => {
         if (isMatch) setMatchedIdx((prev) => new Set(prev).add(a).add(b));

@@ -17,10 +17,18 @@ export default function MemoryMatchPage({ lang, setLang, user, setUser, grantAch
   const t = T[lang] || T.RU;
   const navigate = useNavigate();
   const [subject, setSubject] = useState(null);
-  const [round, setRound] = useState(null);
+  const [labels, setLabels] = useState(null);
 
-  const start = (s) => { setSubject(s); setRound(getDeckSortRound(s, lang)); };
-  const reset = () => { setSubject(null); setRound(null); };
+  // Пул для матчинга — темы предмета и его термины как ПЛОСКИЙ список текста,
+  // без связи "термин относится к теме": Memory Match проверяет только память,
+  // не то, знает ли ученик, куда что относится (см. Sort It Out — вот та игра
+  // как раз про это).
+  const start = (s) => {
+    const round = getDeckSortRound(s, lang);
+    setSubject(s);
+    setLabels([...round.categories, ...round.items.map((it) => it.term)]);
+  };
+  const reset = () => { setSubject(null); setLabels(null); };
 
   const handleFinish = async (score, meta) => {
     if (meta.perfect) grantAchievement?.('memory_master');
@@ -33,15 +41,15 @@ export default function MemoryMatchPage({ lang, setLang, user, setUser, grantAch
 
       <main className="max-w-2xl mx-auto px-6">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={round || subject ? reset : () => navigate(-1)}
+          <button onClick={labels || subject ? reset : () => navigate(-1)}
             className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
             <ArrowLeft size={24} />
           </button>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter italic break-words">{t.title}</h1>
         </div>
 
-        {round ? (
-          <MemoryMatchGame round={round} lang={lang} onFinish={handleFinish} onExit={reset} onReplay={() => start(subject)} />
+        {labels ? (
+          <MemoryMatchGame labels={labels} lang={lang} onFinish={handleFinish} onExit={reset} onReplay={() => start(subject)} />
         ) : (
           <>
             <h2 className="font-black text-lg uppercase mb-4 text-slate-500">{t.pick}</h2>
