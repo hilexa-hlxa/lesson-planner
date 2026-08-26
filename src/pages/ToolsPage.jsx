@@ -12,6 +12,7 @@ const WHEEL_T = {
     byClass: 'Из класса', byClassDesc: 'Крутит реальных учеников — правильный ответ можно наградить монетами.',
     custom: 'Свой список', customDesc: 'Впиши что угодно — темы, категории, номера вариантов.',
     pickClass: 'Выбери класс', noClasses: 'У тебя пока нет ни одного класса.',
+    studentFallback: 'Ученик',
     awarded: 'Начислено 10 монет!', awardFailed: 'Не удалось начислить монеты.',
   },
   KZ: {
@@ -19,6 +20,7 @@ const WHEEL_T = {
     byClass: 'Сыныптан', byClassDesc: 'Нақты оқушыларды айналдырады — дұрыс жауапты монетамен марапаттауға болады.',
     custom: 'Өз тізімің', customDesc: 'Кез келгенін жаз — тақырыптар, санаттар, нұсқа нөмірлері.',
     pickClass: 'Сыныпты таңда', noClasses: 'Сенде әзірге бір де сынып жоқ.',
+    studentFallback: 'Оқушы',
     awarded: '10 монета есептелді!', awardFailed: 'Монета есептеу мүмкін болмады.',
   },
   EN: {
@@ -26,6 +28,7 @@ const WHEEL_T = {
     byClass: 'From a class', byClassDesc: 'Spins real students — you can reward a correct answer with coins.',
     custom: 'Custom list', customDesc: 'Type anything — topics, categories, variant numbers.',
     pickClass: 'Pick a class', noClasses: "You don't have any classes yet.",
+    studentFallback: 'Student',
     awarded: '10 coins awarded!', awardFailed: 'Could not award coins.',
   },
 };
@@ -54,7 +57,15 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
   const pickClass = async (classId) => {
     try {
       const r = await api.classes.getMembers(classId, 'approved');
-      const members = (r.members || r.items || []).map((m) => ({ id: m.student_id || m.id, name: m.display_name || m.name }));
+      // display_name бывает пустым — ученик мог ни разу не заходить в профиль,
+      // чтобы его задать. Без фолбэка колесо получало name: undefined и падало
+      // на name.length при расчёте размера шрифта сегмента.
+      const members = (r.members || r.items || []).map((m) => {
+        const id = m.student_id || m.id;
+        const fullName = [m.first_name, m.last_name].filter(Boolean).join(' ');
+        const name = m.display_name || fullName || m.email || `${wt.studentFallback} #${id}`;
+        return { id, name };
+      });
       setParticipants(members);
       setWheelStep('wheel-roster');
     } catch {

@@ -17,8 +17,14 @@ const FortuneWheel = ({ initialNames, participants, onClose, onWin }) => {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
 
+  // Пустое имя участника (например, ученик ещё не задал display_name) когда-то
+  // роняло всё колесо на name.length в расчёте шрифта — эта строка гарантирует,
+  // что segments всегда массив непустых строк, независимо от того, что прислал
+  // вызывающий код.
   const usingRoster = Array.isArray(participants) && participants.length > 0;
-  const segments = usingRoster ? participants.map((p) => p.name) : textInput.split('\n').filter(name => name.trim() !== "");
+  const segments = usingRoster
+    ? participants.map((p) => p.name || '?')
+    : textInput.split('\n').filter(name => name.trim() !== "");
   const tooFewNames = segments.length < 2;
 
   const spin = () => {

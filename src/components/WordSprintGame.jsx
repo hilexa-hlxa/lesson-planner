@@ -24,12 +24,18 @@ export default function WordSprintGame({ sentence, lang = 'RU', onFinish, onExit
     setTyped(value);
 
     if (value.length === sentence.length) {
-      const elapsedMs = Math.max(1, Date.now() - (startedAt || Date.now()));
+      // Пол в 300мс — не для честного игрока (никто не наберёт предложение
+      // быстрее физически), а для Date.now()-разницы в доли миллисекунды:
+      // без пола она однажды дала 8830 слов/мин и с чистой совестью выдала
+      // ачивку word_sprint_ace за результат, невозможный для человека.
+      const elapsedMs = Math.max(300, Date.now() - (startedAt || Date.now()));
       const minutes = elapsedMs / 60000;
       let correct = 0;
       for (let i = 0; i < sentence.length; i++) if (value[i] === sentence[i]) correct++;
       const accuracy = Math.round((correct / sentence.length) * 100);
-      const wpm = Math.round((sentence.length / 5) / minutes);
+      // 250 слов/мин — выше мирового рекорда на клавиатуре; всё, что "быстрее",
+      // это не более быстрый ученик, а вставка текста или сбой таймера
+      const wpm = Math.min(250, Math.round((sentence.length / 5) / minutes));
 
       setStatus('done');
       setResult({ wpm, accuracy });

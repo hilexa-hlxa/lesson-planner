@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { CheckCircle, XCircle, RotateCcw, Delete, Clock } from 'lucide-react';
+import { CheckCircle, RotateCcw, Delete, Clock } from 'lucide-react';
 
 // Задачу нельзя пропустить неправильным ответом — ни в соло, ни в дуэли.
 // В дуэли это буквально диктует бэкенд (answered/solved_count не растёт,
@@ -150,8 +150,11 @@ export default function MathBattleGame({
         </>
       ) : (
         <div className="w-full p-6 rounded-2xl border-4 border-black dark:border-white bg-white dark:bg-zinc-900 text-center">
+          {/* correctCount < total только когда истекло время соло-тренировки —
+              это не проигрыш, а просто личный результат; крестик здесь читался
+              бы как "не справился", хотя раунд пройден честно. */}
           <div className="flex justify-center mb-2">
-            {correctCount === total ? <CheckCircle size={36} className="text-green-500" /> : <XCircle size={36} className="text-rose-500" />}
+            <CheckCircle size={36} className={correctCount === total ? 'text-green-500' : 'text-rose-500'} />
           </div>
           <p className="font-black text-xl mb-1">{t.done}</p>
           <p className="font-bold text-sm text-slate-500">{t.score}: {correctCount} {t.of} {total}</p>

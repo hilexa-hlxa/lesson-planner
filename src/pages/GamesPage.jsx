@@ -134,9 +134,9 @@ const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
                 {lang === 'EN' ? "Memory Match" : lang === 'KZ' ? "Жад ойыны" : "Игра на Память"}
               </h3>
               <p className="text-slate-500 font-bold text-lg leading-tight">
-                {lang === 'EN' ? "Flip cards, match term to definition by subject." :
-                 lang === 'KZ' ? "Карталарды аш, терминді анықтамамен сәйкестендір." :
-                 "Открывай карточки, находи пары термин-определение."}
+                {lang === 'EN' ? "Flip cards, find the two that match." :
+                 lang === 'KZ' ? "Карталарды аш, бір-біріне сәйкес екеуін тап." :
+                 "Открывай карточки, находи одинаковые пары."}
               </p>
             </div>
             <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">

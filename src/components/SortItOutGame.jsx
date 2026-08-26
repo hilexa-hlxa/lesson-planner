@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, RotateCcw } from 'lucide-react';
+import { CheckCircle, RotateCcw } from 'lucide-react';
 
 const T = {
   RU: { pick: 'Выбери термин, затем категорию', mistakes: 'Ошибки', done: 'Готово!', perfect: 'Без единой ошибки!', again: 'Ещё раз', exit: 'Выход' },
@@ -89,8 +89,11 @@ export default function SortItOutGame({ round, lang = 'RU', onFinish, onExit, on
         </>
       ) : (
         <div className="w-full p-6 rounded-2xl border-4 border-black dark:border-white bg-white dark:bg-zinc-900 text-center">
+          {/* Раунд закончен — значит все термины разложены. Крестик здесь
+              читался бы как "не справился", хотя дело сделано; ошибки без
+              потери прогресса просто не дают отметку "без единой ошибки". */}
           <div className="flex justify-center mb-2">
-            {mistakes === 0 ? <CheckCircle size={36} className="text-green-500" /> : <XCircle size={36} className="text-lime-600" />}
+            <CheckCircle size={36} className={mistakes === 0 ? 'text-green-500' : 'text-lime-600'} />
           </div>
           <p className="font-black text-xl mb-1">{t.done}</p>
           {mistakes === 0 && <p className="font-bold text-sm text-slate-500">{t.perfect}</p>}

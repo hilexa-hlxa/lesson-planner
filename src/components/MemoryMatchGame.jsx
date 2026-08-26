@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { CheckCircle, RotateCcw, Timer as TimerIcon, XCircle } from 'lucide-react';
+import { CheckCircle, RotateCcw, Timer as TimerIcon } from 'lucide-react';
 
 const T = {
   RU: { moves: 'Ходы', mistakes: 'Ошибки', done: 'Собрано!', perfect: 'Без единой ошибки!', again: 'Ещё раз', exit: 'Выход' },
@@ -115,8 +115,11 @@ export default function MemoryMatchGame({ labels, lang = 'RU', onFinish, onExit,
         </div>
       ) : (
         <div className="w-full p-6 rounded-2xl border-4 border-black dark:border-white bg-white dark:bg-zinc-900 text-center">
+          {/* Дошёл до конца доски — значит все пары найдены. Крестик тут
+              читался бы как "не справился", хотя игра пройдена; ошибки лишь
+              снимают отметку "без единой ошибки" ниже. */}
           <div className="flex justify-center mb-2">
-            {mistakes === 0 ? <CheckCircle size={36} className="text-green-500" /> : <XCircle size={36} className="text-fuchsia-500" />}
+            <CheckCircle size={36} className={mistakes === 0 ? 'text-green-500' : 'text-fuchsia-500'} />
           </div>
           <p className="font-black text-xl mb-1">{t.done}</p>
           {mistakes === 0 && <p className="font-bold text-sm text-slate-500">{t.perfect}</p>}
