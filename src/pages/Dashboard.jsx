@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 import ReactMarkdown from "react-markdown";
-import { MoreVertical, Edit3, Trash2, History, Sparkles } from "lucide-react";
+import { MoreVertical, Edit3, Trash2, History, Sparkles, Loader2, AlertCircle } from "lucide-react";
 
 import api from "../api";
 // Оставили только ОДИН чистый импорт
@@ -132,6 +132,13 @@ export default function Dashboard({
     return () => { alive = false; };
   }, [activeId]);
 
+  // Патчит статус элемента в локальном списке истории, чтобы не ждать
+  // следующего relist — раньше и успешная, и упавшая генерация навсегда
+  // застревали в списке с исходным "running", неотличимые друг от друга.
+  const setPlanStatus = (id, status) => {
+    setLessonPlans(prev => prev.map(p => (p.id === id ? { ...p, status } : p)));
+  };
+
   // 4. ГЕНЕРАЦИЯ
   const handleGenerate = async () => {
     if (!form.subject || !form.topic) return;
@@ -139,15 +146,20 @@ export default function Dashboard({
     const vars = { lang, ...form };
     const promptText = buildPrompt("lesson_plan", vars, promptConfig);
 
+    // Вне try, чтобы catch знал, какую запись пометить "error", а не просто
+    // оставить её висеть в истории как вечный "running".
+    let createdPlanId = null;
+
     try {
       const plan = await api.lessonPlans.create({
         type: 'lesson_plan', ...form, lang, prompt: promptText, status: "running"
       });
+      createdPlanId = plan.id;
 
       setActiveId(plan.id);
       activeIdRef.current = plan.id;
       setLessonPlans(prev => [{ id: plan.id, name: form.topic, status: "running" }, ...prev]);
-      
+
       let jsonText = "";
       for await (const delta of api.generateStream({ prompt: promptText })) {
         jsonText += (typeof delta === "string" ? delta : delta?.text || "");
@@ -158,6 +170,9 @@ export default function Dashboard({
 
       if (!payload) {
         setPlanOutput(GEN_T.errParse);
+        setPlanStatus(plan.id, "error");
+        await api.lessonPlans.update(plan.id, { status: "error" }).catch(() => {});
+        invalidatePrefixRaw("lessonPlans.list");
         return;
       }
 
@@ -171,6 +186,7 @@ export default function Dashboard({
         result_json_version: 1,
         template_key: "kmj_kazakh_january"
       });
+      setPlanStatus(plan.id, "done");
 
       invalidatePrefixRaw("lessonPlans.list");
 
@@ -185,8 +201,13 @@ export default function Dashboard({
 
     } catch (e) {
       setPlanOutput(GEN_T.errGeneric);
-    } finally { 
-      setLoading(false); 
+      if (createdPlanId) {
+        setPlanStatus(createdPlanId, "error");
+        api.lessonPlans.update(createdPlanId, { status: "error" }).catch(() => {});
+        invalidatePrefixRaw("lessonPlans.list");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -220,8 +241,12 @@ export default function Dashboard({
                   ${activeId === item.id ? "ring-4 ring-emerald-500/20" : ""}`}
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-[13px] font-bold opacity-80 group-hover:opacity-100 truncate w-40">
-                    {item.name}
+                  <span className="flex items-center gap-2 min-w-0">
+                    {item.status === "running" && <Loader2 size={13} className="shrink-0 animate-spin opacity-60" />}
+                    {item.status === "error" && <AlertCircle size={13} className="shrink-0 text-red-500 group-hover:text-white" />}
+                    <span className="text-[13px] font-bold opacity-80 group-hover:opacity-100 truncate w-36">
+                      {item.name}
+                    </span>
                   </span>
 
                   <div className="relative z-30">
@@ -330,7 +355,7 @@ export default function Dashboard({
         </section>
         <section className="flex-1 min-w-0 p-6 sm:p-10 xl:p-14 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl rounded-[32px] sm:rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto min-h-[360px]">
           {planOutput ? (
-            <div className="prose dark:prose-invert max-w-none leading-relaxed italic break-words"><ReactMarkdown>{planOutput}</ReactMarkdown></div>
+            <div className="prose prose-emerald dark:prose-invert max-w-none break-words prose-headings:font-black prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-strong:text-slate-900 dark:prose-strong:text-white"><ReactMarkdown>{planOutput}</ReactMarkdown></div>
           ) : loading ? (
             <div className="space-y-3">
               <Skeleton className="h-6 w-2/3" />

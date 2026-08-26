@@ -109,6 +109,20 @@ final class GenerateStream
       'model'    => $model,
       'messages' => [['role' => 'user', 'content' => $prompt]],
       'stream'   => true,
+      // gpt-oss — reasoning-модель: без ограничения она сжигает бюджет токенов
+      // на скрытый chain-of-thought и обрывает финальный JSON на середине
+      // (finish_reason: "length"), из-за чего JSON.parse на фронте падал.
+      // reasoning_effort=low урезает "раздумья". max_completion_tokens=4096
+      // — НЕ округлый запас "с головой": free-тир этого ключа на gpt-oss-120b
+      // хард-лимитирован в 8000 токенов/минуту, и Groq считает в этот лимит
+      // весь зарезервированный max_completion_tokens, а не только реально
+      // использованное — запрос на 8000 гарантированно ловил 413 "Request
+      // too large" (промпт ~600 токенов + резерв 8000 > лимита 8000).
+      // 4096 оставляет запас под промпт и проверено хватает: самый тяжёлый
+      // из наших промптов (план урока, high detail) укладывается в ~1900
+      // токенов ответа даже с reasoning.
+      'reasoning_effort'      => 'low',
+      'max_completion_tokens' => 4096,
     ], JSON_UNESCAPED_UNICODE);
 
     $cafile = (string)($config['ssl']['cafile'] ?? '');
@@ -126,7 +140,7 @@ final class GenerateStream
       CURLOPT_RETURNTRANSFER => false,
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_TIMEOUT        => 0,
-      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf): int {
+      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf, &$finishReason): int {
         $buf .= $chunk;
         while (($pos = strpos($buf, "\n")) !== false) {
           $line = trim(substr($buf, 0, $pos));
@@ -139,10 +153,14 @@ final class GenerateStream
           $obj = json_decode($payload, true);
           if (!is_array($obj)) continue;
 
-          $text = $obj['choices'][0]['delta']['content'] ?? null;
+          $choice = $obj['choices'][0] ?? [];
+          $text = $choice['delta']['content'] ?? null;
           if (is_string($text) && $text !== '') {
             self::sendEvent(['type' => 'delta', 'text' => $text]);
             self::flushNow();
+          }
+          if (!empty($choice['finish_reason'])) {
+            $finishReason = $choice['finish_reason'];
           }
         }
         return strlen($chunk);
@@ -156,6 +174,7 @@ final class GenerateStream
 
     curl_setopt_array($ch, $opts);
 
+    $finishReason = null;
     $ok = curl_exec($ch);
     if ($ok === false) {
       $err = curl_error($ch);
@@ -171,6 +190,15 @@ final class GenerateStream
       self::sendEvent(['type' => 'done']);
       self::flushNow();
       return;
+    }
+
+    // Модель уперлась в max_completion_tokens до того, как закончила ответ —
+    // JSON/markdown на клиенте гарантированно оборван. Явно предупреждаем,
+    // а не тихо отдаём "done" на половине документа (см. коммит про
+    // reasoning_effort/max_completion_tokens — это тот же баг, страховка на
+    // случай, если бюджета опять не хватит для другого промпта/модели).
+    if ($finishReason === 'length') {
+      self::sendEvent(['type' => 'error', 'message' => 'Groq response truncated (finish_reason=length) — try a shorter prompt or lower detail level']);
     }
 
     self::sendEvent(['type' => 'done']);

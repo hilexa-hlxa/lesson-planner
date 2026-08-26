@@ -165,6 +165,12 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
   const handleGenerate = async () => {
     setLoading(true); setError(""); setAccessCode(null); setActiveTest(null); setTestResults(null); setSelectedStudent(null);
+
+    // Вне try — иначе catch не знает, какую запись пометить "error", и она
+    // навсегда виснет в истории со статусом "running" (тот же баг, что был
+    // в Dashboard.jsx для планов уроков).
+    let createdTestId = null;
+
     try {
       const vars = { lang, subject, topic, grade, details: "" };
       const mergedCfg = { ...promptConfig, tests: { ...promptConfig?.tests, ...testUi } };
@@ -174,6 +180,8 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
         type: 'test',
         subject: subject || "Test", topic, grade, lang, prompt: promptText, status: "running"
       });
+      createdTestId = test.id;
+      loadSavedTests();
 
       let accumulatedText = "";
       for await (const evt of api.generateStream({ prompt: promptText })) {
@@ -181,11 +189,22 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
         if (delta) accumulatedText += delta;
       }
 
+      if (!accumulatedText.trim()) {
+        throw new Error("Empty generation result");
+      }
+
       await api.tests.update(test.id, { status: "done", result_md: accumulatedText });
       setActiveTest({ id: test.id, result_md: accumulatedText, topic, subject, access_code: null });
       loadSavedTests();
 
-    } catch (e) { console.error(e); setError(tr.errGenerate); } finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+      setError(tr.errGenerate);
+      if (createdTestId) {
+        api.tests.update(createdTestId, { status: "error" }).catch(() => {});
+        loadSavedTests();
+      }
+    } finally { setLoading(false); }
   };
 
   const handleStartSession = async () => {
@@ -494,7 +513,11 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
             )}
             {savedTests.map((item) => (
                 <div key={item.id} onClick={() => handleSelectOldTest(item)} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] ${activeTest?.id === item.id ? 'bg-emerald-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-emerald-300'}`}>
-                    <h4 className="font-black text-sm mb-1 line-clamp-2">{item.topic}</h4>
+                    <h4 className="font-black text-sm mb-1 line-clamp-2 flex items-center gap-1.5">
+                        {item.status === "running" && <RefreshCw size={12} className="shrink-0 animate-spin opacity-60" />}
+                        {item.status === "error" && <AlertCircle size={12} className="shrink-0 text-red-500" />}
+                        <span className="truncate">{item.topic}</span>
+                    </h4>
                     <div className="flex justify-between items-center opacity-70 text-[10px] font-bold uppercase tracking-wider">
                         <span>{item.subject}</span>
                         <span>{new Date(item.created_at).toLocaleDateString()}</span>
