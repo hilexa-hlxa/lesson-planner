@@ -16,19 +16,26 @@ function shuffle(arr) {
   return a;
 }
 
-// pairs: [{id, term, definition}] — каждая пара даёт две карточки: term-face и definition-face
-export default function MemoryMatchGame({ pairs, lang = 'RU', onFinish, onExit, onReplay }) {
+// round: { categories: string[], items: [{id, term, categoryIndex}] } — same
+// shape SortItOutGame uses. Each term gets a card, each item ALSO contributes
+// a "topic name" card carrying its category. A term card matches ANY topic
+// card of the same category — not one fixed, hidden partner — so a match is
+// "does this term belong to this topic", answered by a short label, not a
+// full sentence. That's the whole fix: the old version paired a term with a
+// prose definition, which tested reading comprehension and subject knowledge
+// on top of memory. Matching two short labels is just memory again.
+export default function MemoryMatchGame({ round, lang = 'RU', onFinish, onExit, onReplay }) {
   const t = T[lang] || T.RU;
+  const totalPairs = round.items.length;
 
-  const cards = useMemo(() => shuffle(
-    pairs.flatMap((p) => [
-      { key: `${p.id}-term`, pairId: p.id, label: p.term },
-      { key: `${p.id}-def`, pairId: p.id, label: p.definition },
-    ])
-  ), [pairs]);
+  const cards = useMemo(() => {
+    const termCards = round.items.map((it) => ({ key: `term-${it.id}`, kind: 'term', categoryIndex: it.categoryIndex, text: it.term }));
+    const labelCards = round.items.map((it) => ({ key: `label-${it.id}`, kind: 'label', categoryIndex: it.categoryIndex, text: round.categories[it.categoryIndex] }));
+    return shuffle([...termCards, ...labelCards]);
+  }, [round]);
 
-  const [flipped, setFlipped] = useState([]); // indices currently face-up, max 2
-  const [matched, setMatched] = useState(new Set());
+  const [flipped, setFlipped] = useState([]); // board indices currently face-up, max 2
+  const [matchedIdx, setMatchedIdx] = useState(new Set()); // board indices already resolved
   const [moves, setMoves] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [seconds, setSeconds] = useState(0);
@@ -44,7 +51,7 @@ export default function MemoryMatchGame({ pairs, lang = 'RU', onFinish, onExit, 
 
   const flip = (idx) => {
     if (lockRef.current || status !== 'playing') return;
-    if (flipped.includes(idx) || matched.has(cards[idx].pairId)) return;
+    if (flipped.includes(idx) || matchedIdx.has(idx)) return;
     if (!startedRef.current) startedRef.current = true;
 
     const next = [...flipped, idx];
@@ -54,14 +61,10 @@ export default function MemoryMatchGame({ pairs, lang = 'RU', onFinish, onExit, 
       lockRef.current = true;
       setMoves((m) => m + 1);
       const [a, b] = next;
-      const isMatch = cards[a].pairId === cards[b].pairId;
+      const isMatch = cards[a].categoryIndex === cards[b].categoryIndex && cards[a].kind !== cards[b].kind;
 
       setTimeout(() => {
-        // Раньше финальный onFinish жил прямо в апдейтере setMatched — в
-        // dev+StrictMode React вызывает такие апдейтеры дважды, и очко в
-        // game_scores улетало бы на сервер два раза подряд. Апдейтер теперь
-        // только считает пары; факт финиша ловит отдельный эффект ниже.
-        if (isMatch) setMatched((prev) => new Set(prev).add(cards[a].pairId));
+        if (isMatch) setMatchedIdx((prev) => new Set(prev).add(a).add(b));
         else setMistakes((m) => m + 1);
         setFlipped([]);
         lockRef.current = false;
@@ -71,14 +74,14 @@ export default function MemoryMatchGame({ pairs, lang = 'RU', onFinish, onExit, 
 
   const finishedRef = useRef(false);
   useEffect(() => {
-    if (status !== 'playing' || matched.size !== pairs.length || pairs.length === 0) return;
+    if (status !== 'playing' || totalPairs === 0 || matchedIdx.size !== totalPairs * 2) return;
     if (finishedRef.current) return;
     finishedRef.current = true;
     setStatus('done');
     const score = Math.max(0, 1000 - seconds * 5 - mistakes * 30);
     onFinish?.(score, { seconds, moves, mistakes, perfect: mistakes === 0 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matched, pairs.length, status]);
+  }, [matchedIdx, totalPairs, status]);
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto px-4 pb-8">
@@ -91,18 +94,18 @@ export default function MemoryMatchGame({ pairs, lang = 'RU', onFinish, onExit, 
       {status === 'playing' ? (
         <div className="grid grid-cols-4 gap-2 sm:gap-3 w-full">
           {cards.map((card, idx) => {
-            const isUp = flipped.includes(idx) || matched.has(card.pairId);
+            const isUp = flipped.includes(idx) || matchedIdx.has(idx);
             return (
               <button
                 key={card.key}
                 onClick={() => flip(idx)}
                 className={`aspect-square rounded-2xl border-[3px] border-black dark:border-white font-black text-[11px] sm:text-sm p-2 flex items-center justify-center text-center transition-all
-                  ${matched.has(card.pairId) ? 'bg-green-100 dark:bg-green-900/40 opacity-60' :
+                  ${matchedIdx.has(idx) ? 'bg-green-100 dark:bg-green-900/40 opacity-60' :
                     isUp ? 'bg-fuchsia-100 dark:bg-fuchsia-900/40 shadow-[4px_4px_0_0_#000]' :
                     'bg-fuchsia-500 text-white shadow-[4px_4px_0_0_#000] hover:-translate-y-0.5'}
                 `}
               >
-                {isUp ? card.label : '?'}
+                {isUp ? card.text : '?'}
               </button>
             );
           })}

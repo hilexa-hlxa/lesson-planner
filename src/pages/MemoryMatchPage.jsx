@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import SubjectPicker from '../components/SubjectPicker';
 import MemoryMatchGame from '../components/MemoryMatchGame';
-import { getDeckPairs } from '../data/subjectDecks';
+import { getDeckSortRound } from '../data/subjectDecks';
 import api from '../api';
 
 const T = {
@@ -17,10 +17,10 @@ export default function MemoryMatchPage({ lang, setLang, user, setUser, grantAch
   const t = T[lang] || T.RU;
   const navigate = useNavigate();
   const [subject, setSubject] = useState(null);
-  const [pairs, setPairs] = useState(null);
+  const [round, setRound] = useState(null);
 
-  const start = (s) => { setSubject(s); setPairs(getDeckPairs(s, lang)); };
-  const reset = () => { setSubject(null); setPairs(null); };
+  const start = (s) => { setSubject(s); setRound(getDeckSortRound(s, lang)); };
+  const reset = () => { setSubject(null); setRound(null); };
 
   const handleFinish = async (score, meta) => {
     if (meta.perfect) grantAchievement?.('memory_master');
@@ -33,15 +33,15 @@ export default function MemoryMatchPage({ lang, setLang, user, setUser, grantAch
 
       <main className="max-w-2xl mx-auto px-6">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={pairs || subject ? reset : () => navigate(-1)}
+          <button onClick={round || subject ? reset : () => navigate(-1)}
             className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
             <ArrowLeft size={24} />
           </button>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter italic break-words">{t.title}</h1>
         </div>
 
-        {pairs ? (
-          <MemoryMatchGame pairs={pairs} lang={lang} onFinish={handleFinish} onExit={reset} onReplay={() => start(subject)} />
+        {round ? (
+          <MemoryMatchGame round={round} lang={lang} onFinish={handleFinish} onExit={reset} onReplay={() => start(subject)} />
         ) : (
           <>
             <h2 className="font-black text-lg uppercase mb-4 text-slate-500">{t.pick}</h2>

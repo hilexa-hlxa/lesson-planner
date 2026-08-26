@@ -103,17 +103,13 @@ export const SUBJECT_DECKS = {
   },
 };
 
-/** Пары термин/определение на нужном языке — источник карточек для Memory Match. */
-export function getDeckPairs(subject, lang = "RU") {
-  const deck = SUBJECT_DECKS[subject];
-  if (!deck) return [];
-  return deck.terms.map((t, i) => {
-    const [term, definition] = t[lang] || t.RU;
-    return { id: i, term, definition };
-  });
-}
-
-/** Термины + категории на нужном языке — источник раунда для Sort It Out. */
+/**
+ * Термины + категории на нужном языке — источник раунда и для Sort It Out, и
+ * для Memory Match. Раньше Memory Match пары "термин ↔ определение" были
+ * заменены на "термин ↔ название темы": матчинг по объяснению проверял
+ * понимание предмета, а не память, и требовал прочитать целое предложение —
+ * то есть это была игра на академические знания под видом игры на память.
+ */
 export function getDeckSortRound(subject, lang = "RU") {
   const deck = SUBJECT_DECKS[subject];
   if (!deck) return { categories: [], items: [] };
