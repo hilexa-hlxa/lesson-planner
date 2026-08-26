@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -8,39 +8,60 @@ import { meCached } from "./apiCache"; // Импортируем ме-кэш
 import AuthModal from "./components/AuthModal";
 import Protected from "./components/Protected";
 
+// Каждая страница — отдельный чанк (см. ADR-0005): раньше все ~30 маршрутов,
+// включая мини-игры и учительские инструменты, паковались в один бандл
+// (877 КБ / 249 КБ gzip), и его целиком грузил даже гость на LandingPage.
+// LandingPage остаётся обычным импортом — это первый экран почти для всех,
+// и грузить его отдельным чанком означало бы лишний round-trip на каждый
+// первый визит. Остальное — lazy: страница скачивается только когда на неё
+// действительно переходят.
 import LandingPage from "./pages/LandingPage";
-import HubPage from "./pages/HubPage";
-import Dashboard from "./pages/Dashboard";
-import ProfilePage from "./pages/ProfilePage";
-import PromptsPage from "./pages/PromptsPage";
-import StudentJoinPage from "./pages/StudentJoinPage";
-import CreateTestPage from "./pages/CreateTestPage";
-import ToolsPage from './pages/ToolsPage';
-import GamesPage from './pages/GamesPage';
-import ClassesPage from './pages/ClassesPage';
-import ClassDetailPage from './pages/ClassDetailPage';
-import StudentClassesPage from './pages/StudentClassesPage';
-import WordlePage from './pages/WordlePage';
-import HangmanPage from './pages/HangmanPage';
-import MathBattlePage from './pages/MathBattlePage';
-import MemoryMatchPage from './pages/MemoryMatchPage';
-import WordSprintPage from './pages/WordSprintPage';
-import SortItOutPage from './pages/SortItOutPage';
-import TriviaRacePage from './pages/TriviaRacePage';
-import DailyChallengePage from './pages/DailyChallengePage';
-import LessonSummaryPage from './pages/LessonSummaryPage';
-import ReteachPlannerPage from './pages/ReteachPlannerPage';
-import ParentMessagePage from './pages/ParentMessagePage';
-import NotFoundPage from './pages/NotFoundPage';
-import PricingPage from './pages/PricingPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
+const HubPage = lazy(() => import("./pages/HubPage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const PromptsPage = lazy(() => import("./pages/PromptsPage"));
+const StudentJoinPage = lazy(() => import("./pages/StudentJoinPage"));
+const CreateTestPage = lazy(() => import("./pages/CreateTestPage"));
+const ToolsPage = lazy(() => import('./pages/ToolsPage'));
+const GamesPage = lazy(() => import('./pages/GamesPage'));
+const ClassesPage = lazy(() => import('./pages/ClassesPage'));
+const ClassDetailPage = lazy(() => import('./pages/ClassDetailPage'));
+const StudentClassesPage = lazy(() => import('./pages/StudentClassesPage'));
+const WordlePage = lazy(() => import('./pages/WordlePage'));
+const HangmanPage = lazy(() => import('./pages/HangmanPage'));
+const MathBattlePage = lazy(() => import('./pages/MathBattlePage'));
+const MemoryMatchPage = lazy(() => import('./pages/MemoryMatchPage'));
+const WordSprintPage = lazy(() => import('./pages/WordSprintPage'));
+const SortItOutPage = lazy(() => import('./pages/SortItOutPage'));
+const TriviaRacePage = lazy(() => import('./pages/TriviaRacePage'));
+const DailyChallengePage = lazy(() => import('./pages/DailyChallengePage'));
+const LessonSummaryPage = lazy(() => import('./pages/LessonSummaryPage'));
+const ReteachPlannerPage = lazy(() => import('./pages/ReteachPlannerPage'));
+const ParentMessagePage = lazy(() => import('./pages/ParentMessagePage'));
+const WorksheetGeneratorPage = lazy(() => import('./pages/WorksheetGeneratorPage'));
+const DifferentiatedWorksheetPage = lazy(() => import('./pages/DifferentiatedWorksheetPage'));
+const RubricBuilderPage = lazy(() => import('./pages/RubricBuilderPage'));
+const TranslateMaterialsPage = lazy(() => import('./pages/TranslateMaterialsPage'));
+const RandomGroupingPage = lazy(() => import('./pages/RandomGroupingPage'));
+const SeatingChartPage = lazy(() => import('./pages/SeatingChartPage'));
+const BehaviorLogPage = lazy(() => import('./pages/BehaviorLogPage'));
+const FlashcardExportPage = lazy(() => import('./pages/FlashcardExportPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const QuizPlayer = lazy(() => import("./components/QuizPlayer"));
 
 import { DEFAULT_PROMPT_CONFIG } from "./lib/prompt";
 import { achievementReward, achievementText } from "./lib/achievements";
 import ClassControlBar from './components/ClassControlBar';
-import QuizPlayer from "./components/QuizPlayer";
 import AchievementToast from "./components/AchievementToast";
+
+// Тот же вид, что и заглушка в Protected.jsx, — единообразный флеш между
+// переходом по ссылке и подгрузкой чанка страницы.
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">Loading...</div>
+);
 
 const Page = ({ children }) => (
   <motion.div
@@ -222,6 +243,7 @@ export default function App() {
         isFormValid={/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && pass.length >= 8}
       />
 
+      <Suspense fallback={<RouteFallback />}>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Page><LandingPage {...accessProps} setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} /></Page>} />
@@ -254,6 +276,14 @@ export default function App() {
           <Route path="/lesson-summary" element={<Page><Protected authReady={authReady} user={user}><LessonSummaryPage {...accessProps} /></Protected></Page>} />
           <Route path="/reteach-planner" element={<Page><Protected authReady={authReady} user={user}><ReteachPlannerPage {...accessProps} /></Protected></Page>} />
           <Route path="/parent-message" element={<Page><Protected authReady={authReady} user={user}><ParentMessagePage {...accessProps} /></Protected></Page>} />
+          <Route path="/worksheet-generator" element={<Page><Protected authReady={authReady} user={user}><WorksheetGeneratorPage {...accessProps} /></Protected></Page>} />
+          <Route path="/differentiated-worksheet" element={<Page><Protected authReady={authReady} user={user}><DifferentiatedWorksheetPage {...accessProps} /></Protected></Page>} />
+          <Route path="/rubric-builder" element={<Page><Protected authReady={authReady} user={user}><RubricBuilderPage {...accessProps} /></Protected></Page>} />
+          <Route path="/translate-materials" element={<Page><Protected authReady={authReady} user={user}><TranslateMaterialsPage {...accessProps} /></Protected></Page>} />
+          <Route path="/random-grouping" element={<Page><Protected authReady={authReady} user={user}><RandomGroupingPage {...accessProps} /></Protected></Page>} />
+          <Route path="/seating-chart" element={<Page><Protected authReady={authReady} user={user}><SeatingChartPage {...accessProps} /></Protected></Page>} />
+          <Route path="/behavior-log" element={<Page><Protected authReady={authReady} user={user}><BehaviorLogPage {...accessProps} /></Protected></Page>} />
+          <Route path="/flashcard-export" element={<Page><Protected authReady={authReady} user={user}><FlashcardExportPage {...accessProps} /></Protected></Page>} />
           <Route path="/play" element={<QuizPlayer {...accessProps} />} />
 
           <Route path="/pricing" element={<Page><PricingPage {...accessProps} setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} /></Page>} />
@@ -263,6 +293,7 @@ export default function App() {
           <Route path="*" element={<Page><NotFoundPage user={user} lang={lang} /></Page>} />
         </Routes>
       </AnimatePresence>
+      </Suspense>
 
       <AchievementToast
         achievement={activeAchievement && {

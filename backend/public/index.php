@@ -895,6 +895,24 @@ try {
     exit;
   }
 
+  // POST /api/export/simple-docx {title, content} — generic markdown-ish
+  // text to .docx, no template. Used by tools whose output isn't the
+  // lessonlab.kmj.v1 schema (Worksheet, Rubric Builder, Flashcards, ...).
+  if ($method === 'POST' && $path === '/api/export/simple-docx') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+
+    $title = trim((string)($body['title'] ?? 'export'));
+    $content = (string)($body['content'] ?? '');
+    if ($content === '') Response::error('Nothing to export', 400);
+
+    require __DIR__ . '/../vendor/autoload.php';
+    require __DIR__ . '/../src/SimpleDocxExport.php';
+
+    \App\SimpleDocxExport::export($title, $content);
+    exit;
+  }
+
   // ======================================================
   // Class Roster Routes
   // ======================================================
@@ -1860,6 +1878,68 @@ try {
     $stmt->execute($params);
 
     Response::ok(['history' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+  }
+
+  // ======================================================
+  // Behavior / Participation Log — quick positive/negative notes a teacher
+  // logs per student during class. Same ownership shape as coin_awards:
+  // teacher must own the class, student must be an approved member.
+  // ======================================================
+
+  if ($method === 'POST' && $path === '/api/behavior-notes') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    $classId = (int)($body['class_id'] ?? 0);
+    $studentId = (int)($body['student_id'] ?? 0);
+    $type = (string)($body['type'] ?? '');
+    $note = trim((string)($body['note'] ?? ''));
+    if (!in_array($type, ['positive', 'negative'], true)) Response::error('Invalid type', 400);
+    if (mb_strlen($note) > 500) $note = mb_substr($note, 0, 500);
+
+    $own = $db->pdo()->prepare("
+      SELECT 1 FROM classes c
+      JOIN class_members cm ON cm.class_id = c.id
+      WHERE c.id = :cid AND c.teacher_id = :tid AND cm.student_id = :sid AND cm.status = 'approved'
+    ");
+    $own->execute([':cid' => $classId, ':tid' => $u['id'], ':sid' => $studentId]);
+    if (!$own->fetchColumn()) Response::error('Access denied', 403);
+
+    $stmt = $db->pdo()->prepare("
+      INSERT INTO behavior_notes (teacher_id, class_id, student_id, type, note)
+      VALUES (:tid, :cid, :sid, :type, :note)
+      RETURNING id, created_at
+    ");
+    $stmt->execute([':tid' => $u['id'], ':cid' => $classId, ':sid' => $studentId, ':type' => $type, ':note' => $note]);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    Response::ok(['id' => (int)$row['id'], 'created_at' => $row['created_at']]);
+  }
+
+  if ($method === 'GET' && $path === '/api/behavior-notes') {
+    $u = $auth->currentUser();
+    if (!$u) Response::error('Unauthorized', 401);
+    if ($u['role'] !== 'teacher') Response::error('Teachers only', 403);
+
+    $classId = (int)($_GET['class_id'] ?? 0);
+    if ($classId <= 0) Response::error('class_id required', 400);
+
+    $own = $db->pdo()->prepare("SELECT 1 FROM classes WHERE id = :cid AND teacher_id = :tid");
+    $own->execute([':cid' => $classId, ':tid' => $u['id']]);
+    if (!$own->fetchColumn()) Response::error('Access denied', 403);
+
+    $stmt = $db->pdo()->prepare("
+      SELECT bn.id, bn.student_id, bn.type, bn.note, bn.created_at, u.display_name, u.email
+      FROM behavior_notes bn
+      JOIN users u ON u.id = bn.student_id
+      WHERE bn.class_id = :cid
+      ORDER BY bn.created_at DESC
+      LIMIT 100
+    ");
+    $stmt->execute([':cid' => $classId]);
+
+    Response::ok(['notes' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
   }
 
   error_log("404 Not Found: {$path}");

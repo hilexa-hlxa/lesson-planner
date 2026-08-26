@@ -232,6 +232,14 @@ const api = {
     },
   },
 
+  behaviorNotes: {
+    create: (class_id, student_id, type, note) => request('/behavior-notes', {
+      method: 'POST',
+      body: JSON.stringify({ class_id, student_id, type, note }),
+    }),
+    list: (classId) => request(`/behavior-notes?class_id=${encodeURIComponent(classId)}`, { method: 'GET' }),
+  },
+
   quiz: {
     // Учительские
     start: (id, class_id = null) => request('/quiz/start', {
