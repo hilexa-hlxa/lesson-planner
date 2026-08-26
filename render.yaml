@@ -17,6 +17,10 @@ services:
         sync: false
       - key: GEMINI_MODEL
         value: gemini-2.0-flash
+      - key: GROQ_API_KEY
+        sync: false          # preferred provider — set this and generation uses Groq, not Gemini
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
       - key: ALLOWED_ORIGIN
         sync: false          # set to the frontend Render URL after first deploy
       - key: COOKIE_SAMESITE

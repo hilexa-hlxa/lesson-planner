@@ -7,8 +7,10 @@ final class GenerateStream
 {
   public static function handle(array $config, ?array $body = null): void
   {
-    $apiKey = (string)($config['gemini']['api_key'] ?? '');
-    $model  = (string)($config['gemini']['model'] ?? 'gemini-2.0-flash');
+    $groqKey    = (string)($config['groq']['api_key'] ?? '');
+    $groqModel  = (string)($config['groq']['model'] ?? 'openai/gpt-oss-120b');
+    $geminiKey  = (string)($config['gemini']['api_key'] ?? '');
+    $geminiModel = (string)($config['gemini']['model'] ?? 'gemini-2.0-flash');
 
     // Body: либо передали из index.php, либо читаем сами
     $data = is_array($body) ? $body : [];
@@ -30,12 +32,28 @@ final class GenerateStream
     self::sseHeaders();
     header('X-Accel-Buffering: no');
 
-    // --- [НАЧАЛО ЗАГЛУШКИ] ---
-    // Если ключа нет (или он пустой), включаем режим симуляции
-    if ($apiKey === '') {
-      
-      // Текст фейкового теста в формате Markdown
-      $mockResponse = "## Тест: Веб-разработка (Демо режим)
+    // Провайдер выбирается по наличию ключа: Groq в приоритете (быстрее и
+    // дешевле для наших промптов), Gemini — если Groq не настроен, демо-режим
+    // — если не настроено вообще ничего.
+    if ($groqKey !== '') {
+      self::streamGroq($groqKey, $groqModel, $prompt, $config);
+      return;
+    }
+
+    if ($geminiKey !== '') {
+      self::streamGemini($geminiKey, $geminiModel, $prompt, $config);
+      return;
+    }
+
+    self::streamDemo();
+  }
+
+  // --- [НАЧАЛО ЗАГЛУШКИ] ---
+  // Если ни один ключ не задан, включаем режим симуляции
+  private static function streamDemo(): void
+  {
+    // Текст фейкового теста в формате Markdown
+    $mockResponse = "## Тест: Веб-разработка (Демо режим)
 
 1. **Что означает аббревиатура HTML?**
    - [ ] Hyper Text Make Link
@@ -62,28 +80,105 @@ final class GenerateStream
    - [ ] Операционная система
 ";
 
-      // Эмулируем "мышление" ИИ (пауза перед стартом)
-      usleep(500000); // 0.5 сек
+    // Эмулируем "мышление" ИИ (пауза перед стартом)
+    usleep(500000); // 0.5 сек
 
-      // Разбиваем текст на кусочки по 15 символов, чтобы было похоже на печатание
-      $chunks = mb_str_split($mockResponse, 15);
+    // Разбиваем текст на кусочки по 15 символов, чтобы было похоже на печатание
+    $chunks = mb_str_split($mockResponse, 15);
 
-      foreach ($chunks as $chunk) {
-          self::sendEvent(['type' => 'delta', 'text' => $chunk]);
-          self::flushNow();
-          
-          // Случайная задержка между "ударами по клавишам" (от 0.03 до 0.1 сек)
-          usleep(rand(30000, 100000)); 
-      }
+    foreach ($chunks as $chunk) {
+      self::sendEvent(['type' => 'delta', 'text' => $chunk]);
+      self::flushNow();
 
-      // Сообщаем, что генерация завершена
+      // Случайная задержка между "ударами по клавишам" (от 0.03 до 0.1 сек)
+      usleep(rand(30000, 100000));
+    }
+
+    self::sendEvent(['type' => 'done']);
+    self::flushNow();
+  }
+  // --- [КОНЕЦ ЗАГЛУШКИ] ---
+
+  // Groq — OpenAI-совместимый chat/completions с stream:true. Ответ приходит
+  // построчно как "data: {...}\n\n", последняя строка — "data: [DONE]".
+  private static function streamGroq(string $apiKey, string $model, string $prompt, array $config): void
+  {
+    $url = 'https://api.groq.com/openai/v1/chat/completions';
+
+    $payload = json_encode([
+      'model'    => $model,
+      'messages' => [['role' => 'user', 'content' => $prompt]],
+      'stream'   => true,
+    ], JSON_UNESCAPED_UNICODE);
+
+    $cafile = (string)($config['ssl']['cafile'] ?? '');
+
+    $buf = '';
+    $ch = curl_init($url);
+
+    $opts = [
+      CURLOPT_POST           => true,
+      CURLOPT_HTTPHEADER     => [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $apiKey,
+      ],
+      CURLOPT_POSTFIELDS     => $payload,
+      CURLOPT_RETURNTRANSFER => false,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_TIMEOUT        => 0,
+      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf): int {
+        $buf .= $chunk;
+        while (($pos = strpos($buf, "\n")) !== false) {
+          $line = trim(substr($buf, 0, $pos));
+          $buf = substr($buf, $pos + 1);
+
+          if ($line === '' || strncmp($line, 'data:', 5) !== 0) continue;
+          $payload = trim(substr($line, 5));
+          if ($payload === '[DONE]') continue;
+
+          $obj = json_decode($payload, true);
+          if (!is_array($obj)) continue;
+
+          $text = $obj['choices'][0]['delta']['content'] ?? null;
+          if (is_string($text) && $text !== '') {
+            self::sendEvent(['type' => 'delta', 'text' => $text]);
+            self::flushNow();
+          }
+        }
+        return strlen($chunk);
+      },
+    ];
+
+    if ($cafile !== '' && is_file($cafile)) {
+      $opts[CURLOPT_CAINFO] = $cafile;
+      @putenv('SSL_CERT_FILE=' . $cafile);
+    }
+
+    curl_setopt_array($ch, $opts);
+
+    $ok = curl_exec($ch);
+    if ($ok === false) {
+      $err = curl_error($ch);
+      self::sendEvent(['type' => 'error', 'message' => $err ?: 'curl_exec failed']);
       self::sendEvent(['type' => 'done']);
       self::flushNow();
-      return; 
+      return;
     }
-    // --- [КОНЕЦ ЗАГЛУШКИ] ---
 
-    // Дальше идет старый код для реального Gemini (он сработает, если ты потом добавишь ключ)
+    $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    if ($code >= 400) {
+      self::sendEvent(['type' => 'error', 'message' => "Groq HTTP {$code}"]);
+      self::sendEvent(['type' => 'done']);
+      self::flushNow();
+      return;
+    }
+
+    self::sendEvent(['type' => 'done']);
+    self::flushNow();
+  }
+
+  private static function streamGemini(string $apiKey, string $model, string $prompt, array $config): void
+  {
     $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
       . rawurlencode($model)
       . ':streamGenerateContent?key='

@@ -18,6 +18,14 @@ $cfg = [
     'api_key' => null,
     'model'   => 'gemini-2.0-flash',
   ],
+  // Groq — предпочитаемый провайдер (см. GenerateStream::handle): если ключ
+  // задан, генерация идёт через него, а не через Gemini. Оставляем оба блока
+  // конфига независимыми, чтобы можно было держать оба ключа и переключаться
+  // без правки кода.
+  'groq' => [
+    'api_key' => null,
+    'model'   => 'openai/gpt-oss-120b',
+  ],
   'ssl' => [
    'cafile' => __DIR__ . '/extras/ssl/cacert.pem',
   ],
@@ -39,6 +47,9 @@ $cfg['db']['pass'] = $cfg['db']['pass'] ?: (getenv('DB_PASS') ?: null);
 
 $cfg['gemini']['api_key'] = $cfg['gemini']['api_key'] ?: (getenv('GEMINI_API_KEY') ?: null);
 $cfg['gemini']['model']   = $cfg['gemini']['model']   ?: (getenv('GEMINI_MODEL') ?: 'gemini-2.0-flash');
+
+$cfg['groq']['api_key'] = $cfg['groq']['api_key'] ?: (getenv('GROQ_API_KEY') ?: null);
+$cfg['groq']['model']   = $cfg['groq']['model']   ?: (getenv('GROQ_MODEL') ?: 'openai/gpt-oss-120b');
 
 // 3) Флаг Secure у cookie сессии.
 // Раньше здесь стояло жёсткое false с комментарием «true на https», то есть
