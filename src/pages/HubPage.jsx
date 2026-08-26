@@ -8,6 +8,17 @@ import api from "../api";
 
 const ONBOARDING_KEY = "lp_onboarding_dismissed_v1";
 
+// Русское согласование числительных: 1 день, 2 дня, 5 дней, 21 день, 11 дней...
+// "1 дней подряд" на серии в один день выглядело как опечатка, а не как мелочь —
+// это первое, что видит ученик после самого первого прохождения.
+function pluralRu(n, one, few, many) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} ${one}`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} ${few}`;
+  return `${n} ${many}`;
+}
+
 const ONBOARDING = {
   RU: {
     badge: "Первый вход",
@@ -54,9 +65,9 @@ export default function HubPage({ lang, setLang, user, setUser, ...accessProps }
   const ob = ONBOARDING[lang] || ONBOARDING.RU;
 
   const hubT = {
-    RU: { teacher: "ДЛЯ УЧИТЕЛЕЙ", teacherDesc: "Создание и автоматизация уроков, AI помощник, планы", student: "ДЛЯ УЧЕНИКОВ", studentDesc: "Обучающие игры, тесты, награды и прогресс", denied: "ТОЛЬКО ДЛЯ УЧИТЕЛЕЙ", gamesTitle: "ИГРОТЕКА", classes: "МОИ КЛАССЫ", classesTeacherDesc: "Управление классами, ученики, история тестов", classesStudentDesc: "Ваши классы и заявки", streakLabel: "дней подряд", streakCta: "Пройти вызов дня" },
-    KZ: { teacher: "МҰҒАЛІМДЕРГЕ", teacherDesc: "Сабақтарды құрастыру және автоматтандыру, AI көмекші", student: "ОҚУШЫЛАРҒА", studentDesc: "Оқу ойындары, тесттер, марапаттар", denied: "МҰҒАЛІМДЕРГЕ ҒАНА", gamesTitle: "ОЙЫН ХАБЫ", classes: "МЕНІҢ СЫНЫПТАРЫМ", classesTeacherDesc: "Сыныптарды басқару, оқушылар, тест тарихы", classesStudentDesc: "Сіздің сыныптарыңыз және өтініштер", streakLabel: "күн қатарынан", streakCta: "Күндік сынақты өту" },
-    EN: { teacher: "FOR TEACHERS", teacherDesc: "Lesson planning, automation, AI assistant", student: "FOR STUDENTS", studentDesc: "Learning games, quizzes, rewards", denied: "TEACHERS ONLY", gamesTitle: "GAME LIBRARY", classes: "MY CLASSES", classesTeacherDesc: "Manage classes, students, quiz history", classesStudentDesc: "Your classes and applications", streakLabel: "day streak", streakCta: "Take today's challenge" }
+    RU: { teacher: "ДЛЯ УЧИТЕЛЕЙ", teacherDesc: "Создание и автоматизация уроков, AI помощник, планы", student: "ДЛЯ УЧЕНИКОВ", studentDesc: "Обучающие игры, тесты, награды и прогресс", denied: "ТОЛЬКО ДЛЯ УЧИТЕЛЕЙ", gamesTitle: "ИГРОТЕКА", classes: "МОИ КЛАССЫ", classesTeacherDesc: "Управление классами, ученики, история тестов", classesStudentDesc: "Ваши классы и заявки", streakLabel: (n) => `${pluralRu(n, 'день', 'дня', 'дней')} подряд`, streakCta: "Пройти вызов дня" },
+    KZ: { teacher: "МҰҒАЛІМДЕРГЕ", teacherDesc: "Сабақтарды құрастыру және автоматтандыру, AI көмекші", student: "ОҚУШЫЛАРҒА", studentDesc: "Оқу ойындары, тесттер, марапаттар", denied: "МҰҒАЛІМДЕРГЕ ҒАНА", gamesTitle: "ОЙЫН ХАБЫ", classes: "МЕНІҢ СЫНЫПТАРЫМ", classesTeacherDesc: "Сыныптарды басқару, оқушылар, тест тарихы", classesStudentDesc: "Сіздің сыныптарыңыз және өтініштер", streakLabel: (n) => `${n} күн қатарынан`, streakCta: "Күндік сынақты өту" },
+    EN: { teacher: "FOR TEACHERS", teacherDesc: "Lesson planning, automation, AI assistant", student: "FOR STUDENTS", studentDesc: "Learning games, quizzes, rewards", denied: "TEACHERS ONLY", gamesTitle: "GAME LIBRARY", classes: "MY CLASSES", classesTeacherDesc: "Manage classes, students, quiz history", classesStudentDesc: "Your classes and applications", streakLabel: (n) => `${n} day streak`, streakCta: "Take today's challenge" }
   }[lang] || {};
 
   // Серия показывается только ученикам — Daily Streak Challenge их фича;
@@ -120,7 +131,7 @@ export default function HubPage({ lang, setLang, user, setUser, ...accessProps }
               title={hubT.streakCta}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-[3px] border-black dark:border-white bg-orange-100 dark:bg-orange-900/30 font-black text-orange-600 dark:text-orange-300 text-sm hover:-translate-y-0.5 transition-transform"
             >
-              <Flame size={18} /> {streak.current_streak > 0 ? `${streak.current_streak} ${hubT.streakLabel}` : hubT.streakCta}
+              <Flame size={18} /> {streak.current_streak > 0 ? hubT.streakLabel(streak.current_streak) : hubT.streakCta}
             </Link>
           </div>
         )}
