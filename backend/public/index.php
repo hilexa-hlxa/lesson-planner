@@ -16,24 +16,13 @@ const QUIZ_SESSION_TTL_SECONDS = 4 * 60 * 60;
 // Что бывает в generations.type. Неизвестное значение считаем планом урока.
 const GENERATION_TYPES = ['lesson_plan', 'test'];
 
-$config = require __DIR__ . '/../config.php';
-
-require __DIR__ . '/../src/DB.php';
-require __DIR__ . '/../src/AuthService.php';
-require __DIR__ . '/../src/Response.php';
-require __DIR__ . '/../src/QuizParser.php';
-require __DIR__ . '/../src/RateLimiter.php';
-require __DIR__ . '/../src/MathProblemGenerator.php';
-
-try {
-  $db   = new DB($config['db']);
-  $auth = new AuthService($db->pdo(), $config['auth']);
-} catch (Throwable $e) {
-  error_log("Bootstrap failed: " . $e->getMessage());
-  Response::error('Service temporarily unavailable', 503);
-}
-
 // ---------------- CORS Configuration ----------------
+// Раньше это шло ПОСЛЕ подключения к базе — значит, каждый preflight
+// OPTIONS (а браузер шлёт его перед любым "непростым" cross-origin запросом:
+// Content-Type: application/json, credentials) сначала открывал соединение
+// с Supabase и только потом отвечал 204 и завершал работу, ничего в базе не
+// делая. CORS не зависит ни от $config, ни от базы — двигаем его в начало,
+// чтобы OPTIONS выходил до require'ов и до new DB().
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $allowedOrigins = array_values(array_filter([
   'http://localhost:5173',
@@ -56,6 +45,23 @@ header("Access-Control-Max-Age: 600");
 if ($method === 'OPTIONS') {
   http_response_code(204);
   exit;
+}
+
+$config = require __DIR__ . '/../config.php';
+
+require __DIR__ . '/../src/DB.php';
+require __DIR__ . '/../src/AuthService.php';
+require __DIR__ . '/../src/Response.php';
+require __DIR__ . '/../src/QuizParser.php';
+require __DIR__ . '/../src/RateLimiter.php';
+require __DIR__ . '/../src/MathProblemGenerator.php';
+
+try {
+  $db   = new DB($config['db']);
+  $auth = new AuthService($db->pdo(), $config['auth']);
+} catch (Throwable $e) {
+  error_log("Bootstrap failed: " . $e->getMessage());
+  Response::error('Service temporarily unavailable', 503);
 }
 
 // ---------------- Helper Functions ----------------
