@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, FileQuestion, Lightbulb, ClipboardList, RotateCw, Users, ListChecks, X } from 'lucide-react';
+import { BookOpen, FileQuestion, Lightbulb, ClipboardList, RotateCw, Users, ListChecks, X, Repeat, MessageCircle } from 'lucide-react';
 import { tr } from "../lib/i18n";
 import Header from "../components/Header";
 import FortuneWheel from "../components/FortuneWheel";
@@ -198,7 +198,57 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
             </div>
           </button>
 
-          {/* 5. Генератор идей (Заглушка) */}
+          {/* 5. Повторение западающих тем */}
+          <Link
+            to="/reteach-planner"
+            className="group bg-white dark:bg-zinc-900 p-8 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#dc2626] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between h-[320px]"
+          >
+            <div>
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-6 border-2 border-black/10">
+                <Repeat size={32} className="text-red-600" />
+              </div>
+              <h3 className="text-3xl font-black uppercase tracking-tight mb-2">
+                {lang === 'EN' ? "Reteach Planner" : lang === 'KZ' ? "Қайта өту" : "Переповторение"}
+              </h3>
+              <p className="text-slate-500 font-bold text-sm leading-tight">
+                {lang === 'EN' ? "Find the class's most-missed questions and get a targeted mini-lesson." :
+                 lang === 'KZ' ? "Сынып ең көп қателескен сұрақтарды тауып, нақты қайталау жоспарын ал." :
+                 "Найди вопросы, где класс чаще всего ошибался, и получи план повторения."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-xs tracking-widest bg-black text-white px-4 py-2 rounded-full">
+                   {tr(lang, "hub.go")}
+               </span>
+            </div>
+          </Link>
+
+          {/* 6. Сообщение родителю */}
+          <Link
+            to="/parent-message"
+            className="group bg-white dark:bg-zinc-900 p-8 rounded-[40px] border-[4px] border-black dark:border-white shadow-[8px_8px_0px_0px_#0891b2] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col justify-between h-[320px]"
+          >
+            <div>
+              <div className="w-16 h-16 bg-cyan-100 dark:bg-cyan-900/30 rounded-2xl flex items-center justify-center mb-6 border-2 border-black/10">
+                <MessageCircle size={32} className="text-cyan-600" />
+              </div>
+              <h3 className="text-3xl font-black uppercase tracking-tight mb-2">
+                {lang === 'EN' ? "Parent Message" : lang === 'KZ' ? "Ата-анаға хабарлама" : "Сообщение родителю"}
+              </h3>
+              <p className="text-slate-500 font-bold text-sm leading-tight">
+                {lang === 'EN' ? "Draft a Kundelik-ready progress note from a student's real test history." :
+                 lang === 'KZ' ? "Оқушының нақты тест тарихы негізінде Kundelik-ке дайын хабарлама жаса." :
+                 "Составь готовое для Kundelik сообщение по реальной истории тестов ученика."}
+              </p>
+            </div>
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+               <span className="font-black uppercase text-xs tracking-widest bg-black text-white px-4 py-2 rounded-full">
+                   {tr(lang, "hub.go")}
+               </span>
+            </div>
+          </Link>
+
+          {/* 7. Генератор идей (Заглушка) */}
           <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[40px] p-8 flex flex-col items-center justify-center text-slate-400 h-[320px] group cursor-not-allowed select-none">
             <Lightbulb size={48} className="mb-4 opacity-50 group-hover:text-yellow-500 transition-colors" />
             <span className="font-black uppercase text-lg tracking-widest opacity-60">

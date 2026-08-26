@@ -1808,12 +1808,36 @@ try {
   // Student History Routes
   // ======================================================
 
-  // GET /api/student/history?class_id=X
+  // GET /api/student/history?class_id=X[&student_id=Y]
+  // student_id — учитель смотрит историю конкретного ученика своего класса
+  // (нужно для Reteach Planner/Parent Message Drafter); без него — история
+  // текущего пользователя, как и раньше.
   if ($method === 'GET' && $path === '/api/student/history') {
     $u = $auth->currentUser();
     if (!$u) Response::error('Unauthorized', 401);
 
     $classId = isset($_GET['class_id']) ? (int)$_GET['class_id'] : 0;
+    $requestedStudentId = isset($_GET['student_id']) ? (int)$_GET['student_id'] : 0;
+
+    $studentId = $u['id'];
+    // class_id у Теста — необязательная привязка, выставляется отдельно от
+    // членства в классе (CONTEXT.md: "Тест можно привязать к Классу"), и часто
+    // пуста. Фильтровать по ней историю ученика для учителя означало бы молча
+    // терять как раз те попытки, ради которых Reteach Planner/Parent Message
+    // сюда и обращаются — членство в классе уже доказано ниже, этого достаточно.
+    $applyClassFilter = true;
+    if ($requestedStudentId > 0 && $requestedStudentId !== $u['id']) {
+      if ($u['role'] !== 'teacher' || $classId <= 0) Response::error('Access denied', 403);
+      $own = $db->pdo()->prepare("
+        SELECT 1 FROM classes c
+        JOIN class_members cm ON cm.class_id = c.id
+        WHERE c.id = :cid AND c.teacher_id = :tid AND cm.student_id = :sid AND cm.status = 'approved'
+      ");
+      $own->execute([':cid' => $classId, ':tid' => $u['id'], ':sid' => $requestedStudentId]);
+      if (!$own->fetchColumn()) Response::error('Access denied', 403);
+      $studentId = $requestedStudentId;
+      $applyClassFilter = false;
+    }
 
     $sql = "
       SELECT g.id AS quiz_id, g.topic, g.subject, g.result_md,
@@ -1823,9 +1847,9 @@ try {
       JOIN generations g ON g.id = qr.quiz_id
       WHERE qr.student_id = :sid
     ";
-    $params = [':sid' => $u['id']];
+    $params = [':sid' => $studentId];
 
-    if ($classId > 0) {
+    if ($applyClassFilter && $classId > 0) {
       $sql .= " AND g.class_id = :cid";
       $params[':cid'] = $classId;
     }

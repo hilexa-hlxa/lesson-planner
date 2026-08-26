@@ -29,6 +29,8 @@ import SortItOutPage from './pages/SortItOutPage';
 import TriviaRacePage from './pages/TriviaRacePage';
 import DailyChallengePage from './pages/DailyChallengePage';
 import LessonSummaryPage from './pages/LessonSummaryPage';
+import ReteachPlannerPage from './pages/ReteachPlannerPage';
+import ParentMessagePage from './pages/ParentMessagePage';
 import NotFoundPage from './pages/NotFoundPage';
 import PricingPage from './pages/PricingPage';
 import PrivacyPage from './pages/PrivacyPage';
@@ -250,6 +252,8 @@ export default function App() {
           <Route path="/trivia-race" element={<Page><Protected authReady={authReady} user={user}><TriviaRacePage {...accessProps} /></Protected></Page>} />
           <Route path="/daily-challenge" element={<Page><Protected authReady={authReady} user={user}><DailyChallengePage {...accessProps} /></Protected></Page>} />
           <Route path="/lesson-summary" element={<Page><Protected authReady={authReady} user={user}><LessonSummaryPage {...accessProps} /></Protected></Page>} />
+          <Route path="/reteach-planner" element={<Page><Protected authReady={authReady} user={user}><ReteachPlannerPage {...accessProps} /></Protected></Page>} />
+          <Route path="/parent-message" element={<Page><Protected authReady={authReady} user={user}><ParentMessagePage {...accessProps} /></Protected></Page>} />
           <Route path="/play" element={<QuizPlayer {...accessProps} />} />
 
           <Route path="/pricing" element={<Page><PricingPage {...accessProps} setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} /></Page>} />

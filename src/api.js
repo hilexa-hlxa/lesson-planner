@@ -221,7 +221,15 @@ const api = {
   },
 
   student: {
-    history: (classId) => request(`/student/history${classId ? `?class_id=${classId}` : ''}`, { method: 'GET' }),
+    // studentId — учитель смотрит историю ученика своего класса (см. index.php);
+    // без него — история текущего пользователя, как и раньше.
+    history: (classId, studentId) => {
+      const params = new URLSearchParams();
+      if (classId) params.set('class_id', classId);
+      if (studentId) params.set('student_id', studentId);
+      const qs = params.toString();
+      return request(`/student/history${qs ? `?${qs}` : ''}`, { method: 'GET' });
+    },
   },
 
   quiz: {
