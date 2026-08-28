@@ -147,8 +147,8 @@ export default function ParentMessagePage({ lang, setLang, user, setUser, ...acc
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left: pick class/student/tone */}
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
-            <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.pickClass}</label>
-            {classes.length === 0 && <p className="text-slate-400 font-bold text-sm mb-3">{t.noClasses}</p>}
+            <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.pickClass}</label>
+            {classes.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-3">{t.noClasses}</p>}
             <div className="flex flex-wrap gap-2 mb-5">
               {classes.map((c) => (
                 <button key={c.id} onClick={() => pickClass(c)}
@@ -160,8 +160,8 @@ export default function ParentMessagePage({ lang, setLang, user, setUser, ...acc
 
             {cls && (
               <>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.pickStudent}</label>
-                {members.length === 0 && <p className="text-slate-400 font-bold text-sm mb-3">{t.noStudents}</p>}
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.pickStudent}</label>
+                {members.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-3">{t.noStudents}</p>}
                 <div className="flex flex-col gap-2 mb-5">
                   {members.map((m) => {
                     const name = m.display_name || [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email;
@@ -176,12 +176,12 @@ export default function ParentMessagePage({ lang, setLang, user, setUser, ...acc
               </>
             )}
 
-            {loading && <p className="font-bold text-sm text-slate-400 animate-pulse">...</p>}
+            {loading && <p className="font-bold text-sm text-slate-500 dark:text-slate-400 animate-pulse">...</p>}
             {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
 
             {history && history.length > 0 && (
               <>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.tone}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.tone}</label>
                 <div className="flex gap-2 mb-5">
                   <button onClick={() => setTone('friendly')}
                     className={`flex-1 py-2 rounded-xl border-[3px] font-bold text-sm ${tone === 'friendly' ? 'border-black dark:border-white bg-slate-100 dark:bg-zinc-800' : 'border-black/20 dark:border-white/20'}`}>
@@ -207,7 +207,7 @@ export default function ParentMessagePage({ lang, setLang, user, setUser, ...acc
           {/* Right: output */}
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <span className="font-black text-xs uppercase tracking-widest text-slate-400">{t.result}</span>
+              <span className="font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">{t.result}</span>
               {output && (
                 <button onClick={handleCopy}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-black dark:border-white font-black text-sm uppercase hover:bg-black/5 dark:hover:bg-white/10 transition-colors">

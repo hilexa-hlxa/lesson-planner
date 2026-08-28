@@ -420,7 +420,7 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
           </Link>
 
           {/* 15. Генератор идей (Заглушка) */}
-          <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[40px] p-8 flex flex-col items-center justify-center text-slate-400 h-[320px] group cursor-not-allowed select-none">
+          <div className="border-[4px] border-dashed border-slate-300 dark:border-zinc-800 rounded-[40px] p-8 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 h-[320px] group cursor-not-allowed select-none">
             <Lightbulb size={48} className="mb-4 opacity-50 group-hover:text-yellow-500 transition-colors" />
             <span className="font-black uppercase text-lg tracking-widest opacity-60">
                 {lang === 'EN' ? "Idea Generator" : lang === 'KZ' ? "Идея генераторы" : "Генератор идей"}
@@ -471,7 +471,7 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
               <X size={24} />
             </button>
             <h2 className="text-2xl font-black uppercase mb-6">{wt.pickClass}</h2>
-            {classes.length === 0 && <p className="text-slate-400 font-bold text-sm">{wt.noClasses}</p>}
+            {classes.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">{wt.noClasses}</p>}
             <div className="flex flex-col gap-2">
               {classes.map((c) => (
                 <button key={c.id} onClick={() => pickClass(c.id)}

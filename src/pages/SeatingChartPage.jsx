@@ -148,8 +148,8 @@ export default function SeatingChartPage({ lang, setLang, user, setUser, ...acce
         </div>
 
         <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] mb-8">
-          <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.pickClass}</label>
-          {classes.length === 0 && <p className="text-slate-400 font-bold text-sm mb-3">{t.noClasses}</p>}
+          <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.pickClass}</label>
+          {classes.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-3">{t.noClasses}</p>}
           <div className="flex flex-wrap gap-2 mb-5">
             {classes.map((c) => (
               <button key={c.id} onClick={() => pickClass(c)}
@@ -159,25 +159,25 @@ export default function SeatingChartPage({ lang, setLang, user, setUser, ...acce
             ))}
           </div>
 
-          {cls && members.length === 0 && <p className="text-slate-400 font-bold text-sm">{t.noStudents}</p>}
+          {cls && members.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">{t.noStudents}</p>}
 
           {cls && members.length > 0 && (
             <>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.rows}</label>
+                  <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.rows}</label>
                   <input type="number" min={1} max={10} value={rows} onChange={(e) => setRows(Math.max(1, Number(e.target.value)))}
                     aria-label={t.rows}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none" />
                 </div>
                 <div>
-                  <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.cols}</label>
+                  <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.cols}</label>
                   <input type="number" min={1} max={10} value={cols} onChange={(e) => setCols(Math.max(1, Number(e.target.value)))}
                     aria-label={t.cols}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none" />
                 </div>
               </div>
-              <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.keepApart}</label>
+              <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.keepApart}</label>
               <textarea value={keepApart} onChange={(e) => setKeepApart(e.target.value)} rows={3}
                 aria-label={t.keepApart}
                 className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none resize-none mb-4"

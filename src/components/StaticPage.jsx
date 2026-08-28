@@ -19,7 +19,7 @@ export default function StaticPage({ lang, setLang, user, setUser, title, subtit
           <p className="text-slate-500 dark:text-zinc-400 leading-relaxed text-base sm:text-lg mb-4">{subtitle}</p>
         )}
         {updated && (
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-10">{updated}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-10">{updated}</p>
         )}
 
         <div className="space-y-8">{children}</div>

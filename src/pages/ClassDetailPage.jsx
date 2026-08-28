@@ -112,9 +112,9 @@ export default function ClassDetailPage({ lang, setLang, user, setUser, ...acces
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter italic break-words min-w-0">{cls?.name}</h1>
           {cls?.join_code && (
             <button onClick={copyCode} className="flex items-center gap-3 px-5 py-3 bg-white dark:bg-zinc-900 border-4 border-black dark:border-white rounded-2xl shadow-[4px_4px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all">
-              <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">{t.code}:</span>
+              <span className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-widest">{t.code}:</span>
               <span className="font-mono font-black text-2xl tracking-widest">{cls.join_code}</span>
-              {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} className="text-slate-400" />}
+              {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} className="text-slate-500 dark:text-slate-400" />}
             </button>
           )}
         </div>
@@ -156,7 +156,7 @@ export default function ClassDetailPage({ lang, setLang, user, setUser, ...acces
                     <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-orange-50 dark:bg-orange-950/30 rounded-2xl border-2 border-orange-200 dark:border-orange-800">
                       <div>
                         <div className="font-black">{studentName(m)}</div>
-                        <div className="text-slate-400 text-sm">{m.email}{m.phone ? ` · ${m.phone}` : ''}</div>
+                        <div className="text-slate-500 dark:text-slate-400 text-sm">{m.email}{m.phone ? ` · ${m.phone}` : ''}</div>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => handleApprove(m.student_id)} className="px-4 py-2 bg-green-600 text-white text-xs font-black uppercase rounded-xl border-2 border-black hover:bg-green-700 transition-colors">
@@ -178,14 +178,14 @@ export default function ClassDetailPage({ lang, setLang, user, setUser, ...acces
                 {t.approved} ({approved.length})
               </h2>
               {approved.length === 0 ? (
-                <p className="text-slate-400 font-bold">{t.noMembers}</p>
+                <p className="text-slate-500 dark:text-slate-400 font-bold">{t.noMembers}</p>
               ) : (
                 <div className="space-y-3">
                   {approved.map(m => (
                     <div key={m.id} className="flex items-center justify-between gap-3 px-5 py-4 bg-white dark:bg-zinc-900 rounded-2xl border-2 border-black/10 dark:border-white/10">
                       <div>
                         <div className="font-black">{studentName(m)}</div>
-                        <div className="text-slate-400 text-sm">{m.email}{m.phone ? ` · ${m.phone}` : ''}</div>
+                        <div className="text-slate-500 dark:text-slate-400 text-sm">{m.email}{m.phone ? ` · ${m.phone}` : ''}</div>
                       </div>
                       <button onClick={() => handleKick(m.student_id, studentName(m))} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors">
                         <Trash2 size={16} />
@@ -202,14 +202,14 @@ export default function ClassDetailPage({ lang, setLang, user, setUser, ...acces
         {tab === "quizzes" && (
           <div>
             {quizzes.length === 0 ? (
-              <p className="text-slate-400 font-bold py-8">{t.noQuizzes}</p>
+              <p className="text-slate-500 dark:text-slate-400 font-bold py-8">{t.noQuizzes}</p>
             ) : (
               <div className="space-y-4">
                 {quizzes.map(q => (
                   <div key={q.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 sm:px-6 py-5 bg-white dark:bg-zinc-900 rounded-2xl border-2 border-black/10 dark:border-white/10">
                     <div>
                       <div className="font-black text-lg">{q.topic}</div>
-                      <div className="text-slate-400 text-sm font-bold">{q.subject} · {new Date(q.created_at).toLocaleDateString()}</div>
+                      <div className="text-slate-500 dark:text-slate-400 text-sm font-bold">{q.subject} · {new Date(q.created_at).toLocaleDateString()}</div>
                     </div>
                     <div className="flex items-center gap-6 text-right shrink-0">
                       <div className="text-slate-500 text-sm font-bold">{q.result_count} {t.results}</div>

@@ -166,7 +166,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
 
             <div className="space-y-4">
               <div>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.subject}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.subject}</label>
                 <input
                   value={form.subject}
                   onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
@@ -177,7 +177,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
               </div>
 
               <div>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.topic}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.topic}</label>
                 <input
                   value={form.topic}
                   onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
@@ -188,7 +188,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
               </div>
 
               <div>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.notes}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.notes}</label>
                 <textarea
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
@@ -213,7 +213,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
           {/* Output */}
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <span className="font-black text-xs uppercase tracking-widest text-slate-400">{t.result}</span>
+              <span className="font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">{t.result}</span>
               {output && (
                 <button
                   onClick={handleCopy}

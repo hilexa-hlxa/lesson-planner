@@ -512,7 +512,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
             {savedTests.length === 0 && (
                 <div className="flex flex-col items-center text-center px-4 py-10 rounded-2xl border-2 border-dashed border-black/10 dark:border-white/10">
                     <ClipboardList size={28} className="mb-3 text-slate-300" />
-                    <p className="text-xs font-bold text-slate-400 leading-relaxed">{tr.empty}</p>
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed">{tr.empty}</p>
                 </div>
             )}
             {savedTests.map((item) => (

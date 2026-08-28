@@ -94,8 +94,8 @@ export default function RandomGroupingPage({ lang, setLang, user, setUser, ...ac
         </div>
 
         <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] mb-8">
-          <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.pickClass}</label>
-          {classes.length === 0 && <p className="text-slate-400 font-bold text-sm mb-3">{t.noClasses}</p>}
+          <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.pickClass}</label>
+          {classes.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-3">{t.noClasses}</p>}
           <div className="flex flex-wrap gap-2 mb-5">
             {classes.map((c) => (
               <button key={c.id} onClick={() => pickClass(c)}
@@ -105,11 +105,11 @@ export default function RandomGroupingPage({ lang, setLang, user, setUser, ...ac
             ))}
           </div>
 
-          {cls && members.length === 0 && <p className="text-slate-400 font-bold text-sm">{t.noStudents}</p>}
+          {cls && members.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">{t.noStudents}</p>}
 
           {cls && members.length > 0 && (
             <>
-              <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.groupSize}</label>
+              <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.groupSize}</label>
               <div className="flex gap-3">
                 <button onClick={() => { setSize(2); doShuffle(2); }}
                   className={`flex-1 py-3 rounded-xl border-[3px] font-black uppercase text-sm ${size === 2 ? 'border-black dark:border-white bg-slate-100 dark:bg-zinc-800' : 'border-black/20 dark:border-white/20'}`}>

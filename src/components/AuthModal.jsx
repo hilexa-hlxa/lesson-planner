@@ -185,7 +185,7 @@ export default function AuthModal({
             className={`w-full py-6 rounded-2xl font-black uppercase tracking-widest text-lg transition-all ${
               isFormValid && !loading
                 ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                : "bg-slate-200 dark:bg-zinc-800 text-slate-400 opacity-50"
+                : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 opacity-50"
             }`}
           >
             {loading ? "..." : (mode === "signup" ? (authT.signupEnter || authT.enter) : authT.enter)}

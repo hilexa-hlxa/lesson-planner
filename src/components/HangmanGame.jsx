@@ -86,7 +86,7 @@ export default function HangmanGame({ word, lang = 'RU', onComplete, onExit }) {
         ))}
       </div>
 
-      <p className="font-black text-sm uppercase text-slate-400">{t.wrong}: {wrongCount} / {MAX_WRONG}</p>
+      <p className="font-black text-sm uppercase text-slate-500 dark:text-slate-400">{t.wrong}: {wrongCount} / {MAX_WRONG}</p>
 
       {status !== 'playing' && (
         <div className={`w-full p-5 rounded-2xl border-4 text-center ${status === 'won' ? 'bg-green-50 dark:bg-green-900/30 border-green-500 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/30 border-red-400 text-red-700 dark:text-red-300'}`}>

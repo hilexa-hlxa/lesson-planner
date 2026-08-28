@@ -106,14 +106,14 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             <div className="space-y-4">
               <div>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.subject}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.subject}</label>
                 <input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
                   aria-label={t.subject}
                   className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
                   placeholder="Математика" />
               </div>
               <div>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.topic}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.topic}</label>
                 <input value={form.topic} onChange={(e) => setForm((f) => ({ ...f, topic: e.target.value }))}
                   aria-label={t.topic}
                   className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
@@ -121,7 +121,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.grade}</label>
+                  <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.grade}</label>
                   <select value={form.grade} onChange={(e) => setForm((f) => ({ ...f, grade: Number(e.target.value) }))}
                     aria-label={t.grade}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
@@ -129,7 +129,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
                   </select>
                 </div>
                 <div>
-                  <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.count}</label>
+                  <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.count}</label>
                   <select value={form.count} onChange={(e) => setForm((f) => ({ ...f, count: Number(e.target.value) }))}
                     aria-label={t.count}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
@@ -147,7 +147,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
 
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] flex flex-col">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <span className="font-black text-xs uppercase tracking-widest text-slate-400">{t.result}</span>
+              <span className="font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">{t.result}</span>
               {output && (
                 <div className="flex gap-2">
                   <button onClick={handleCopy}

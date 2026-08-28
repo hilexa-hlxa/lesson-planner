@@ -54,7 +54,7 @@ export default function NotFoundPage({ user, lang = "RU" }) {
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter mt-6 mb-4 text-slate-900 dark:text-white">
         {t.title}
       </h1>
-      <p className="text-slate-400 mb-10 max-w-sm leading-relaxed">
+      <p className="text-slate-500 dark:text-slate-400 mb-10 max-w-sm leading-relaxed">
         {t.body}
       </p>
 

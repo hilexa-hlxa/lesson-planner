@@ -96,7 +96,7 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
           <SkeletonCardGrid count={4} />
         ) : classes.length === 0 ? (
           <div className="flex flex-col items-center text-center py-16 sm:py-20 px-6 rounded-[32px] border-4 border-dashed border-black/10 dark:border-white/10">
-            <div className="p-4 bg-slate-100 dark:bg-zinc-800 rounded-3xl mb-5 text-slate-400">
+            <div className="p-4 bg-slate-100 dark:bg-zinc-800 rounded-3xl mb-5 text-slate-500 dark:text-slate-400">
               <Users size={36} />
             </div>
             <p className="text-slate-500 dark:text-zinc-400 font-bold text-lg max-w-sm mb-6">{t.empty}</p>
@@ -125,14 +125,14 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
                 </div>
 
                 <div className="flex items-center gap-2 mb-6">
-                  <span className="text-slate-400 font-bold text-sm uppercase tracking-widest">Code:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-bold text-sm uppercase tracking-widest">Code:</span>
                   <span className="font-mono font-black text-2xl tracking-widest">{cls.join_code}</span>
                   <button
                     onClick={e => copyCode(e, cls)}
                     className="ml-1 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
                     title={t.copied}
                   >
-                    {copiedId === cls.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} className="text-slate-400" />}
+                    {copiedId === cls.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} className="text-slate-500 dark:text-slate-400" />}
                   </button>
                 </div>
 

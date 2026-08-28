@@ -14,7 +14,7 @@ export default function TriviaRaceBoard({ boardLength, players, currentPlayerId 
         const isMe = p.id === currentPlayerId;
         return (
           <div key={p.id} className="flex items-center gap-3">
-            <span className={`w-24 sm:w-32 truncate text-xs sm:text-sm font-black uppercase ${isMe ? 'text-black dark:text-white' : 'text-slate-400'}`}>
+            <span className={`w-24 sm:w-32 truncate text-xs sm:text-sm font-black uppercase ${isMe ? 'text-black dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
               {p.name}{isMe ? ' •' : ''}
             </span>
             <div className="relative flex-1 h-8 bg-slate-100 dark:bg-zinc-800 rounded-full border-2 border-black dark:border-white overflow-hidden">
@@ -26,7 +26,7 @@ export default function TriviaRaceBoard({ boardLength, players, currentPlayerId 
                 {p.finished ? <Flag size={12} /> : ''}
               </motion.div>
             </div>
-            <span className="w-10 text-right text-xs font-black text-slate-400">{p.position}/{boardLength}</span>
+            <span className="w-10 text-right text-xs font-black text-slate-500 dark:text-slate-400">{p.position}/{boardLength}</span>
           </div>
         );
       })}

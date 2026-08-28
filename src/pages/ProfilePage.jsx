@@ -255,7 +255,7 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
                     <Trophy size={28} className="text-emerald-600 shrink-0" />
                     <div className="min-w-0">
                       <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter italic">{tr.achievements}</h2>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                      <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         {tr.progress(unlockedCount, achievements.length)}
                       </p>
                     </div>
@@ -294,7 +294,7 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
 
                           <div>
                               <div className="font-black uppercase text-xs mb-1">{ach.title}</div>
-                              <div className="text-[10px] font-bold text-slate-400 leading-tight">{ach.desc}</div>
+                              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-tight">{ach.desc}</div>
                           </div>
 
                           {ach.unlocked ? (

@@ -23,7 +23,7 @@ export default function PlansComparison({ lang = "RU", user, onStart, showHeadin
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter break-words">
             {t.sectionTitle}
           </h2>
-          <p className="text-slate-400 mt-3 text-sm max-w-lg mx-auto leading-relaxed">
+          <p className="text-slate-500 dark:text-slate-400 mt-3 text-sm max-w-lg mx-auto leading-relaxed">
             {t.sectionSub}
           </p>
         </div>
@@ -36,7 +36,7 @@ export default function PlansComparison({ lang = "RU", user, onStart, showHeadin
           <div className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 mb-3">{t.free.name}</div>
           <div className="flex items-end gap-2 flex-wrap mb-1">
             <span className="text-4xl sm:text-5xl font-black tracking-tighter">{t.free.price}</span>
-            <span className="text-slate-400 font-bold text-xs mb-2">{t.free.period}</span>
+            <span className="text-slate-500 dark:text-slate-400 font-bold text-xs mb-2">{t.free.period}</span>
           </div>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mb-6">{t.free.note}</p>
 
@@ -51,7 +51,7 @@ export default function PlansComparison({ lang = "RU", user, onStart, showHeadin
             ))}
           </ul>
 
-          <p className="text-[11px] text-slate-400 leading-relaxed mb-6 border-t border-slate-100 dark:border-zinc-800 pt-4">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6 border-t border-slate-100 dark:border-zinc-800 pt-4">
             {t.free.limits}
           </p>
 
@@ -66,18 +66,18 @@ export default function PlansComparison({ lang = "RU", user, onStart, showHeadin
         {/* ── PRO: ещё не запущен, поэтому без цены и приглушённый ── */}
         <div className="rounded-[28px] sm:rounded-[32px] border-[3px] border-dashed border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-900/40 p-6 sm:p-8">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{t.pro.name}</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">{t.pro.name}</span>
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 text-[9px] font-black uppercase tracking-widest">
               <Sparkles size={9} /> {t.pro.badge}
             </span>
           </div>
           <div className="flex items-end gap-2 flex-wrap mb-1">
             <span className="text-4xl sm:text-5xl font-black tracking-tighter text-slate-300 dark:text-zinc-600">{t.pro.price}</span>
-            <span className="text-slate-400 font-bold text-xs mb-2">{t.pro.period}</span>
+            <span className="text-slate-500 dark:text-slate-400 font-bold text-xs mb-2">{t.pro.period}</span>
           </div>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mb-6">{t.pro.note}</p>
 
-          <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3">{t.pro.inherits}</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">{t.pro.inherits}</p>
           <ul className="space-y-2.5 mb-7">
             {t.pro.features.map((f, i) => (
               <li key={i} className="flex items-start gap-3 text-[14px]">
@@ -89,7 +89,7 @@ export default function PlansComparison({ lang = "RU", user, onStart, showHeadin
             ))}
           </ul>
 
-          <p className="text-[11px] text-slate-400 leading-relaxed mb-6 border-t border-slate-200 dark:border-zinc-800 pt-4">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6 border-t border-slate-200 dark:border-zinc-800 pt-4">
             {t.pro.planned}
           </p>
 
@@ -102,7 +102,7 @@ export default function PlansComparison({ lang = "RU", user, onStart, showHeadin
         </div>
       </div>
 
-      <p className="text-center text-xs text-slate-400 mt-8 leading-relaxed">
+      <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-8 leading-relaxed">
         {t.schoolsNote}{" "}
         <a href={`mailto:${CONTACT_EMAIL}`} className="font-black text-emerald-600 hover:underline">{CONTACT_EMAIL}</a>
       </p>

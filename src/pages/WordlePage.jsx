@@ -248,7 +248,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
             ) : (
               <>
                 <div className="text-center mb-6">
-                  <p className="font-bold text-sm text-slate-400 uppercase mb-2">{t.codeFor}</p>
+                  <p className="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase mb-2">{t.codeFor}</p>
                   <div className="text-5xl sm:text-6xl lg:text-7xl font-mono font-black tracking-[0.2em] sm:tracking-[0.3em] break-all text-emerald-600 mb-2">{hostCode}</div>
                   <p className="text-slate-500 font-bold text-sm">{t.share}</p>
                 </div>

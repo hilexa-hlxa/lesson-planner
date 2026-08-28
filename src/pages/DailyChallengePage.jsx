@@ -110,7 +110,7 @@ export default function DailyChallengePage({ lang, setLang, user, setUser, grant
                 <Flame size={22} /> {streakInfo.current_streak} {t.streak}
               </div>
             )}
-            <p className="text-sm font-bold text-slate-400 mb-6">{t.comeBack}</p>
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-6">{t.comeBack}</p>
             <button onClick={() => navigate('/hub')} className="px-6 py-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl font-black uppercase">
               {t.exit}
             </button>

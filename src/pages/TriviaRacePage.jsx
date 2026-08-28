@@ -211,8 +211,8 @@ export default function TriviaRacePage({ lang, setLang, user, setUser, grantAchi
 
             {!hostCode ? (
               <>
-                <p className="font-black text-xs uppercase text-slate-400 mb-2">{t.pickTest}</p>
-                {tests.length === 0 && <p className="text-slate-400 font-bold text-sm mb-3">{t.noTests}</p>}
+                <p className="font-black text-xs uppercase text-slate-500 dark:text-slate-400 mb-2">{t.pickTest}</p>
+                {tests.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-3">{t.noTests}</p>}
                 <div className="flex flex-col gap-2 mb-4">
                   {tests.map((qz) => (
                     <button key={qz.id} onClick={() => hostRace(qz.id)} disabled={loading}
@@ -226,7 +226,7 @@ export default function TriviaRacePage({ lang, setLang, user, setUser, grantAchi
             ) : (
               <>
                 <div className="text-center mb-6">
-                  <p className="font-bold text-sm text-slate-400 uppercase mb-2">{t.codeFor}</p>
+                  <p className="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase mb-2">{t.codeFor}</p>
                   <div className="text-5xl sm:text-6xl lg:text-7xl font-mono font-black tracking-[0.2em] sm:tracking-[0.3em] break-all text-amber-500 mb-2">{hostCode}</div>
                   <p className="text-slate-500 font-bold text-sm">{t.share}</p>
                 </div>

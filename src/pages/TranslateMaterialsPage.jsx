@@ -135,21 +135,21 @@ export default function TranslateMaterialsPage({ lang, setLang, user, setUser, .
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
-            <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.pick}</label>
-            {items.length === 0 && <p className="text-slate-400 font-bold text-sm mb-3">{t.noItems}</p>}
+            <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.pick}</label>
+            {items.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-3">{t.noItems}</p>}
             <div className="flex flex-col gap-2 mb-5 max-h-[220px] overflow-y-auto">
               {items.map((i) => (
                 <button key={`${i.kind}-${i.id}`} onClick={() => pickItem(i)}
                   className={`text-left px-4 py-3 rounded-xl border-[3px] font-bold transition-colors flex items-center justify-between ${item?.id === i.id && item?.kind === i.kind ? 'border-black dark:border-white bg-slate-100 dark:bg-zinc-800' : 'border-black/20 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-zinc-800'}`}>
                   <span>{i.topic || i.subject || `#${i.id}`}</span>
-                  <span className="text-xs font-black uppercase text-slate-400 shrink-0 ml-2">{i.kind === 'lesson_plan' ? t.lessonPlan : t.test}</span>
+                  <span className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 shrink-0 ml-2">{i.kind === 'lesson_plan' ? t.lessonPlan : t.test}</span>
                 </button>
               ))}
             </div>
 
             {item && (
               <>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.targetLang}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.targetLang}</label>
                 <div className="flex gap-2 mb-5">
                   {['RU', 'KZ', 'EN'].map((l) => (
                     <button key={l} onClick={() => setTargetLang(l)}
@@ -169,7 +169,7 @@ export default function TranslateMaterialsPage({ lang, setLang, user, setUser, .
 
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] flex flex-col">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <span className="font-black text-xs uppercase tracking-widest text-slate-400">{t.result}</span>
+              <span className="font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">{t.result}</span>
               {output && (
                 <div className="flex gap-2">
                   <button onClick={handleCopy}

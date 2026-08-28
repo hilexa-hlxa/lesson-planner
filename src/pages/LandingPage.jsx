@@ -537,7 +537,7 @@ function WordleVisual({ lang }) {
             </div>
           ))}
         </div>
-        <div className="text-[6px] text-slate-400 font-bold mt-1">{m.wordleTries}</div>
+        <div className="text-[6px] text-slate-500 dark:text-slate-400 font-bold mt-1">{m.wordleTries}</div>
       </div>
     </BrowserShell>
   );
@@ -551,7 +551,7 @@ function FaqItem({ q, a }) {
       <button onClick={() => setOpen(v => !v)} className="w-full flex items-center justify-between py-5 text-left gap-4 group">
         <span className="font-bold text-[15px] text-slate-800 dark:text-zinc-200 group-hover:text-emerald-600 transition-colors">{q}</span>
         <div className="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-zinc-700 flex items-center justify-center shrink-0">
-          {open ? <Minus size={12} className="text-emerald-500" /> : <Plus size={12} className="text-slate-400" />}
+          {open ? <Minus size={12} className="text-emerald-500" /> : <Plus size={12} className="text-slate-500 dark:text-slate-400" />}
         </div>
       </button>
       {open && (
@@ -649,7 +649,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
       <motion.div {...fadeUp(0)} className="max-w-4xl mx-auto px-5 sm:px-8 pb-16 sm:pb-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 rounded-2xl border-[3px] border-black overflow-hidden shadow-[6px_6px_0_0_#000] dark:shadow-[6px_6px_0_0_rgba(255,255,255,0.07)]">
           <div className="p-6 sm:p-8 bg-slate-100 dark:bg-zinc-900 border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-black">
-            <div className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400 mb-5">
+            <div className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-500 dark:text-slate-400 mb-5">
               {lang === "KZ" ? "Бұрын" : lang === "EN" ? "Before" : "Раньше"}
             </div>
             {(lang === "KZ"
@@ -728,7 +728,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
             <h2 className="text-3xl font-black uppercase tracking-tighter">
               {lang === "KZ" ? "Тіркелусіз. Кез келген телефоннан." : lang === "EN" ? "No account. Any phone. 10 seconds." : "Без регистрации. С любого телефона."}
             </h2>
-            <p className="text-slate-400 mt-3 text-sm max-w-md mx-auto">
+            <p className="text-slate-500 dark:text-slate-400 mt-3 text-sm max-w-md mx-auto">
               {lang === "KZ" ? "Оқушылар ештеңе орнатпайды — тек 4 санды код енгізеді." : lang === "EN" ? "Students install nothing — they just type the 4-digit code." : "Ученикам ничего устанавливать не нужно — просто вводят 4-значный код."}
             </p>
           </motion.div>
@@ -746,7 +746,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
                 <div className="text-center p-7 rounded-2xl bg-[#f8fafc] dark:bg-zinc-800 border-[2px] border-black shadow-[4px_4px_0_0_#000] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.06)]">
                   <div className="w-10 h-10 rounded-xl bg-emerald-600 border-2 border-black flex items-center justify-center font-black text-white text-base mx-auto mb-4">{n}</div>
                   <div className="font-black text-sm uppercase tracking-tight mb-2">{title}</div>
-                  <div className="text-xs text-slate-400 leading-relaxed">{desc}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</div>
                 </div>
               </motion.div>
             ))}
@@ -773,7 +773,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
                 <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed flex-1 mb-6">{t.quote}</p>
                 <div className="border-t border-slate-100 dark:border-zinc-800 pt-4">
                   <div className="font-black text-[13px] text-slate-900 dark:text-white">{t.name}</div>
-                  <div className="text-[11px] text-slate-400 font-medium mt-0.5">{t.role}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t.role}</div>
                 </div>
               </motion.div>
             ))}

@@ -57,7 +57,7 @@ export default function Footer({ lang = "RU" }) {
             <Link to="/" className="flex items-center gap-2 font-black text-lg italic tracking-tighter text-emerald-600">
               <GraduationCap size={22} /> LESSON.LAB
             </Link>
-            <p className="text-xs text-slate-400 max-w-[220px] leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[220px] leading-relaxed">
               {t.tagline}
             </p>
 

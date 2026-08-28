@@ -77,11 +77,11 @@ export default function WordSprintGame({ sentence, lang = 'RU', onFinish, onExit
           <div className="flex justify-center gap-8 mb-2">
             <div>
               <div className="text-3xl font-black flex items-center gap-1 justify-center"><Gauge size={22} />{result.wpm}</div>
-              <div className="text-xs font-bold uppercase text-slate-400">{t.wpm}</div>
+              <div className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">{t.wpm}</div>
             </div>
             <div>
               <div className="text-3xl font-black">{result.accuracy}%</div>
-              <div className="text-xs font-bold uppercase text-slate-400">{t.accuracy}</div>
+              <div className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">{t.accuracy}</div>
             </div>
           </div>
           <div className="flex gap-3 mt-4 justify-center">

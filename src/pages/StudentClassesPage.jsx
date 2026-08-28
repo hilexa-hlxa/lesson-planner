@@ -48,10 +48,10 @@ function HistoryRow({ item, t }) {
       <div className="flex items-center justify-between px-5 py-4 gap-4">
         <div className="flex-1 min-w-0">
           <p className="font-black truncate">{item.topic}</p>
-          <p className="text-xs text-slate-400 font-bold">{item.subject} · {new Date(item.created_at).toLocaleDateString()}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">{item.subject} · {new Date(item.created_at).toLocaleDateString()}</p>
         </div>
         <div className={`font-black text-xl shrink-0 ${pctColor}`}>{pct}%</div>
-        <div className="text-sm text-slate-400 font-bold shrink-0">{item.score}/{item.total_questions}</div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 font-bold shrink-0">{item.score}/{item.total_questions}</div>
         {wrong.length > 0 && (
           <button
             onClick={() => setOpen(v => !v)}
@@ -64,7 +64,7 @@ function HistoryRow({ item, t }) {
 
       {open && wrong.length > 0 && (
         <div className="border-t-2 border-black/10 dark:border-white/10 px-5 py-4 space-y-3 bg-slate-50 dark:bg-zinc-950">
-          <p className="font-black text-xs uppercase text-slate-400 mb-2">{t.wrongQ}</p>
+          <p className="font-black text-xs uppercase text-slate-500 dark:text-slate-400 mb-2">{t.wrongQ}</p>
           {wrong.map((a, i) => (
             <div key={i} className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700">
               <p className="font-bold text-sm mb-1.5 dark:text-white">
@@ -92,7 +92,7 @@ function ClassHistory({ classId, t }) {
   }, [classId]);
 
   if (loading) return <SkeletonRows count={2} className="pt-4" />;
-  if (!history.length) return <p className="py-6 text-center text-slate-400 font-bold text-sm">{t.noHistory}</p>;
+  if (!history.length) return <p className="py-6 text-center text-slate-500 dark:text-slate-400 font-bold text-sm">{t.noHistory}</p>;
 
   return (
     <div className="space-y-3 pt-4">
@@ -187,7 +187,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
                   <div key={cls.id} className="flex items-center justify-between px-6 py-5 bg-orange-50 dark:bg-orange-950/30 rounded-2xl border-2 border-orange-200 dark:border-orange-700">
                     <div>
                       <div className="font-black text-lg">{cls.name}</div>
-                      {cls.teacher_name && <div className="text-slate-400 text-sm font-bold">{t.teacher}: {cls.teacher_name}</div>}
+                      {cls.teacher_name && <div className="text-slate-500 dark:text-slate-400 text-sm font-bold">{t.teacher}: {cls.teacher_name}</div>}
                     </div>
                     <span className="flex items-center gap-1.5 text-orange-500 font-bold text-sm">
                       <Clock size={14} /> {t.pending}
@@ -199,7 +199,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
 
             {approved.length === 0 && pending.length === 0 ? (
               <div className="flex flex-col items-center text-center py-14 px-6 rounded-[28px] border-4 border-dashed border-black/10 dark:border-white/10">
-                <div className="p-4 bg-slate-100 dark:bg-zinc-800 rounded-3xl mb-5 text-slate-400">
+                <div className="p-4 bg-slate-100 dark:bg-zinc-800 rounded-3xl mb-5 text-slate-500 dark:text-slate-400">
                   <GraduationCap size={32} />
                 </div>
                 <p className="text-slate-500 dark:text-zinc-400 font-bold max-w-xs">{t.noClasses}</p>
@@ -214,17 +214,17 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
                     >
                       <div className="text-left">
                         <div className="font-black text-xl">{cls.name}</div>
-                        {cls.teacher_name && <div className="text-slate-400 text-sm font-bold">{t.teacher}: {cls.teacher_name}</div>}
+                        {cls.teacher_name && <div className="text-slate-500 dark:text-slate-400 text-sm font-bold">{t.teacher}: {cls.teacher_name}</div>}
                       </div>
                       <div className="flex items-center gap-3">
                         <CheckCircle size={20} className="text-green-500 shrink-0" />
-                        {expandedClass === cls.id ? <ChevronUp size={18} className="text-slate-400"/> : <ChevronDown size={18} className="text-slate-400"/>}
+                        {expandedClass === cls.id ? <ChevronUp size={18} className="text-slate-500 dark:text-slate-400"/> : <ChevronDown size={18} className="text-slate-500 dark:text-slate-400"/>}
                       </div>
                     </button>
 
                     {expandedClass === cls.id && (
                       <div className="px-6 pb-6 bg-slate-50 dark:bg-zinc-950 border-t-2 border-black/10 dark:border-white/10">
-                        <p className="font-black text-xs uppercase text-slate-400 pt-4 mb-2">{t.history}</p>
+                        <p className="font-black text-xs uppercase text-slate-500 dark:text-slate-400 pt-4 mb-2">{t.history}</p>
                         <ClassHistory classId={cls.id} t={t} />
                       </div>
                     )}

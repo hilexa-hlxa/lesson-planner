@@ -117,8 +117,8 @@ export default function FlashcardExportPage({ lang, setLang, user, setUser, ...a
         </div>
 
         <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] mb-8">
-          <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.pickTest}</label>
-          {tests.length === 0 && <p className="text-slate-400 font-bold text-sm">{t.noTests}</p>}
+          <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.pickTest}</label>
+          {tests.length === 0 && <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">{t.noTests}</p>}
           <div className="flex flex-wrap gap-2">
             {tests.map((qz) => (
               <button key={qz.id} onClick={() => pickTest(qz)}
@@ -142,7 +142,7 @@ export default function FlashcardExportPage({ lang, setLang, user, setUser, ...a
               <p className="text-xl sm:text-2xl font-black leading-snug">
                 {flipped ? current.options[current.correctIndex] : current.question}
               </p>
-              <p className="mt-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400">
+              <p className="mt-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 <RotateCw size={14} /> {t.tapToFlip}
               </p>
             </button>

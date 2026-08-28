@@ -109,7 +109,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             <div className="space-y-4">
               <div>
-                <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.assignment}</label>
+                <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.assignment}</label>
                 <textarea value={form.assignment} onChange={(e) => setForm((f) => ({ ...f, assignment: e.target.value }))}
                   rows={4}
                   aria-label={t.assignment}
@@ -118,7 +118,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.criteria}</label>
+                  <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.criteria}</label>
                   <select value={form.criteria} onChange={(e) => setForm((f) => ({ ...f, criteria: Number(e.target.value) }))}
                     aria-label={t.criteria}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
@@ -126,7 +126,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
                   </select>
                 </div>
                 <div>
-                  <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.levels}</label>
+                  <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.levels}</label>
                   <select value={form.levels} onChange={(e) => setForm((f) => ({ ...f, levels: Number(e.target.value) }))}
                     aria-label={t.levels}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
@@ -144,7 +144,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
 
           <div className="bg-white dark:bg-zinc-900 p-8 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000] flex flex-col">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <span className="font-black text-xs uppercase tracking-widest text-slate-400">{t.result}</span>
+              <span className="font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">{t.result}</span>
               {output && (
                 <div className="flex gap-2">
                   <button onClick={handleCopy}
