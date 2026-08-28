@@ -103,7 +103,7 @@ const api = {
     const retries = 3;
 
     for (let i = 0; i <= retries; i++) {
-        res = await fetch(`/api/generate/stream`, {
+        res = await fetch(`${API_PREFIX}/generate/stream`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
