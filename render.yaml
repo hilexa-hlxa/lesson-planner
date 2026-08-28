@@ -38,7 +38,30 @@ services:
       - key: VITE_API_BASE_URL
         sync: false          # set to the backend Render URL after first deploy
     routes:
-      - type: rewrite        # SPA fallback — all paths serve index.html
+      # Explicit rewrites for the prerendered public routes (see
+      # scripts/prerender-meta.mjs and src/lib/seoMeta.js#PRERENDER_ROUTES —
+      # keep this list in sync with that array) MUST come before the SPA
+      # catch-all below. Render matches routes top-to-bottom, first match
+      # wins; without these, a bare "/pricing" (no trailing slash — the URL
+      # form anyone actually shares) falls through to the catch-all and
+      # serves dist/index.html's generic meta instead of dist/pricing's,
+      # defeating the whole point of prerendering. Confirmed locally: `vite
+      # preview` resolves "/pricing/" and "/pricing/index.html" to the right
+      # file automatically, but NOT bare "/pricing" — same directory-index
+      # ambiguity is expected here, so we don't rely on it.
+      - type: rewrite
+        source: /pricing
+        destination: /pricing/index.html
+      - type: rewrite
+        source: /join-test
+        destination: /join-test/index.html
+      - type: rewrite
+        source: /privacy
+        destination: /privacy/index.html
+      - type: rewrite
+        source: /terms
+        destination: /terms/index.html
+      - type: rewrite        # SPA fallback — everything else serves index.html
         source: /*
         destination: /index.html
     headers:
