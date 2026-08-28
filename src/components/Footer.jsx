@@ -46,7 +46,12 @@ export default function Footer({ lang = "RU" }) {
   const t = T[lang] || T.RU;
   const socials = SOCIALS.filter(s => s.href);
 
-  const linkCls = "opacity-50 hover:opacity-100 transition-opacity";
+  // Раньше здесь было "opacity-50 hover:opacity-100": на белом фоне это
+  // рендерится как rgb(127,127,127) — контраст ~4:1, ниже AA-порога 4.5:1
+  // для обычного текста (11px bold сюда не дотягивает до "крупного текста").
+  // Прозрачность всегда размывает цвет к фону, поэтому вместо неё — сплошные
+  // оттенки slate/zinc, уже проверенные в остальном приложении.
+  const linkCls = "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors";
 
   return (
     <footer className="border-t border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-md">
@@ -84,19 +89,19 @@ export default function Footer({ lang = "RU" }) {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12 text-[11px] font-black uppercase tracking-widest">
             <div className="flex flex-col gap-3">
-              <span className="opacity-30 mb-1">{t.platform}</span>
+              <span className="text-slate-600 dark:text-zinc-400 mb-1">{t.platform}</span>
               <Link to="/hub" className={linkCls}>{t.hub}</Link>
               <Link to="/tools" className={linkCls}>{t.tools}</Link>
               <Link to="/games" className={linkCls}>{t.games}</Link>
               <Link to="/classes" className={linkCls}>{t.classes}</Link>
             </div>
             <div className="flex flex-col gap-3">
-              <span className="opacity-30 mb-1">{t.account}</span>
+              <span className="text-slate-600 dark:text-zinc-400 mb-1">{t.account}</span>
               <Link to="/profile" className={linkCls}>{t.profile}</Link>
               <Link to="/join-test" className={linkCls}>{t.joinTest}</Link>
             </div>
             <div className="flex flex-col gap-3">
-              <span className="opacity-30 mb-1">{t.company}</span>
+              <span className="text-slate-600 dark:text-zinc-400 mb-1">{t.company}</span>
               <Link to="/pricing" className={linkCls}>{t.pricing}</Link>
               <Link to="/privacy" className={linkCls}>{t.privacy}</Link>
               <Link to="/terms" className={linkCls}>{t.terms}</Link>
@@ -107,7 +112,7 @@ export default function Footer({ lang = "RU" }) {
           </div>
         </div>
 
-        <div className="border-t border-slate-100 dark:border-zinc-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 opacity-30 text-[10px] font-black uppercase tracking-[0.2em] text-center sm:text-left">
+        <div className="border-t border-slate-100 dark:border-zinc-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-slate-500 dark:text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] text-center sm:text-left">
           <span>{t.rights}</span>
           <span>{t.made}</span>
         </div>
