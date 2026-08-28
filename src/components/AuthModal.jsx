@@ -83,12 +83,16 @@ export default function AuthModal({
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-white/80 dark:bg-black/90 backdrop-blur-md p-4">
-      <div className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-12 rounded-[44px] shadow-2xl relative">
-        <button onClick={closeModal} className="absolute top-8 right-8 opacity-30 hover:opacity-100 font-bold text-2xl">
+      <div role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-12 rounded-[44px] shadow-2xl relative">
+        <button
+          onClick={closeModal}
+          aria-label={lang === "KZ" ? "Жабу" : lang === "EN" ? "Close" : "Закрыть"}
+          className="absolute top-8 right-8 opacity-30 hover:opacity-100 font-bold text-2xl"
+        >
           ✕
         </button>
 
-        <h2 className="text-4xl font-black mb-10 tracking-tight text-slate-900 dark:text-white">
+        <h2 id="auth-modal-title" className="text-4xl font-black mb-10 tracking-tight text-slate-900 dark:text-white">
           {mode === "login" ? authT.loginTitle : authT.signupTitle}
         </h2>
 
@@ -99,12 +103,14 @@ export default function AuthModal({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder={authT.firstName}
+                aria-label={authT.firstName}
                 className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
               />
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder={authT.lastName}
+                aria-label={authT.lastName}
                 className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
               />
             </div>
@@ -116,6 +122,7 @@ export default function AuthModal({
             onBlur={() => setShowEmailError(true)}
             type="email"
             placeholder={authT.email}
+            aria-label={authT.email}
             className={`w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500 transition ${
               showEmailError && !isEmailValid ? "border-red-500" : ""
             }`}
@@ -127,9 +134,17 @@ export default function AuthModal({
               onChange={(e) => setPass(e.target.value)}
               type={showPass ? "text" : "password"}
               placeholder={authT.pass}
+              aria-label={authT.pass}
               className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
             />
-            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-6 top-1/2 -translate-y-1/2 opacity-30">
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              aria-label={showPass
+                ? (lang === "KZ" ? "Құпия сөзді жасыру" : lang === "EN" ? "Hide password" : "Скрыть пароль")
+                : (lang === "KZ" ? "Құпия сөзді көрсету" : lang === "EN" ? "Show password" : "Показать пароль")}
+              className="absolute right-6 top-1/2 -translate-y-1/2 opacity-30"
+            >
               {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>

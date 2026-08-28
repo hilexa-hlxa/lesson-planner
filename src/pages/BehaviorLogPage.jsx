@@ -12,6 +12,7 @@ const T = {
     notePh: 'Короткая заметка (необязательно)',
     recent: 'ПОСЛЕДНИЕ ЗАПИСИ', noNotes: 'Записей пока нет.',
     justNow: 'только что',
+    positive: 'Отметить плюс', negative: 'Отметить минус',
   },
   KZ: {
     title: 'МІНЕЗ-ҚҰЛЫҚ ЖУРНАЛЫ',
@@ -20,6 +21,7 @@ const T = {
     notePh: 'Қысқа жазба (міндетті емес)',
     recent: 'СОҢҒЫ ЖАЗБАЛАР', noNotes: 'Әзірге жазба жоқ.',
     justNow: 'жаңа ғана',
+    positive: 'Плюс белгілеу', negative: 'Минус белгілеу',
   },
   EN: {
     title: 'BEHAVIOR LOG',
@@ -28,6 +30,7 @@ const T = {
     notePh: 'Short note (optional)',
     recent: 'RECENT ENTRIES', noNotes: 'No entries yet.',
     justNow: 'just now',
+    positive: 'Mark positive', negative: 'Mark negative',
   },
 };
 
@@ -114,13 +117,16 @@ export default function BehaviorLogPage({ lang, setLang, user, setUser, ...acces
                       value={drafts[sid] || ''}
                       onChange={(e) => setDrafts((d) => ({ ...d, [sid]: e.target.value }))}
                       placeholder={t.notePh}
+                      aria-label={`${t.notePh} — ${nameOf(m)}`}
                       className="flex-1 min-w-0 px-3 py-2 bg-white dark:bg-zinc-900 rounded-lg text-sm font-bold outline-none border-2 border-transparent focus:border-black/20 dark:focus:border-white/20"
                     />
                     <button onClick={() => log(sid, 'positive')} disabled={saving === sid}
+                      aria-label={`${t.positive} — ${nameOf(m)}`}
                       className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-40 transition-colors shrink-0">
                       <ThumbsUp size={16} />
                     </button>
                     <button onClick={() => log(sid, 'negative')} disabled={saving === sid}
+                      aria-label={`${t.negative} — ${nameOf(m)}`}
                       className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-40 transition-colors shrink-0">
                       <ThumbsDown size={16} />
                     </button>

@@ -112,10 +112,11 @@ const StudentJoinPage = ({ lang = "RU", user = null }) => {
 
         <form onSubmit={handleJoin} className="space-y-6">
           <div>
-            <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">{t.codeLabel}</label>
+            <label htmlFor="join-code" className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">{t.codeLabel}</label>
             <div className="relative">
               <Hash className="absolute left-4 top-4 text-gray-400" size={20} />
               <input
+                id="join-code"
                 type="text"
                 inputMode="numeric"
                 maxLength={4}
@@ -128,10 +129,11 @@ const StudentJoinPage = ({ lang = "RU", user = null }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">{t.nameLabel}</label>
+            <label htmlFor="join-name" className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">{t.nameLabel}</label>
             <div className="relative">
               <User className="absolute left-4 top-4 text-gray-400" size={20} />
               <input
+                id="join-name"
                 type="text"
                 value={name}
                 onChange={(e) => { setName(e.target.value); setError(""); }}

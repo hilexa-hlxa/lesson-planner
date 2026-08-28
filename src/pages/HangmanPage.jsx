@@ -196,6 +196,7 @@ export default function HangmanPage({ lang, setLang, user, setUser, grantAchieve
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
               placeholder={t.codePlaceholder}
+              aria-label={t.codePlaceholder}
               className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none"
               maxLength={4}
             />
@@ -215,6 +216,7 @@ export default function HangmanPage({ lang, setLang, user, setUser, grantAchieve
                   value={hostWord}
                   onChange={(e) => setHostWord(e.target.value.toUpperCase())}
                   placeholder={t.wordPlaceholder}
+                  aria-label={t.wordPlaceholder}
                   maxLength={10}
                   className="w-full text-center text-2xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-widest mb-4 outline-none uppercase"
                 />

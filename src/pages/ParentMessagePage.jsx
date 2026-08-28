@@ -218,6 +218,7 @@ export default function ParentMessagePage({ lang, setLang, user, setUser, ...acc
             <textarea
               readOnly
               value={output || (generating ? '' : '...')}
+              aria-label={t.result}
               className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300"
             />
           </div>

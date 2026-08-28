@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap } from "lucide-react";
 
@@ -29,6 +29,17 @@ const T = {
 export default function NotFoundPage({ user, lang = "RU" }) {
   const t = T[lang] || T.RU;
   const navigate = useNavigate();
+
+  // Render всегда отвечает 200 (SPA-фолбэк на index.html — см. routes в
+  // render.yaml), так что без этого Google видел бы страницу-404 как обычный
+  // 200-контент и мог бы проиндексировать битую ссылку как настоящую
+  // страницу. Восстанавливаем index,follow при уходе — иначе значение
+  // "прилипнет" и следующая реальная страница тоже перестанет индексироваться.
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="robots"]');
+    meta?.setAttribute("content", "noindex, follow");
+    return () => { meta?.setAttribute("content", "index, follow"); };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex flex-col items-center justify-center text-center px-5 sm:px-8 py-16">

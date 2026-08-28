@@ -167,16 +167,19 @@ export default function SeatingChartPage({ lang, setLang, user, setUser, ...acce
                 <div>
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.rows}</label>
                   <input type="number" min={1} max={10} value={rows} onChange={(e) => setRows(Math.max(1, Number(e.target.value)))}
+                    aria-label={t.rows}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none" />
                 </div>
                 <div>
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.cols}</label>
                   <input type="number" min={1} max={10} value={cols} onChange={(e) => setCols(Math.max(1, Number(e.target.value)))}
+                    aria-label={t.cols}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none" />
                 </div>
               </div>
               <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.keepApart}</label>
               <textarea value={keepApart} onChange={(e) => setKeepApart(e.target.value)} rows={3}
+                aria-label={t.keepApart}
                 className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none resize-none mb-4"
                 placeholder={t.keepApartPh} />
               <button onClick={doGenerate}

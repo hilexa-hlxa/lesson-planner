@@ -333,6 +333,7 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
                     value={tempData.firstName}
                     onChange={(e) => { setTempData({ ...tempData, firstName: e.target.value }); setSaveError(""); }}
                     maxLength={80}
+                    aria-label={tr.firstName}
                     className="w-full p-4 bg-slate-50 dark:bg-zinc-950 border-2 border-black dark:border-white rounded-xl font-bold outline-none focus:ring-4 ring-emerald-500/20"
                 />
               </div>
@@ -342,6 +343,7 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
                     value={tempData.lastName}
                     onChange={(e) => { setTempData({ ...tempData, lastName: e.target.value }); setSaveError(""); }}
                     maxLength={80}
+                    aria-label={tr.lastName}
                     className="w-full p-4 bg-slate-50 dark:bg-zinc-950 border-2 border-black dark:border-white rounded-xl font-bold outline-none focus:ring-4 ring-emerald-500/20"
                  />
               </div>

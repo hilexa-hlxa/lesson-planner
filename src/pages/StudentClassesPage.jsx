@@ -158,6 +158,7 @@ export default function StudentClassesPage({ lang, setLang, user, setUser, ...ac
               value={code}
               onChange={e => setCode(e.target.value.toUpperCase())}
               placeholder={t.codePlaceholder}
+              aria-label={t.codePlaceholder}
               maxLength={6}
               className="flex-1 px-5 py-3 border-4 border-black dark:border-white rounded-2xl bg-[#f8fafc] dark:bg-zinc-800 font-mono font-black text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase"
             />

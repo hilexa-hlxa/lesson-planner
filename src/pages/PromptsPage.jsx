@@ -70,6 +70,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
                 <select
                   value={local.lesson_plan.style}
                   onChange={(e) => setLocal({ ...local, lesson_plan: { ...local.lesson_plan, style: e.target.value } })}
+                  aria-label={cur.style}
                   className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
                 >
                   <option value="strict">{cur.strict}</option>
@@ -83,6 +84,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
                 <select
                   value={local.lesson_plan.detailLevel}
                   onChange={(e) => setLocal({ ...local, lesson_plan: { ...local.lesson_plan, detailLevel: e.target.value } })}
+                  aria-label={cur.detail}
                   className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
                 >
                   <option value="low">{cur.low}</option>
@@ -120,6 +122,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
                 <select
                   value={local.tests.difficulty}
                   onChange={(e) => setLocal({ ...local, tests: { ...local.tests, difficulty: e.target.value } })}
+                  aria-label={cur.difficulty}
                   className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
                 >
                   <option value="easy">{cur.easy}</option>
@@ -137,6 +140,7 @@ export default function PromptsPage({ lang, promptConfig, setPromptConfig }) {
                   onChange={(e) =>
                     setLocal({ ...local, tests: { ...local.tests, total: Math.max(1, Number(e.target.value || 1)) } })
                   }
+                  aria-label={cur.total}
                   className="w-full p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl font-bold text-sm"
                 />
               </div>

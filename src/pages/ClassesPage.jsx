@@ -78,6 +78,7 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder={t.placeholder}
+              aria-label={t.placeholder}
               maxLength={100}
               className="flex-1 px-5 py-3 border-4 border-black dark:border-white rounded-2xl bg-white dark:bg-zinc-900 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />

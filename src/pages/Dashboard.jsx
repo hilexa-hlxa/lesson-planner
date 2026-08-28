@@ -345,9 +345,9 @@ export default function Dashboard({
                 {[45, 90, 135].map(v => <option key={v} value={v}>{v} {GEN_T.minSuffix}</option>)}
               </select>
             </div>
-            <input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder={cur.s} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
-            <input value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} placeholder={cur.t} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
-            <textarea value={form.details} onChange={e => setForm({...form, details: e.target.value})} placeholder={cur.d} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold h-40 sm:h-52 resize-none focus:ring-4 ring-emerald-500/10 transition-all" />
+            <input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder={cur.s} aria-label={cur.s} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
+            <input value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} placeholder={cur.t} aria-label={cur.t} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
+            <textarea value={form.details} onChange={e => setForm({...form, details: e.target.value})} placeholder={cur.d} aria-label={cur.d} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold h-40 sm:h-52 resize-none focus:ring-4 ring-emerald-500/10 transition-all" />
             <button onClick={handleGenerate} disabled={loading} className={`w-full py-5 sm:py-7 rounded-[24px] sm:rounded-[28px] text-[13px] sm:text-[15px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] transition-all border-[4px] border-black dark:border-white shadow-2xl ${loading ? 'bg-slate-200 dark:bg-zinc-800 text-slate-500' : 'bg-emerald-600 text-white hover:scale-[1.02]'}`}>
                 {loading ? GEN_T.generating : tr(lang,"doc.createPlan","СОЗДАТЬ ПЛАН")}
             </button>

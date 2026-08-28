@@ -108,12 +108,14 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
               <div>
                 <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.subject}</label>
                 <input value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+                  aria-label={t.subject}
                   className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
                   placeholder="Математика" />
               </div>
               <div>
                 <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.topic}</label>
                 <input value={form.topic} onChange={(e) => setForm((f) => ({ ...f, topic: e.target.value }))}
+                  aria-label={t.topic}
                   className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
                   placeholder="Дроби" />
               </div>
@@ -121,6 +123,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
                 <div>
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.grade}</label>
                   <select value={form.grade} onChange={(e) => setForm((f) => ({ ...f, grade: Number(e.target.value) }))}
+                    aria-label={t.grade}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
                     {Array.from({ length: 11 }, (_, i) => i + 1).map((g) => <option key={g} value={g}>{g}</option>)}
                   </select>
@@ -128,6 +131,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
                 <div>
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-400 mb-2">{t.count}</label>
                   <select value={form.count} onChange={(e) => setForm((f) => ({ ...f, count: Number(e.target.value) }))}
+                    aria-label={t.count}
                     className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
                     {[5, 10, 15, 20].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -159,6 +163,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
             </div>
             {exportError && <p className="text-red-500 font-bold text-sm mb-2">{exportError}</p>}
             <textarea readOnly value={output || (generating ? '' : '...')}
+              aria-label={t.result}
               className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300" />
           </div>
         </div>

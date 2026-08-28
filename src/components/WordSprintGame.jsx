@@ -64,6 +64,7 @@ export default function WordSprintGame({ sentence, lang = 'RU', onFinish, onExit
           value={typed}
           onChange={handleChange}
           placeholder={t.placeholder}
+          aria-label={t.placeholder}
           autoComplete="off" autoCorrect="off" spellCheck="false"
           className="w-full p-4 text-lg font-mono border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none"
         />

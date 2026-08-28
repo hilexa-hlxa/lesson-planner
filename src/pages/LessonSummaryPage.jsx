@@ -170,6 +170,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
                 <input
                   value={form.subject}
                   onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                  aria-label={t.subject}
                   className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
                   placeholder="Математика"
                 />
@@ -180,6 +181,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
                 <input
                   value={form.topic}
                   onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
+                  aria-label={t.topic}
                   className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30"
                   placeholder="Дроби"
                 />
@@ -191,6 +193,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                   rows={5}
+                  aria-label={t.notes}
                   className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 ring-emerald-500/30 resize-none"
                   placeholder={t.placeholderNotes}
                 />
@@ -225,6 +228,7 @@ export default function LessonSummaryPage({ lang, setLang, user, setUser, ...acc
               ref={outputRef}
               readOnly
               value={output || (generating ? '' : '...')}
+              aria-label={t.result}
               className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300"
             />
           </div>
