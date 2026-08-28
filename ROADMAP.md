@@ -133,6 +133,30 @@
   is private or does not exist under that name; either way a committed credential should be
   treated as burned.
 
+- **Both AI generation providers are dead on production right now.** Confirmed live on 2026-08-28
+  by calling `/api/generate/stream` directly: `{"message":"All generation providers unavailable
+  (Groq: HTTP 401; Gemini: GEMINI_API_KEY not configured)"}`. Concretely:
+  - `GROQ_API_KEY` (Render → `lessonlab-backend` → Environment) is set but invalid/expired — Groq
+    rejects every request with HTTP 401. Get a fresh key from console.groq.com and update it there.
+  - `GEMINI_API_KEY` isn't set at all, so there's no working fallback either. Every teacher-facing
+    generation feature (Dashboard, CreateTestPage, LessonSummaryPage, ParentMessagePage,
+    ReteachPlannerPage, RubricBuilderPage, TranslateMaterialsPage, WorksheetGeneratorPage,
+    DifferentiatedWorksheetPage) is currently unable to produce real output — it fails with a clear
+    error message instead of silently serving demo/fake content, but nothing generates. The code
+    itself already does the right thing once either key works: Groq first, Gemini as fallback, demo
+    mode only when neither is configured at all (see `backend/src/GenerateStream.php`). This is a
+    credentials-only fix — no code change needed once a valid key is in place on Render.
+
+- **`lessonplanner.kz` isn't a real, resolvable domain yet.** Every canonical URL, Open Graph tag,
+  JSON-LD block, the sitemap, and `scripts/prerender-meta.mjs` point at `https://lessonplanner.kz`,
+  but the domain returns `NXDOMAIN` — it isn't registered, or at least isn't pointed at anything.
+  The live site is really only reachable at `https://lessonlab-frontend.onrender.com` today. This
+  doesn't break the app (nothing 404s, nothing crashes), but search engines and social-media link
+  previews are currently being told the canonical home of the site is a domain that doesn't
+  resolve. Once you register the domain, add it as a custom domain on the `lessonlab-frontend`
+  Render service and point its DNS per Render's instructions — no code changes needed, the SEO
+  plumbing is already built assuming that exact hostname.
+
 ## Open
 
 - **PRO tariff is a placeholder** — the plans block on the landing and `/pricing` render PRO as
