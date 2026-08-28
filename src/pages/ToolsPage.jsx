@@ -5,6 +5,7 @@ import { tr } from "../lib/i18n";
 import Header from "../components/Header";
 import FortuneWheel from "../components/FortuneWheel";
 import api from "../api";
+import useEscapeKey from "../hooks/useEscapeKey";
 
 const WHEEL_T = {
   RU: {
@@ -45,6 +46,8 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
 
   const openWheelChooser = () => setWheelStep('choose');
   const closeWheel = () => { setWheelStep(null); setParticipants([]); setAwardMsg(''); };
+
+  useEscapeKey(wheelStep !== null, closeWheel);
 
   const chooseByClass = async () => {
     setWheelStep('pickClass');

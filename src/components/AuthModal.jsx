@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import api from "../api";
@@ -42,6 +42,16 @@ export default function AuthModal({
   const currentLangData = t[lang] || t.RU;
   const authT = currentLangData.auth;
 
+  // Esc закрывает модалку — стандартное ожидание для клавиатурных
+  // пользователей, которого раньше не было (только клик по ✕).
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => { if (e.key === "Escape") closeModal(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
@@ -82,8 +92,15 @@ export default function AuthModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-white/80 dark:bg-black/90 backdrop-blur-md p-4">
-      <div role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-12 rounded-[44px] shadow-2xl relative">
+    <div
+      onClick={closeModal}
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-white/80 dark:bg-black/90 backdrop-blur-md p-4"
+    >
+      <div
+        role="dialog" aria-modal="true" aria-labelledby="auth-modal-title"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-12 rounded-[44px] shadow-2xl relative"
+      >
         <button
           onClick={closeModal}
           aria-label={lang === "KZ" ? "Жабу" : lang === "EN" ? "Close" : "Закрыть"}

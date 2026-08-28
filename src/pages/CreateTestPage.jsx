@@ -7,6 +7,7 @@ import { I18N as t } from '../lib/i18n';
 import { buildPrompt } from '../lib/prompt';
 import api from '../api';
 import Header from "../components/Header";
+import useEscapeKey from "../hooks/useEscapeKey";
 
 // Все подписи страницы. Раньше половина была захардкожена по-английски,
 // половина по-русски, и переключатель языка их не трогал.
@@ -135,6 +136,9 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportContext, setReportContext] = useState("");
   const [copied, setCopied] = useState(false);
+
+  useEscapeKey(showReportModal, () => { setShowReportModal(false); setReportError(""); });
+  useEscapeKey(!!selectedStudent, () => setSelectedStudent(null));
 
   // Настройки генерации теста; экран их пока не меняет
   const testUi = {

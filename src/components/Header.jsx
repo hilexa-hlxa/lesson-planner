@@ -60,14 +60,20 @@ export default function Header({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Закрываем мобильное меню при клике вне него
+  // Закрываем мобильное меню при клике вне него или по Esc — второе нужно
+  // клавиатурным пользователям, у которых нет "клика вне" как способа выйти.
   useEffect(() => {
     if (!menuOpen) return;
     const onClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     };
+    const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false); };
     document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [menuOpen]);
 
   // ЛОГИКА "УМНОГО" ЛОГОТИПА

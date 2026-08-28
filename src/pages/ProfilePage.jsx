@@ -11,6 +11,7 @@ import { achievementText } from "../lib/achievements";
 import AchievementToast from "../components/AchievementToast";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import useEscapeKey from "../hooks/useEscapeKey";
 
 const T = {
   RU: {
@@ -89,6 +90,8 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
   const [tempData, setTempData] = useState({ firstName: "", lastName: "" });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  useEscapeKey(isEditOpen, () => setIsEditOpen(false));
 
   const [coins, setCoins] = useState(user?.coins || 0);
   const [unlocked, setUnlocked] = useState(() => new Set(user?.achievements || []));
