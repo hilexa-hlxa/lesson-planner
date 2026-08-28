@@ -73,3 +73,51 @@ services:
       - path: /assets/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
+
+      # Security headers — there were none beyond what Render/Cloudflare add
+      # automatically (HSTS, X-Content-Type-Options). Applied to every path.
+      #
+      # CSP notes, since this is the header most likely to silently break
+      # something if changed carelessly:
+      # - script-src allows exactly one inline script by SHA-256 hash rather
+      #   than 'unsafe-inline' — the dark-mode/high-contrast FOUC-prevention
+      #   script in index.html's <head> (see that file's comment). Precise
+      #   allowance, not a blanket one; any OTHER injected inline script
+      #   still gets blocked. If that script's exact text ever changes,
+      #   recompute the hash (python3 -c "import hashlib,base64;
+      #   print(base64.b64encode(hashlib.sha256(open('index.html').read()
+      #   .split('<script>')[1].split('</script>')[0].encode()).digest())
+      #   .decode())") and update the value below, or the FOUC fix silently
+      #   stops running (fails closed — no error, dark mode just flashes
+      #   again).
+      # - style-src needs 'unsafe-inline': several components (FortuneWheel,
+      #   SeatingChartPage's grid, DailyChallengePage's progress bar) use
+      #   React's style={{}} prop with per-render-computed values, which
+      #   can't be hash-allowed. Standard, broadly-accepted tradeoff — CSS
+      #   injection risk is much lower than script injection, which is why
+      #   script-src above gets the precise treatment and this doesn't.
+      # - connect-src names the backend origin explicitly — every fetch in
+      #   src/api.js goes to VITE_API_BASE_URL (lessonlab-backend.onrender.com
+      #   in this deploy). Update this if the backend ever moves origins.
+      - path: /*
+        name: Content-Security-Policy
+        value: >-
+          default-src 'self';
+          script-src 'self' 'sha256-VX8LmaaG7MUWhqcli9SZJOUu8Okk6HPlfQS7x6bHl2s=';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data:;
+          font-src 'self';
+          connect-src 'self' https://lessonlab-backend.onrender.com;
+          frame-ancestors 'none';
+          base-uri 'self';
+          form-action 'self';
+          object-src 'none'
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=(), payment=(), usb=()

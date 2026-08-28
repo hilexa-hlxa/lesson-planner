@@ -13,6 +13,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 3. Включаем модуль Apache для путей (mod_rewrite)
 RUN a2enmod rewrite
 
+# 3.0 Убираем "X-Powered-By: PHP/x.y.z" из ответов — версия PHP в заголовке
+# ничего не даёт клиенту, зато бесплатно подсказывает атакующему, какие
+# известные уязвимости конкретной версии пробовать.
+RUN echo "expose_php = Off" > /usr/local/etc/php/conf.d/no-expose-php.ini
+
 # 3.1 Composer и зависимости PHP. Без этого шага vendor/autoload.php в образе
 # нет, и экспорт в DOCX падает: маршрут /api/generations/{id}/export-docx
 # делает require этого файла. Ставим до копирования кода, чтобы слой с
