@@ -41,6 +41,12 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Max-Age: 600");
 
+// Стоит копейки, а закрывает MIME-sniffing: без этого заголовка старые
+// браузеры могли попытаться угадать тип ответа по содержимому и выполнить
+// JSON как что-то другое, если контент когда-нибудь будет частично
+// контролируем пользователем (например, echo одного поля без Content-Type).
+header("X-Content-Type-Options: nosniff");
+
 // Handle preflight requests
 if ($method === 'OPTIONS') {
   http_response_code(204);
