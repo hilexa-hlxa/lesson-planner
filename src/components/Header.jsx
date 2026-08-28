@@ -2,13 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   GraduationCap, User, LogOut, Sun,
-  Moon, Type, Contrast, Settings2
+  Moon, Type, Contrast, Settings2, Search
 } from 'lucide-react';
 
 import api from "../api";
 import { invalidate, invalidatePrefixRaw } from "../apiCache";
 import LanguageSwitcher from "./LanguageSwitcher";
+import CommandPalette from "./CommandPalette";
 import { I18N as t } from "../lib/i18n";
+
+const SEARCH_LABEL = { RU: "Поиск", KZ: "Іздеу", EN: "Search" };
 
 // Панель доступности — используется и в десктопной строке, и в мобильном меню
 function AccessibilityPanel({ dark, setDark, highContrast, setHighContrast, fontSize, setFontSize, stacked = false }) {
@@ -59,6 +62,20 @@ export default function Header({
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Cmd/Ctrl+K из любого места приложения — Header смонтирован на каждом
+  // маршруте, так что глобальный слушатель тут и есть "глобальный".
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   // Закрываем мобильное меню при клике вне него или по Esc — второе нужно
   // клавиатурным пользователям, у которых нет "клика вне" как способа выйти.
@@ -94,6 +111,7 @@ export default function Header({
   const a11yProps = { dark, setDark, highContrast, setHighContrast, fontSize, setFontSize };
 
   return (
+    <>
     <nav className={`fixed ${announcementBar ? 'top-9' : 'top-0'} left-0 right-0 z-[100] flex justify-between items-center gap-3 px-4 sm:px-8 lg:px-12 py-4 lg:py-6 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/10 dark:border-white/10 transition-all`}>
 
       {/* 1. ЛОГОТИП С УМНОЙ НАВИГАЦИЕЙ */}
@@ -113,6 +131,16 @@ export default function Header({
 
       {/* 3. АККАУНТ И ЯЗЫК */}
       <div className="flex-1 min-w-0 flex justify-end items-center gap-2 sm:gap-4 lg:gap-6">
+        {showAccessibility && (
+          <button
+            onClick={() => setPaletteOpen(true)}
+            aria-label={SEARCH_LABEL[lang] || SEARCH_LABEL.RU}
+            title={`${SEARCH_LABEL[lang] || SEARCH_LABEL.RU} (${navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+K)`}
+            className="p-2.5 rounded-xl border-2 border-black/10 dark:border-white/10 hover:border-black dark:hover:border-white transition-all shrink-0"
+          >
+            <Search size={18} />
+          </button>
+        )}
         <div className="hidden sm:block">
           <LanguageSwitcher lang={lang} setLang={setLang} />
         </div>
@@ -163,5 +191,7 @@ export default function Header({
         )}
       </div>
     </nav>
+    {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} lang={lang} user={user} />}
+    </>
   );
 }
