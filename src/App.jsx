@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState, Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 
 import api from "./api";
 import { meCached } from "./apiCache"; // Импортируем ме-кэш
@@ -226,7 +226,14 @@ export default function App() {
   const isWidgetVisible = user && user.role === 'teacher' && activeRoutes.includes(location.pathname);
 
   return (
-    <>
+    // reducedMotion="user" — framer-motion уже умеет уважать
+    // prefers-reduced-motion, просто раньше этого нигде не было включено:
+    // все motion.div/AnimatePresence в приложении (переходы между
+    // страницами в Page, лендинг, тосты) анимировались одинаково для всех,
+    // независимо от системной настройки "уменьшить движение". Один враппер
+    // здесь покрывает вообще все motion-компоненты приложения — обходить
+    // каждый вручную не нужно.
+    <MotionConfig reducedMotion="user">
       <AuthModal
         isOpen={isAuthOpen} mode={authMode} setMode={setAuthMode}
         onClose={() => setIsAuthOpen(false)} email={email} setEmail={setEmail}
@@ -297,6 +304,6 @@ export default function App() {
       />
       
       {isWidgetVisible && <ClassControlBar />}
-    </>
+    </MotionConfig>
   );
 }
