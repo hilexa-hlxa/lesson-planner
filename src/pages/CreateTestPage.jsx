@@ -582,8 +582,9 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                         <div className="flex gap-4 flex-shrink-0">
                             <button onClick={() => setReport("")} className="flex-1 py-3 font-bold text-gray-400 hover:text-black">{tr.back}</button>
                             {/* Copy Button */}
-                            <button 
-                                onClick={copyToClipboard} 
+                            <button
+                                onClick={copyToClipboard}
+                                aria-label={copied ? tr.copied : tr.copy}
                                 className={`flex-1 py-3 ${copied ? 'bg-green-500' : 'bg-purple-600'} text-white rounded-xl font-bold uppercase flex items-center justify-center gap-2 transition-all`}
                             >
                                 {copied ? <Check size={18} /> : <Copy size={18} />}

@@ -141,7 +141,7 @@ export default function MathBattleGame({
                 {d}
               </button>
             ))}
-            <button onClick={backspace} className="h-14 rounded-2xl font-black bg-slate-300 dark:bg-zinc-600 flex items-center justify-center active:scale-95">
+            <button onClick={backspace} aria-label={lang === "KZ" ? "Өшіру" : lang === "EN" ? "Backspace" : "Стереть"} className="h-14 rounded-2xl font-black bg-slate-300 dark:bg-zinc-600 flex items-center justify-center active:scale-95">
               <Delete size={20} />
             </button>
             <button onClick={() => pressDigit('0')} className="h-14 rounded-2xl font-black text-xl bg-slate-200 dark:bg-zinc-700 active:scale-95 transition-transform">0</button>

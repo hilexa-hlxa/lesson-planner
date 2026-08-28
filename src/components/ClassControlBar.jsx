@@ -30,12 +30,14 @@ const ClassControlBar = () => {
         </span>
         <button
           onClick={() => setIsActive(v => !v)}
+          aria-label={isActive ? "Pause timer" : "Start timer"}
           className={`p-1.5 rounded-lg border-2 border-black dark:border-white transition ${isActive ? 'bg-red-400' : 'bg-green-400'}`}
         >
           {isActive ? <Square size={14} fill="black" /> : <Play size={14} fill="black" />}
         </button>
         <button
           onClick={reset}
+          aria-label="Reset timer"
           className="p-1.5 rounded-lg border-2 border-black dark:border-white bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 transition"
         >
           <RotateCcw size={14} className="dark:text-white" />

@@ -75,7 +75,7 @@ const FortuneWheel = ({ initialNames, participants, onClose, onWin }) => {
         onClick={(e) => e.stopPropagation()}
         className="bg-white border-[6px] border-black rounded-[40px] shadow-2xl w-full max-w-6xl h-[90vh] flex overflow-hidden relative"
       >
-        <button onClick={onClose} className="absolute top-6 right-6 z-50 p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <button onClick={onClose} aria-label="Close" className="absolute top-6 right-6 z-50 p-2 hover:bg-gray-100 rounded-full transition-colors">
           <X size={32} className="text-black" />
         </button>
 

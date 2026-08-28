@@ -13,7 +13,7 @@ const WHEEL_T = {
     byClass: 'Из класса', byClassDesc: 'Крутит реальных учеников — правильный ответ можно наградить монетами.',
     custom: 'Свой список', customDesc: 'Впиши что угодно — темы, категории, номера вариантов.',
     pickClass: 'Выбери класс', noClasses: 'У тебя пока нет ни одного класса.',
-    studentFallback: 'Ученик',
+    studentFallback: 'Ученик', close: 'Закрыть',
     awarded: 'Начислено 10 монет!', awardFailed: 'Не удалось начислить монеты.',
   },
   KZ: {
@@ -21,7 +21,7 @@ const WHEEL_T = {
     byClass: 'Сыныптан', byClassDesc: 'Нақты оқушыларды айналдырады — дұрыс жауапты монетамен марапаттауға болады.',
     custom: 'Өз тізімің', customDesc: 'Кез келгенін жаз — тақырыптар, санаттар, нұсқа нөмірлері.',
     pickClass: 'Сыныпты таңда', noClasses: 'Сенде әзірге бір де сынып жоқ.',
-    studentFallback: 'Оқушы',
+    studentFallback: 'Оқушы', close: 'Жабу',
     awarded: '10 монета есептелді!', awardFailed: 'Монета есептеу мүмкін болмады.',
   },
   EN: {
@@ -29,7 +29,7 @@ const WHEEL_T = {
     byClass: 'From a class', byClassDesc: 'Spins real students — you can reward a correct answer with coins.',
     custom: 'Custom list', customDesc: 'Type anything — topics, categories, variant numbers.',
     pickClass: 'Pick a class', noClasses: "You don't have any classes yet.",
-    studentFallback: 'Student',
+    studentFallback: 'Student', close: 'Close',
     awarded: '10 coins awarded!', awardFailed: 'Could not award coins.',
   },
 };
@@ -437,7 +437,7 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
       {wheelStep === 'choose' && (
         <div onClick={closeWheel} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4">
           <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-[32px] p-8 max-w-md w-full relative">
-            <button onClick={closeWheel} className="absolute top-5 right-5 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full">
+            <button onClick={closeWheel} aria-label={wt.close} className="absolute top-5 right-5 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full">
               <X size={24} />
             </button>
             <h2 className="text-2xl font-black uppercase mb-6">{wt.title}</h2>
@@ -467,7 +467,7 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
       {wheelStep === 'pickClass' && (
         <div onClick={closeWheel} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4">
           <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-[32px] p-8 max-w-md w-full relative">
-            <button onClick={closeWheel} className="absolute top-5 right-5 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full">
+            <button onClick={closeWheel} aria-label={wt.close} className="absolute top-5 right-5 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full">
               <X size={24} />
             </button>
             <h2 className="text-2xl font-black uppercase mb-6">{wt.pickClass}</h2>

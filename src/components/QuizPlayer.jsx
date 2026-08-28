@@ -239,7 +239,7 @@ const QuizPlayer = ({ grantAchievement, lang = "RU" }) => {
              <Timer size={18} className="text-emerald-500" />
              <span className="font-black font-mono text-lg">{elapsedTime}s</span>
           </div>
-          <button onClick={handleExit} className="p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition"><LogOut size={18} /></button>
+          <button onClick={handleExit} aria-label={tr.exit} className="p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-200 transition"><LogOut size={18} /></button>
        </div>
 
        <div className="w-full h-3 bg-gray-200 dark:bg-zinc-800 rounded-full mb-8 overflow-hidden">
