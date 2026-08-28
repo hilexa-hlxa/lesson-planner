@@ -93,7 +93,8 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
 
   // Join class (student)
   const [joinCode, setJoinCode] = useState('');
-  const joinClass = async () => {
+  const joinClass = async (e) => {
+    e?.preventDefault();
     if (joinCode.length !== 4) return;
     setLoading(true); setError('');
     try {
@@ -193,7 +194,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
           </div>
         ) : mode === 'join' ? (
           /* Student join panel */
-          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
+          <form onSubmit={joinClass} className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             <h2 className="font-black text-xl uppercase mb-6">{t.classJoin}</h2>
             <input
               value={joinCode}
@@ -205,13 +206,13 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
             />
             {error && <p role="alert" className="text-red-500 font-bold text-sm mb-3">{error}</p>}
             <button
-              onClick={joinClass}
+              type="submit"
               disabled={loading || joinCode.length !== 4}
               className="w-full py-4 bg-purple-600 text-white font-black text-lg uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40 transition-opacity"
             >
               {loading ? t.generating : t.join}
             </button>
-          </div>
+          </form>
         ) : mode === 'host' ? (
           /* Teacher host panel */
           <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">

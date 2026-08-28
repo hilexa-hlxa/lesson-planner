@@ -98,7 +98,8 @@ export default function MathBattlePage({ lang, setLang, user, setUser, grantAchi
 
   // Join duel (student)
   const [joinCode, setJoinCode] = useState('');
-  const joinDuel = async () => {
+  const joinDuel = async (e) => {
+    e?.preventDefault();
     if (joinCode.length !== 4) return;
     setLoading(true); setError('');
     try {
@@ -214,7 +215,7 @@ export default function MathBattlePage({ lang, setLang, user, setUser, grantAchi
             <div className="text-2xl font-black animate-pulse">{loading ? t.generating : error || ''}</div>
           </div>
         ) : mode === 'join' ? (
-          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
+          <form onSubmit={joinDuel} className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             <h2 className="font-black text-xl uppercase mb-6">{t.classJoin}</h2>
             <input
               value={joinCode}
@@ -225,11 +226,11 @@ export default function MathBattlePage({ lang, setLang, user, setUser, grantAchi
               maxLength={4}
             />
             {error && <p role="alert" className="text-red-500 font-bold text-sm mb-3">{error}</p>}
-            <button onClick={joinDuel} disabled={loading || joinCode.length !== 4}
+            <button type="submit" disabled={loading || joinCode.length !== 4}
               className="w-full py-4 bg-purple-600 text-white font-black text-lg uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40 transition-opacity">
               {loading ? t.generating : t.join}
             </button>
-          </div>
+          </form>
         ) : mode === 'host' ? (
           <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             <h2 className="font-black text-xl uppercase mb-6">{t.classHost}</h2>

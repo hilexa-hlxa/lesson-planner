@@ -116,7 +116,8 @@ export default function TriviaRacePage({ lang, setLang, user, setUser, grantAchi
     } finally { setLoading(false); }
   };
 
-  const joinRace = async () => {
+  const joinRace = async (e) => {
+    e?.preventDefault();
     if (joinCode.length !== 4) return;
     setLoading(true); setError('');
     try {
@@ -183,7 +184,7 @@ export default function TriviaRacePage({ lang, setLang, user, setUser, grantAchi
             )}
           </div>
         ) : mode === 'join' ? (
-          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
+          <form onSubmit={joinRace} className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             <h2 className="font-black text-xl uppercase mb-6">{t.classJoin}</h2>
             <input
               value={studentName} onChange={(e) => setStudentName(e.target.value)}
@@ -200,11 +201,11 @@ export default function TriviaRacePage({ lang, setLang, user, setUser, grantAchi
               maxLength={4}
             />
             {error && <p role="alert" className="text-red-500 font-bold text-sm mb-3">{error}</p>}
-            <button onClick={joinRace} disabled={loading || joinCode.length !== 4}
+            <button type="submit" disabled={loading || joinCode.length !== 4}
               className="w-full py-4 bg-amber-500 text-white font-black text-lg uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40 transition-opacity">
               {loading ? t.generating : t.join}
             </button>
-          </div>
+          </form>
         ) : mode === 'host' ? (
           <div className="p-8 bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[6px_6px_0_0_#000]">
             <h2 className="font-black text-xl uppercase mb-6">{t.classHost}</h2>
