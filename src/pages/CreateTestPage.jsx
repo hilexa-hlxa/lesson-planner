@@ -516,7 +516,14 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                 </div>
             )}
             {savedTests.map((item) => (
-                <div key={item.id} onClick={() => handleSelectOldTest(item)} className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] ${activeTest?.id === item.id ? 'bg-emerald-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-emerald-300'}`}>
+                <div
+                    key={item.id}
+                    onClick={() => handleSelectOldTest(item)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSelectOldTest(item); } }}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-emerald-500/40 ${activeTest?.id === item.id ? 'bg-emerald-600 border-black text-white shadow-md' : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-emerald-300'}`}
+                >
                     <h4 className="font-black text-sm mb-1 line-clamp-2 flex items-center gap-1.5">
                         {item.status === "running" && <RefreshCw size={12} className="shrink-0 animate-spin opacity-60" />}
                         {item.status === "error" && <AlertCircle size={12} className="shrink-0 text-red-500" />}

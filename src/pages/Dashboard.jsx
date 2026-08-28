@@ -239,7 +239,16 @@ export default function Dashboard({
                   activeIdRef.current = item.id;
                   setActiveMenu(null);
                 }}
-                className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-emerald-600 hover:text-white transition-all shadow-sm cursor-pointer
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  setActiveId(item.id);
+                  activeIdRef.current = item.id;
+                  setActiveMenu(null);
+                }}
+                className={`group relative p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/40 hover:bg-emerald-600 hover:text-white transition-all shadow-sm cursor-pointer focus:outline-none focus:ring-4 focus:ring-emerald-500/40
                   ${activeId === item.id ? "ring-4 ring-emerald-500/20" : ""}`}
               >
                 <div className="flex justify-between items-center">

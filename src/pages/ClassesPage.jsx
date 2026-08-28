@@ -113,7 +113,12 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
               <div
                 key={cls.id}
                 onClick={() => navigate(`/classes/${cls.id}`)}
-                className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.3)] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all p-8"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/classes/${cls.id}`); }
+                }}
+                className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-[32px] border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_#000] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.3)] hover:shadow-none hover:translate-x-2 hover:translate-y-2 transition-all p-8 focus:outline-none focus:ring-4 focus:ring-emerald-500/40"
               >
                 <div className="flex items-start justify-between mb-4">
                   <h2 className="text-3xl font-black uppercase tracking-tight leading-tight">{cls.name}</h2>
