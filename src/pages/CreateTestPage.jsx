@@ -380,17 +380,17 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                <div>
                    <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{tr.subject}</label>
-                   <input value={subject} onChange={e => setSubject(e.target.value)} placeholder={tr.subjectPh} aria-label={tr.subject} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none" />
+                   <input value={subject} onChange={e => setSubject(e.target.value)} placeholder={tr.subjectPh} aria-label={tr.subject} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none focus:ring-2 focus:ring-emerald-500/40" />
                </div>
                <div>
                    <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{tr.grade}</label>
-                   <select value={grade} onChange={e => setGrade(e.target.value)} aria-label={tr.grade} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none appearance-none cursor-pointer">
+                   <select value={grade} onChange={e => setGrade(e.target.value)} aria-label={tr.grade} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500/40">
                         {[...Array(11)].map((_, i) => <option key={i+1} value={i+1}>{i+1}</option>)}
                    </select>
                </div>
            </div>
            <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{tr.topic}</label>
-           <input value={topic} onChange={e => setTopic(e.target.value)} placeholder={tr.topicPh} aria-label={tr.topic} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none mb-6" />
+           <input value={topic} onChange={e => setTopic(e.target.value)} placeholder={tr.topicPh} aria-label={tr.topic} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none mb-6 focus:ring-2 focus:ring-emerald-500/40" />
            
            <button
                 onClick={handleGenerate}

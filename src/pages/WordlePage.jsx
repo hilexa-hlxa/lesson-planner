@@ -200,7 +200,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
               onChange={e => setJoinCode(e.target.value.replace(/\D/g,'').slice(0,4))}
               placeholder={t.codePlaceholder}
               aria-label={t.codePlaceholder}
-              className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none"
+              className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none focus:ring-2 focus:ring-emerald-500/40"
               maxLength={4}
             />
             {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
@@ -225,7 +225,7 @@ export default function WordlePage({ lang, setLang, user, setUser, ...accessProp
                   placeholder={t.wordPlaceholder}
                   aria-label={t.wordPlaceholder}
                   maxLength={10}
-                  className="w-full text-center text-2xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-widest mb-4 outline-none uppercase"
+                  className="w-full text-center text-2xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-widest mb-4 outline-none uppercase focus:ring-2 focus:ring-emerald-500/40"
                 />
                 {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
                 <div className="flex gap-3">

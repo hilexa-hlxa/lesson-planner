@@ -168,19 +168,19 @@ export default function SeatingChartPage({ lang, setLang, user, setUser, ...acce
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.rows}</label>
                   <input type="number" min={1} max={10} value={rows} onChange={(e) => setRows(Math.max(1, Number(e.target.value)))}
                     aria-label={t.rows}
-                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none" />
+                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-emerald-500/40" />
                 </div>
                 <div>
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.cols}</label>
                   <input type="number" min={1} max={10} value={cols} onChange={(e) => setCols(Math.max(1, Number(e.target.value)))}
                     aria-label={t.cols}
-                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none" />
+                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-emerald-500/40" />
                 </div>
               </div>
               <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.keepApart}</label>
               <textarea value={keepApart} onChange={(e) => setKeepApart(e.target.value)} rows={3}
                 aria-label={t.keepApart}
-                className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none resize-none mb-4"
+                className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none resize-none mb-4 focus:ring-2 focus:ring-emerald-500/40"
                 placeholder={t.keepApartPh} />
               <button onClick={doGenerate}
                 className="w-full py-4 bg-emerald-600 text-white rounded-2xl border-4 border-black dark:border-white font-black uppercase text-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform">

@@ -221,7 +221,7 @@ export default function MathBattlePage({ lang, setLang, user, setUser, grantAchi
               onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
               placeholder={t.codePlaceholder}
               aria-label={t.codePlaceholder}
-              className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none"
+              className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none focus:ring-2 focus:ring-emerald-500/40"
               maxLength={4}
             />
             {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
@@ -239,7 +239,7 @@ export default function MathBattlePage({ lang, setLang, user, setUser, grantAchi
                 <label className="block font-black text-xs uppercase text-slate-500 dark:text-slate-400 mb-2">{t.grade}</label>
                 <select value={grade} onChange={(e) => setGrade(Number(e.target.value))}
                   aria-label={t.grade}
-                  className="w-full text-center text-xl font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 mb-4 outline-none">
+                  className="w-full text-center text-xl font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 mb-4 outline-none focus:ring-2 focus:ring-emerald-500/40">
                   {Array.from({ length: 11 }, (_, i) => i + 1).map((g) => (
                     <option key={g} value={g}>{g}</option>
                   ))}

@@ -121,7 +121,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.criteria}</label>
                   <select value={form.criteria} onChange={(e) => setForm((f) => ({ ...f, criteria: Number(e.target.value) }))}
                     aria-label={t.criteria}
-                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
+                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-emerald-500/40">
                     {[3, 4, 5, 6].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -129,7 +129,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.levels}</label>
                   <select value={form.levels} onChange={(e) => setForm((f) => ({ ...f, levels: Number(e.target.value) }))}
                     aria-label={t.levels}
-                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
+                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-emerald-500/40">
                     {[3, 4, 5].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -161,7 +161,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
             {exportError && <p className="text-red-500 font-bold text-sm mb-2">{exportError}</p>}
             <textarea readOnly value={output || (generating ? '' : '...')}
               aria-label={t.result}
-              className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300" />
+              className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300 focus:ring-2 focus:ring-emerald-500/40" />
           </div>
         </div>
       </main>

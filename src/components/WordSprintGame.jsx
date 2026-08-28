@@ -66,7 +66,7 @@ export default function WordSprintGame({ sentence, lang = 'RU', onFinish, onExit
           placeholder={t.placeholder}
           aria-label={t.placeholder}
           autoComplete="off" autoCorrect="off" spellCheck="false"
-          className="w-full p-4 text-lg font-mono border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none"
+          className="w-full p-4 text-lg font-mono border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-emerald-500/40"
         />
       )}
 

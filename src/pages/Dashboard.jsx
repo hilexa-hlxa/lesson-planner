@@ -327,10 +327,10 @@ export default function Dashboard({
           </div>
           <div className="space-y-6 sm:space-y-10">
             <div className="grid grid-cols-2 gap-4 sm:gap-8">
-              <select value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })} className="w-full p-4 sm:p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm outline-none">
+              <select value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })} className="w-full p-4 sm:p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500/40">
                 {[...Array(11)].map((_, i) => <option key={i+1} value={i+1}>{i+1} {GEN_T.gradeSuffix}</option>)}
               </select>
-              <select value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} className="w-full p-4 sm:p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm outline-none">
+              <select value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} className="w-full p-4 sm:p-5 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl border-none font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500/40">
                 {[45, 90, 135].map(v => <option key={v} value={v}>{v} {GEN_T.minSuffix}</option>)}
               </select>
             </div>

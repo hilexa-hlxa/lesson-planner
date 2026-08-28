@@ -124,7 +124,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.grade}</label>
                   <select value={form.grade} onChange={(e) => setForm((f) => ({ ...f, grade: Number(e.target.value) }))}
                     aria-label={t.grade}
-                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
+                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-emerald-500/40">
                     {Array.from({ length: 11 }, (_, i) => i + 1).map((g) => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
@@ -132,7 +132,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
                   <label className="block font-black text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">{t.count}</label>
                   <select value={form.count} onChange={(e) => setForm((f) => ({ ...f, count: Number(e.target.value) }))}
                     aria-label={t.count}
-                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none">
+                    className="w-full px-4 py-3 bg-slate-100 dark:bg-zinc-800 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-emerald-500/40">
                     {[5, 10, 15, 20].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -164,7 +164,7 @@ export default function WorksheetGeneratorPage({ lang, setLang, user, setUser, .
             {exportError && <p className="text-red-500 font-bold text-sm mb-2">{exportError}</p>}
             <textarea readOnly value={output || (generating ? '' : '...')}
               aria-label={t.result}
-              className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300" />
+              className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300 focus:ring-2 focus:ring-emerald-500/40" />
           </div>
         </div>
       </main>

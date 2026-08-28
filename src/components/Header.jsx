@@ -36,7 +36,7 @@ function AccessibilityPanel({ dark, setDark, highContrast, setHighContrast, font
           value={fontSize}
           onChange={(e) => setFontSize(e.target.value)}
           aria-label="Font size"
-          className="bg-transparent font-black text-[11px] uppercase outline-none cursor-pointer dark:text-white"
+          className="bg-transparent font-black text-[11px] uppercase outline-none cursor-pointer dark:text-white focus:ring-2 focus:ring-emerald-500/40"
         >
           <option value="md">A</option>
           <option value="lg">A+</option>
