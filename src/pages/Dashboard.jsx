@@ -221,9 +221,9 @@ export default function Dashboard({
 
       <aside className="w-full lg:w-80 shrink-0 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl rounded-[32px] lg:rounded-[40px] border border-white/20 flex flex-col shadow-xl max-h-[320px] lg:max-h-none">
         <div className="flex-1 p-6 sm:p-8 overflow-y-auto">
-          <div className="text-[10px] font-black opacity-30 mb-8 tracking-[0.3em] uppercase">{cur.h}</div>
+          <div className="text-[10px] font-black text-slate-600 dark:text-zinc-400 mb-8 tracking-[0.3em] uppercase">{cur.h}</div>
           {lessonPlans.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center opacity-50">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-slate-500 dark:text-zinc-400">
               <History size={32} className="mb-3 opacity-40" />
               <p className="text-sm font-bold leading-snug">
                 {lang === "KZ" ? "Жоспарлар жоқ әлі.\nАлғашқы сабақты жасаңыз." : lang === "EN" ? "No plans yet.\nCreate your first lesson." : "Планов пока нет.\nСоздайте первый урок."}
