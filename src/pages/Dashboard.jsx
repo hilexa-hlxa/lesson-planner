@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 
 import ReactMarkdown from "react-markdown";
-import { MoreVertical, Edit3, Trash2, History, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { MoreVertical, Trash2, History, Sparkles, Loader2, AlertCircle } from "lucide-react";
 
 import api from "../api";
 // Оставили только ОДИН чистый импорт
 import { cached, invalidatePrefixRaw, lessonPlansListCached } from "../apiCache";
 import Header from "../components/Header";
+import useEscapeKey from "../hooks/useEscapeKey";
 import { Skeleton } from "../components/Skeleton";
 import { I18N as t, tr } from "../lib/i18n";
 import { payloadToMarkdown } from "../lib/lessonPlanDoc";
@@ -61,6 +62,7 @@ export default function Dashboard({
   const [lessonPlans, setLessonPlans] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
+  useEscapeKey(activeMenu !== null, () => setActiveMenu(null));
   
   const activeIdRef = useRef(null);
   const cur = t[lang] || t.RU;
@@ -277,19 +279,6 @@ export default function Dashboard({
                                     shadow-2xl overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <button
-                            type="button"
-                            className="w-full px-4 py-3 text-left text-sm font-bold hover:bg-black/5 dark:hover:bg-white/5 flex items-center gap-2"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setActiveMenu(null);
-                              // TODO: edit handler
-                            }}
-                          >
-                            <Edit3 size={16} /> {GEN_T.edit}
-                          </button>
-
                           <button
                             type="button"
                             className="w-full px-4 py-3 text-left text-sm font-bold hover:bg-black/5 dark:hover:bg-white/5 flex items-center gap-2 text-red-600"
