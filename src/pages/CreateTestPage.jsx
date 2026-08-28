@@ -533,8 +533,8 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
       {/* Modal: AI Report */}
       {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-[30px] p-6 md:p-8 shadow-2xl border-[4px] border-purple-600 max-h-[90vh] overflow-y-auto flex flex-col">
+        <div onClick={() => { setShowReportModal(false); setReportError(""); }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-[30px] p-6 md:p-8 shadow-2xl border-[4px] border-purple-600 max-h-[90vh] overflow-y-auto flex flex-col">
                 <h3 className="text-2xl font-black uppercase mb-2 flex-shrink-0">{tr.reportTitle}</h3>
                 
                 {!report ? (
@@ -599,8 +599,8 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
       {/* Modal: Student Details */}
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in zoom-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-lg max-h-[80vh] overflow-hidden rounded-[30px] shadow-2xl flex flex-col border-[4px] border-black dark:border-gray-700">
+        <div onClick={() => setSelectedStudent(null)} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in zoom-in duration-200">
+            <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-zinc-900 w-full max-w-lg max-h-[80vh] overflow-hidden rounded-[30px] shadow-2xl flex flex-col border-[4px] border-black dark:border-gray-700">
                 <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50 dark:bg-zinc-800/50">
                     <div>
                         <h3 className="text-xl font-black uppercase">{selectedStudent.student_name}</h3>

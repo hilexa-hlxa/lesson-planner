@@ -68,10 +68,11 @@ const FortuneWheel = ({ initialNames, participants, onClose, onWin }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4 font-sans animate-in fade-in">
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }} 
-        animate={{ scale: 1, opacity: 1 }} 
+    <div onClick={onClose} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4 font-sans animate-in fade-in">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        onClick={(e) => e.stopPropagation()}
         className="bg-white border-[6px] border-black rounded-[40px] shadow-2xl w-full max-w-6xl h-[90vh] flex overflow-hidden relative"
       >
         <button onClick={onClose} className="absolute top-6 right-6 z-50 p-2 hover:bg-gray-100 rounded-full transition-colors">

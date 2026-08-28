@@ -435,8 +435,8 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
 
       {/* Шаг выбора: реальный класс или свободный список */}
       {wheelStep === 'choose' && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-[32px] p-8 max-w-md w-full relative">
+        <div onClick={closeWheel} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4">
+          <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-[32px] p-8 max-w-md w-full relative">
             <button onClick={closeWheel} className="absolute top-5 right-5 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full">
               <X size={24} />
             </button>
@@ -465,8 +465,8 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
 
       {/* Шаг выбора класса */}
       {wheelStep === 'pickClass' && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-[32px] p-8 max-w-md w-full relative">
+        <div onClick={closeWheel} className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100000] flex items-center justify-center p-4">
+          <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white rounded-[32px] p-8 max-w-md w-full relative">
             <button onClick={closeWheel} className="absolute top-5 right-5 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full">
               <X size={24} />
             </button>

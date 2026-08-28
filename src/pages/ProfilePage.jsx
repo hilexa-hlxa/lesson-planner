@@ -317,8 +317,8 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
 
       {/* === МОДАЛКА РЕДАКТИРОВАНИЯ === */}
       {isEditOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white p-6 sm:p-8 rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] relative">
+        <div onClick={() => setIsEditOpen(false)} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-white dark:bg-zinc-900 border-[4px] border-black dark:border-white p-6 sm:p-8 rounded-2xl shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] relative">
             <button
                 onClick={() => setIsEditOpen(false)}
                 aria-label="Close"
