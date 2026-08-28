@@ -370,7 +370,7 @@ export default function Dashboard({
             disabled={!activeId}
             onClick={() => {
               if (!activeId) return;
-              window.location.href = `/api/generations/${activeId}/export-docx`;
+              window.location.href = api.lessonPlans.exportDocxUrl(activeId);
             }}
             className="mt-6 w-full py-4 rounded-2xl font-black uppercase tracking-widest bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20"
           >

@@ -163,7 +163,14 @@ const api = {
     get: (id) => request(`/generations/${id}`, { method: 'GET' }),
     create: (payload) => request(`/generations`, { method: 'POST', body: JSON.stringify(payload) }),
     update: (id, payload) => request(`/generations/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
-    remove: async (id) => { await request(`/generations/${id}`, { method: 'DELETE' }); return true; }
+    remove: async (id) => { await request(`/generations/${id}`, { method: 'DELETE' }); return true; },
+    // Не через request(): это GET-навигация браузера (window.location.href =
+    // ...), не fetch — сервер отвечает Content-Disposition: attachment, а не
+    // JSON. Раньше вызывающий код собирал `/api/generations/${id}/export-docx`
+    // сам, тем же багом, что был в generateStream: относительный путь работает
+    // в dev через прокси Vite и ведёт в никуда в проде, где фронтенд и бэкенд
+    // на разных origin. Тут, как и везде в этом файле, — через API_PREFIX.
+    exportDocxUrl: (id) => `${API_PREFIX}/generations/${id}/export-docx`,
   },
 
   tests: {
