@@ -27,6 +27,32 @@
     <meta name="twitter:title" content="Lesson Planner — планы уроков, тесты и отчёты за минуту" />
     <meta name="twitter:description" content="План урока за 60 секунд, тесты с кодом доступа, AI-отчёт для Кунделик. Бесплатно для учителей Казахстана." />
     <meta name="twitter:image" content="https://lessonplanner.kz/og-image.png" />
+
+    <!-- Structured data: static, so it describes the org/product regardless
+         of which client-rendered route a crawler lands on. Per-page <title>
+         and meta description are still updated at runtime — see the SEO
+         effect in src/App.jsx. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "LESSON.LAB",
+        "alternateName": "Lesson Planner",
+        "url": "https://lessonplanner.kz/",
+        "logo": "https://lessonplanner.kz/favicon.svg",
+        "email": "hello@lessonplanner.kz",
+        "areaServed": "KZ",
+        "availableLanguage": ["ru", "kk", "en"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Lesson Planner",
+        "url": "https://lessonplanner.kz/"
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

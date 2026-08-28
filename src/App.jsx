@@ -202,16 +202,50 @@ export default function App() {
         desc: "AI platform for teachers in Kazakhstan: a lesson plan in 60 seconds, quizzes with an access code and no student signup, a ready report for Kundelik.",
       },
     };
-    const m = META[lang] || META.RU;
+
+    // Оверрайды title/description по маршруту — только для страниц, реально
+    // доступных без аккаунта (см. public/sitemap.xml). Остальные роуты сидят
+    // за <Protected> и разворачивают гостя на лендинг, так что общий META
+    // для них достаточен.
+    const ROUTE_META = {
+      "/pricing": {
+        RU: { title: "Тарифы — Lesson Planner", desc: "Один тариф, бесплатный: планы уроков без ограничений, AI-тесты с кодом доступа, итоги уроков и экспорт в DOCX." },
+        KZ: { title: "Тарифтер — Lesson Planner", desc: "Бір тариф, тегін: шектеусіз сабақ жоспарлары, кодпен кіретін AI-тесттер, сабақ қорытындылары және DOCX-ке экспорт." },
+        EN: { title: "Pricing — Lesson Planner", desc: "One plan, free: unlimited lesson plans, AI quizzes with an access code, lesson summaries, and DOCX export." },
+      },
+      "/join-test": {
+        RU: { title: "Войти в тест — Lesson Planner", desc: "Введите код доступа от учителя и имя — без регистрации и пароля." },
+        KZ: { title: "Тестке кіру — Lesson Planner", desc: "Мұғалімнен алған кодты және атыңызды енгізіңіз — тіркеусіз және парольсіз." },
+        EN: { title: "Join a quiz — Lesson Planner", desc: "Enter the access code from your teacher and your name — no signup, no password." },
+      },
+      "/privacy": {
+        RU: { title: "Политика конфиденциальности — Lesson Planner", desc: "Какие данные мы собираем, зачем и что вы можете с ними сделать." },
+        KZ: { title: "Құпиялылық саясаты — Lesson Planner", desc: "Қандай деректерді жинаймыз, не үшін және сіз олармен не істей аласыз." },
+        EN: { title: "Privacy policy — Lesson Planner", desc: "What data we collect, why, and what you can do about it." },
+      },
+      "/terms": {
+        RU: { title: "Условия использования — Lesson Planner", desc: "Правила использования сервиса для учителей и учеников." },
+        KZ: { title: "Пайдалану шарттары — Lesson Planner", desc: "Мұғалімдер мен оқушыларға арналған қызметті пайдалану ережелері." },
+        EN: { title: "Terms of use — Lesson Planner", desc: "Rules for using the service, for teachers and students." },
+      },
+    };
+
+    const base = META[lang] || META.RU;
+    const override = ROUTE_META[location.pathname]?.[lang] || ROUTE_META[location.pathname]?.RU;
+    const m = { ...base, ...override };
 
     document.title = m.title;
-    document.documentElement.setAttribute("lang", m.code);
+    document.documentElement.setAttribute("lang", base.code);
     document.querySelector('meta[name="description"]')?.setAttribute("content", m.desc);
     document.querySelector('meta[property="og:title"]')?.setAttribute("content", m.title);
     document.querySelector('meta[property="og:description"]')?.setAttribute("content", m.desc);
+    // Canonical должен указывать на текущий путь, а не всегда на "/" — иначе
+    // поисковик считает канонической только главную и может не индексировать
+    // /pricing, /privacy и /terms отдельно.
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://lessonplanner.kz${location.pathname}`);
 
     localStorage.setItem("app_lang", lang);
-  }, [lang]);
+  }, [lang, location.pathname]);
 
   // Настройка консольной команды и темы
   useEffect(() => {
