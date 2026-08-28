@@ -582,6 +582,27 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
     return () => clearInterval(t);
   }, [headlines.length]);
 
+  // FAQPage structured data — the FAQ section below already shows this exact
+  // Q&A, so this just makes it eligible for a rich snippet. Injected/removed
+  // on mount/unmount rather than living in index.html: Google's guidelines
+  // require the markup to match content actually visible on the page, and
+  // that's only true here on "/".
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: c.faq.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    });
+    document.head.appendChild(script);
+    return () => document.head.removeChild(script);
+  }, [c.faq]);
+
   const features = [
     { tag: c.f1tag, h: c.f1h, p: c.f1p, b: c.f1b, icon: BookOpen, color: "blue", Visual: PlanVisual },
     { tag: c.f2tag, h: c.f2h, p: c.f2p, b: c.f2b, icon: FileQuestion, color: "purple", Visual: TestVisual },
