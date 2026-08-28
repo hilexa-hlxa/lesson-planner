@@ -164,7 +164,7 @@ export default function ReteachPlannerPage({ lang, setLang, user, setUser, ...ac
 
             {loading && <p className="font-bold text-sm text-slate-500 dark:text-slate-400 animate-pulse">...</p>}
             {error && (
-              <p className="flex items-center gap-2 text-red-500 font-bold text-sm mb-3"><AlertCircle size={16} /> {error}</p>
+              <p role="alert" className="flex items-center gap-2 text-red-500 font-bold text-sm mb-3"><AlertCircle size={16} /> {error}</p>
             )}
 
             {missed && missed.length > 0 && (

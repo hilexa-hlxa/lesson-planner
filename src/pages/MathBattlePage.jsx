@@ -224,7 +224,7 @@ export default function MathBattlePage({ lang, setLang, user, setUser, grantAchi
               className="w-full text-center text-2xl sm:text-4xl font-mono font-black p-4 border-4 border-black dark:border-white rounded-2xl bg-slate-100 dark:bg-zinc-800 tracking-[0.5em] mb-4 outline-none focus:ring-2 focus:ring-emerald-500/40"
               maxLength={4}
             />
-            {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
+            {error && <p role="alert" className="text-red-500 font-bold text-sm mb-3">{error}</p>}
             <button onClick={joinDuel} disabled={loading || joinCode.length !== 4}
               className="w-full py-4 bg-purple-600 text-white font-black text-lg uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40 transition-opacity">
               {loading ? t.generating : t.join}
@@ -244,7 +244,7 @@ export default function MathBattlePage({ lang, setLang, user, setUser, grantAchi
                     <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
-                {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
+                {error && <p role="alert" className="text-red-500 font-bold text-sm mb-3">{error}</p>}
                 <button onClick={hostDuel} disabled={loading}
                   className="w-full py-4 bg-green-600 text-white font-black uppercase rounded-2xl border-4 border-black dark:border-white disabled:opacity-40">
                   {loading ? t.generating : t.createCode}

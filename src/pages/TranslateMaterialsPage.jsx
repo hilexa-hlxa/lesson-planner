@@ -183,7 +183,7 @@ export default function TranslateMaterialsPage({ lang, setLang, user, setUser, .
                 </div>
               )}
             </div>
-            {exportError && <p className="text-red-500 font-bold text-sm mb-2">{exportError}</p>}
+            {exportError && <p role="alert" className="text-red-500 font-bold text-sm mb-2">{exportError}</p>}
             <textarea readOnly value={output || (generating ? '' : '...')}
               aria-label={t.result}
               className="flex-1 min-h-[300px] bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 font-bold text-sm leading-relaxed resize-none outline-none text-slate-700 dark:text-zinc-300 focus:ring-2 focus:ring-emerald-500/40" />

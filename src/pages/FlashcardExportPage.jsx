@@ -159,7 +159,7 @@ export default function FlashcardExportPage({ lang, setLang, user, setUser, ...a
               </button>
             </div>
 
-            {exportError && <p className="text-red-500 font-bold text-sm mt-4">{exportError}</p>}
+            {exportError && <p role="alert" className="text-red-500 font-bold text-sm mt-4">{exportError}</p>}
             <button onClick={handleDownload}
               className="w-full mt-6 py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl border-4 border-black dark:border-white font-black uppercase text-sm flex items-center justify-center gap-2">
               <Download size={16} /> {t.download}

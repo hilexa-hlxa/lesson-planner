@@ -352,7 +352,7 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
               </div>
 
               {saveError && (
-                <p className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
+                <p role="alert" className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
                   {saveError}
                 </p>
               )}

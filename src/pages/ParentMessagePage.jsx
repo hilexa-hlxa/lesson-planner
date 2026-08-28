@@ -177,7 +177,7 @@ export default function ParentMessagePage({ lang, setLang, user, setUser, ...acc
             )}
 
             {loading && <p className="font-bold text-sm text-slate-500 dark:text-slate-400 animate-pulse">...</p>}
-            {error && <p className="text-red-500 font-bold text-sm mb-3">{error}</p>}
+            {error && <p role="alert" className="text-red-500 font-bold text-sm mb-3">{error}</p>}
 
             {history && history.length > 0 && (
               <>

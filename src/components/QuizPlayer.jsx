@@ -271,7 +271,7 @@ const QuizPlayer = ({ grantAchievement, lang = "RU" }) => {
           </div>
 
           {answerError && (
-            <p className="mt-5 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-sm font-bold">
+            <p role="alert" className="mt-5 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-sm font-bold">
               {answerError}
             </p>
           )}

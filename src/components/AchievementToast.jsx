@@ -22,7 +22,11 @@ const AchievementToast = ({ achievement, onClose, lang = "RU" }) => {
   if (!achievement) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[999] animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-6 right-6 z-[999] animate-in fade-in slide-in-from-bottom-4 duration-500"
+    >
       <div className="bg-yellow-400 text-black p-4 rounded-2xl shadow-[6px_6px_0_0_#000] border-[3px] border-black flex items-center gap-4 max-w-sm">
         <div className="bg-white p-3 rounded-xl border-2 border-black">
            <Trophy size={24} className="text-yellow-500 fill-yellow-500 animate-bounce" />

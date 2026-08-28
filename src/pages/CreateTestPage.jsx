@@ -402,7 +402,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
             </button>
 
             {error && (
-              <div className="mt-5 flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
+              <div role="alert" className="mt-5 flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
                 <AlertCircle size={18} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -572,7 +572,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                         </button>
                         
                         {reportError && (
-                          <div className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
+                          <div role="alert" className="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
                             <AlertCircle size={18} className="shrink-0 mt-0.5" />
                             <span>{reportError}</span>
                           </div>
