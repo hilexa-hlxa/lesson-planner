@@ -112,9 +112,9 @@ const StudentJoinPage = ({ lang = "RU", user = null }) => {
 
         <form onSubmit={handleJoin} className="space-y-6">
           <div>
-            <label htmlFor="join-code" className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">{t.codeLabel}</label>
+            <label htmlFor="join-code" className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2 ml-1">{t.codeLabel}</label>
             <div className="relative">
-              <Hash className="absolute left-4 top-4 text-gray-400" size={20} />
+              <Hash className="absolute left-4 top-4 text-gray-500 dark:text-gray-400" size={20} />
               <input
                 id="join-code"
                 type="text"
@@ -129,9 +129,9 @@ const StudentJoinPage = ({ lang = "RU", user = null }) => {
           </div>
 
           <div>
-            <label htmlFor="join-name" className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1">{t.nameLabel}</label>
+            <label htmlFor="join-name" className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2 ml-1">{t.nameLabel}</label>
             <div className="relative">
-              <User className="absolute left-4 top-4 text-gray-400" size={20} />
+              <User className="absolute left-4 top-4 text-gray-500 dark:text-gray-400" size={20} />
               <input
                 id="join-name"
                 type="text"

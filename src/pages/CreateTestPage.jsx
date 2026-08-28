@@ -451,7 +451,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="text-[10px] font-black uppercase text-gray-400 border-b border-gray-200 dark:border-zinc-700">
+                                    <tr className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-zinc-700">
                                         <th className="p-3">{tr.colStudent}</th>
                                         <th className="p-3">{tr.colScore}</th>
                                         <th className="p-3">{tr.colTime}</th>
@@ -479,7 +479,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             </table>
                         </div>
                     ) : (
-                        <div className="text-center py-8 text-gray-400 text-xs font-bold uppercase tracking-widest">
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest">
                             {accessCode ? tr.waiting : tr.startToJoin}
                         </div>
                     )}
@@ -552,16 +552,16 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             />
                         </div>
 
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">{tr.reportType}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">{tr.reportType}</p>
 
                         <button onClick={() => generateReport('coach')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-left transition group">
                             <div className="font-black text-lg uppercase group-hover:text-purple-600">{tr.coachTitle}</div>
-                            <p className="text-xs text-gray-400 font-bold mt-1">{tr.coachDesc}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-bold mt-1">{tr.coachDesc}</p>
                         </button>
 
                         <button onClick={() => generateReport('judge')} disabled={isGeneratingReport} className="p-4 border-2 border-gray-200 dark:border-zinc-700 rounded-2xl hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-left transition group">
                             <div className="font-black text-lg uppercase group-hover:text-emerald-600">{tr.judgeTitle}</div>
-                            <p className="text-xs text-gray-400 font-bold mt-1">{tr.judgeDesc}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-bold mt-1">{tr.judgeDesc}</p>
                         </button>
                         
                         {reportError && (
@@ -572,7 +572,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                         )}
 
                         {isGeneratingReport && <div className="text-center font-black animate-pulse mt-4 text-purple-600">{tr.analyzing}</div>}
-                        {!isGeneratingReport && <button onClick={() => { setShowReportModal(false); setReportError(""); }} className="mt-2 w-full py-3 font-bold text-gray-400 hover:text-red-500">{tr.cancel}</button>}
+                        {!isGeneratingReport && <button onClick={() => { setShowReportModal(false); setReportError(""); }} className="mt-2 w-full py-3 font-bold text-gray-500 dark:text-gray-400 hover:text-red-500">{tr.cancel}</button>}
                     </div>
                 ) : (
                     <div className="animate-in zoom-in flex flex-col h-full">
@@ -580,7 +580,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             <ReactMarkdown>{report}</ReactMarkdown>
                         </div>
                         <div className="flex gap-4 flex-shrink-0">
-                            <button onClick={() => setReport("")} className="flex-1 py-3 font-bold text-gray-400 hover:text-black">{tr.back}</button>
+                            <button onClick={() => setReport("")} className="flex-1 py-3 font-bold text-gray-500 dark:text-gray-400 hover:text-black">{tr.back}</button>
                             {/* Copy Button */}
                             <button
                                 onClick={copyToClipboard}
@@ -619,7 +619,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             {getDetailsSafe(selectedStudent).map((detail, idx) => (
                                 <div key={idx} className="p-5 bg-white dark:bg-zinc-900 flex items-center justify-between">
                                     <div className="flex flex-col gap-1">
-                                        <span className="font-black text-xs uppercase text-gray-400">{tr.question} {idx + 1}</span>
+                                        <span className="font-black text-xs uppercase text-gray-500 dark:text-gray-400">{tr.question} {idx + 1}</span>
                                         <div className="flex items-center gap-2">
                                             {detail.isCorrect ? (
                                                 <span className="text-green-600 font-black text-sm uppercase">{tr.correct}</span>
@@ -637,7 +637,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
                             ))}
                         </div>
                     ) : (
-                        <div className="p-10 text-center text-gray-400 italic font-bold">
+                        <div className="p-10 text-center text-gray-500 dark:text-gray-400 italic font-bold">
                             {tr.noDetails}
                         </div>
                     )}

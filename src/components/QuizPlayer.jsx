@@ -191,8 +191,8 @@ const QuizPlayer = ({ grantAchievement, lang = "RU" }) => {
            <p className="text-gray-500 font-bold uppercase tracking-widest mb-8 text-center">{session.studentName}</p>
            <div className="bg-slate-100 dark:bg-zinc-800 p-6 rounded-2xl mb-6 text-center">
               <div className="text-6xl font-black text-emerald-600 mb-2">{percentage}%</div>
-              <p className="font-bold text-sm text-gray-400 uppercase">{tr.correctOf}: {finalScore} / {totalQuestions}</p>
-              <p className="font-bold text-sm text-gray-400 uppercase mt-1">{tr.time}: {elapsedTime}{tr.sec}</p>
+              <p className="font-bold text-sm text-gray-500 dark:text-gray-400 uppercase">{tr.correctOf}: {finalScore} / {totalQuestions}</p>
+              <p className="font-bold text-sm text-gray-500 dark:text-gray-400 uppercase mt-1">{tr.time}: {elapsedTime}{tr.sec}</p>
            </div>
 
            {wrong.length > 0 && (
@@ -247,7 +247,7 @@ const QuizPlayer = ({ grantAchievement, lang = "RU" }) => {
        </div>
 
        <div className="bg-white dark:bg-zinc-900 p-6 md:p-10 rounded-[30px] border-[3px] border-black dark:border-white shadow-[6px_6px_0_0_#000] mb-6 flex-1">
-          <div className="flex justify-between mb-4"><span className="font-black text-gray-400 text-xs uppercase tracking-widest">{tr.question} {currentIndex + 1}</span></div>
+          <div className="flex justify-between mb-4"><span className="font-black text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">{tr.question} {currentIndex + 1}</span></div>
           <h2 className="text-2xl font-black mb-8 leading-tight">{currentQ.question}</h2>
           <div className="space-y-3">
              {currentQ.options.map((opt, idx) => {

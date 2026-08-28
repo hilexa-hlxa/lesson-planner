@@ -99,7 +99,7 @@ const FortuneWheel = ({ initialNames, participants, onClose, onWin }) => {
           )}
           <div className="flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-widest mt-4">
             {tooFewNames && <span className="text-red-500 normal-case tracking-normal">Add at least 2 names to spin.</span>}
-            <span className="text-gray-400 ml-auto">{segments.length} Players</span>
+            <span className="text-gray-500 dark:text-gray-400 ml-auto">{segments.length} Players</span>
           </div>
         </div>
 
@@ -178,7 +178,7 @@ const FortuneWheel = ({ initialNames, participants, onClose, onWin }) => {
                 onClick={() => setWinner(null)}
               >
                 <div className="bg-white border-[8px] border-black p-12 rounded-[40px] text-center shadow-[30px_30px_0_0_#000] rotate-[-2deg]">
-                  <div className="text-2xl font-black text-gray-400 uppercase mb-2">Winner</div>
+                  <div className="text-2xl font-black text-gray-500 dark:text-gray-400 uppercase mb-2">Winner</div>
                   <div className="text-7xl font-black uppercase text-emerald-600 tracking-tighter mb-4">{winner}</div>
                   
                   {usingRoster && (
