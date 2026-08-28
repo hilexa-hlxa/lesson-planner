@@ -6,7 +6,12 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // backend/ is all PHP — its only .js file is a vendored Composer
+  // dependency's doc asset (phpoffice/math's mathjax.js), which was getting
+  // swept in and failing lint on undefined browser globals it never
+  // declares (it's not ours to fix). node_modules is ignored by ESLint's
+  // flat-config default; backend/vendor has no equivalent default.
+  globalIgnores(['dist', 'backend/**']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

@@ -203,7 +203,11 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
     } catch (e) {
       console.error(e);
-      setError(tr.errGenerate);
+      // Как и в Dashboard.jsx: e.message несёт реальную причину со стороны
+      // сервера (например, что оба AI-провайдера сейчас недоступны), а
+      // tr.errGenerate — общая фраза "попробуйте через минуту". Раньше
+      // показывался только второй вариант, и настоящая причина терялась.
+      setError(e?.message ? `${tr.errGenerate} (${e.message})` : tr.errGenerate);
       if (createdTestId) {
         api.tests.update(createdTestId, { status: "error" }).catch(() => {});
         loadSavedTests();
@@ -349,7 +353,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
     } catch (e) {
       console.error(e);
-      setReportError(tr.errReport);
+      setReportError(e?.message ? `${tr.errReport} (${e.message})` : tr.errReport);
     } finally {
       setIsGeneratingReport(false);
     }

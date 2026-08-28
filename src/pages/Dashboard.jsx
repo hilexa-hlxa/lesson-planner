@@ -202,7 +202,15 @@ export default function Dashboard({
       }
 
     } catch (e) {
-      setPlanOutput(GEN_T.errGeneric);
+      // Раньше реальная причина (e.message — то, что реально прислал сервер,
+      // например "All generation providers unavailable (Groq: HTTP 401;
+      // Gemini: GEMINI_API_KEY not configured)") просто терялась: тут
+      // показывался только статичный errGeneric, который ещё и советует
+      // "проверьте соединение" — неверно и сбивает с толку, когда причина
+      // на самом деле на сервере. Остальные 7 из 9 страниц с generateStream
+      // (ParentMessagePage и др.) уже показывают e.message — здесь та же
+      // логика, тем же способом.
+      setPlanOutput(e?.message ? `${GEN_T.errGeneric} (${e.message})` : GEN_T.errGeneric);
       if (createdPlanId) {
         setPlanStatus(createdPlanId, "error");
         api.lessonPlans.update(createdPlanId, { status: "error" }).catch(() => {});
