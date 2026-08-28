@@ -54,7 +54,8 @@ export default function AuthModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
       setLoading(true);
       setError("");
@@ -113,7 +114,7 @@ export default function AuthModal({
           {mode === "login" ? authT.loginTitle : authT.signupTitle}
         </h2>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {mode === "signup" && (
             <div className="grid grid-cols-2 gap-4">
               <input
@@ -121,6 +122,7 @@ export default function AuthModal({
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder={authT.firstName}
                 aria-label={authT.firstName}
+                autoComplete="given-name"
                 className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
               />
               <input
@@ -128,6 +130,7 @@ export default function AuthModal({
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder={authT.lastName}
                 aria-label={authT.lastName}
+                autoComplete="family-name"
                 className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
               />
             </div>
@@ -140,6 +143,7 @@ export default function AuthModal({
             type="email"
             placeholder={authT.email}
             aria-label={authT.email}
+            autoComplete="email"
             className={`w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500 transition ${
               showEmailError && !isEmailValid ? "border-red-500" : ""
             }`}
@@ -152,6 +156,7 @@ export default function AuthModal({
               type={showPass ? "text" : "password"}
               placeholder={authT.pass}
               aria-label={authT.pass}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
               className="w-full p-5 bg-slate-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-emerald-500"
             />
             <button
@@ -180,8 +185,8 @@ export default function AuthModal({
           )}
 
           <button
+            type="submit"
             disabled={!isFormValid || loading}
-            onClick={handleSubmit}
             className={`w-full py-6 rounded-2xl font-black uppercase tracking-widest text-lg transition-all ${
               isFormValid && !loading
                 ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
@@ -198,12 +203,13 @@ export default function AuthModal({
           )}
 
           <button
+            type="button"
             onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}
             className="text-[12px] uppercase font-bold opacity-40 hover:opacity-100 block mx-auto mt-6 tracking-widest text-slate-900 dark:text-white"
           >
             {mode === "login" ? authT.switchL : authT.switchS}
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

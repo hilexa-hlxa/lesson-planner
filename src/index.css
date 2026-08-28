@@ -47,9 +47,14 @@ html {
   @apply border-[3px] border-black shadow-[4px_4px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all font-black uppercase tracking-widest;
 }
 
-/* Высокий контраст */
+/* Высокий контраст. Раньше было grayscale(1) contrast(1.2) — это не
+   повышает контраст в смысле, который заявляет переключатель, а стирает
+   вообще весь цвет: фирменный emerald, цветовую разметку 14 карточек на
+   ToolsPage, состояния успех/ошибка. Настоящий high-contrast режим должен
+   РАЗЛИЧАТЬ элементы сильнее, а не терять целый канал информации. Убрали
+   grayscale, подняли сам контраст. */
 .high-contrast {
-  filter: grayscale(1) contrast(1.2);
+  filter: contrast(1.35);
 }
 
 body {
