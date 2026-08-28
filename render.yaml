@@ -6,6 +6,15 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     plan: free
+    # Without this, every commit — including a frontend-only change or a
+    # docs-only ROADMAP.md edit — rebuilt AND restarted this Docker service,
+    # even though nothing under backend/ changed. A restart drops in-flight
+    # requests on the free plan (single instance, no rolling deploy), so an
+    # unrelated commit could interrupt a teacher mid-generation for no
+    # reason. Scope rebuilds to what can actually affect this service.
+    buildFilter:
+      paths:
+        - backend/**
     envVars:
       - key: DB_DSN
         sync: false          # set manually in Render dashboard
@@ -34,6 +43,18 @@ services:
     runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    # Mirrors the backend service's buildFilter: a pure backend/** commit
+    # (like a PHP-only bugfix) has no effect on this build's output, so
+    # don't spend a full npm install + vite build re-publishing an
+    # unchanged dist/ for it. Anything that isn't clearly backend-only or
+    # docs-only still triggers a rebuild here, which is the safe default.
+    buildFilter:
+      ignoredPaths:
+        - backend/**
+        - docs/**
+        - '*.md'
+        - docker-compose.yml
+        - .env.example
     envVars:
       - key: VITE_API_BASE_URL
         sync: false          # set to the backend Render URL after first deploy
