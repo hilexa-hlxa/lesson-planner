@@ -634,7 +634,7 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
         setIsAuthOpen={setIsAuthOpen} setAuthMode={setAuthMode} resetAuthFields={resetAuthFields} />
 
       {/* ── HERO ── */}
-      <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-10 sm:pt-16 pb-6 text-center">
+      <section id="main-content" className="max-w-5xl mx-auto px-5 sm:px-8 pt-10 sm:pt-16 pb-6 text-center">
         <motion.div {...fadeUp(0)}>
           <div className="inline-block px-4 py-1.5 mb-6 sm:mb-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 text-[10px] sm:text-[11px] font-bold tracking-[0.15em] uppercase border border-emerald-100 dark:border-emerald-900">
             {c.badge}

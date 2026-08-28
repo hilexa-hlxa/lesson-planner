@@ -66,7 +66,7 @@ export default function DailyChallengePage({ lang, setLang, user, setUser, grant
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} grantAchievement={grantAchievement} {...accessProps} />
       {finished && <ReactConfetti recycle={false} numberOfPieces={400} />}
 
-      <main className="max-w-xl mx-auto px-6">
+      <main id="main-content" className="max-w-xl mx-auto px-6">
         <div className="flex items-center gap-4 mb-8">
           <button onClick={() => navigate('/hub')} className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
             <ArrowLeft size={24} />

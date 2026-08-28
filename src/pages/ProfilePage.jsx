@@ -205,7 +205,7 @@ export default function ProfilePage({ lang, setLang, user, setUser, ...accessPro
         onClose={() => setToastReward(null)}
       />
 
-      <main className="max-w-[1300px] mx-auto px-5 sm:px-6 py-8">
+      <main id="main-content" className="max-w-[1300px] mx-auto px-5 sm:px-6 py-8">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
             {/* === ЛЕВАЯ КОЛОНКА (Инфо + Монеты) === */}

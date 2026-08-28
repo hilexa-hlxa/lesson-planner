@@ -55,7 +55,7 @@ export default function ClassesPage({ lang, setLang, user, setUser, ...accessPro
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-5xl mx-auto px-5 sm:px-6 py-8 sm:py-12">
+      <main id="main-content" className="max-w-5xl mx-auto px-5 sm:px-6 py-8 sm:py-12">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-10">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div className="p-2.5 sm:p-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl shrink-0">

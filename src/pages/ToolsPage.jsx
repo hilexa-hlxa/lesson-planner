@@ -95,7 +95,7 @@ const ToolsPage = ({ lang, setLang, user, setUser, grantAchievement, ...accessPr
       {/* Теперь Хедер функционален на 100% */}
       <Header {...headerProps} />
 
-      <main className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
+      <main id="main-content" className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase mb-4 tracking-tighter italic break-words">
             {tr(lang, "hub.tools")}
         </h1>

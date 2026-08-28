@@ -329,7 +329,7 @@ export default function Dashboard({
         </div>
       </aside>      
 
-      <main className="flex-1 min-w-0 flex flex-col xl:flex-row gap-4 md:gap-6 lg:overflow-hidden">
+      <main id="main-content" className="flex-1 min-w-0 flex flex-col xl:flex-row gap-4 md:gap-6 lg:overflow-hidden">
         <section className="w-full xl:w-[480px] shrink-0 p-6 sm:p-10 xl:p-12 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl rounded-[32px] sm:rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto">
           <div className="flex justify-between items-center mb-8 sm:mb-12">
             <h1 className="text-[12px] font-black uppercase tracking-widest text-emerald-600">PLANNER</h1>

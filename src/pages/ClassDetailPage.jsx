@@ -68,7 +68,7 @@ export default function ClassDetailPage({ lang, setLang, user, setUser, ...acces
   if (loading) return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
-      <main className="max-w-4xl mx-auto px-5 sm:px-6 py-8 sm:py-12">
+      <main id="main-content" className="max-w-4xl mx-auto px-5 sm:px-6 py-8 sm:py-12">
         <Skeleton className="h-5 w-24 mb-8" />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
           <Skeleton className="h-12 w-56" />

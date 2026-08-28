@@ -363,7 +363,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
     <Header {...accessProps} />
       
       {/* Left Column: Test Creation & Management */}
-      <div className="flex-1 max-w-4xl mx-auto w-full">
+      <div id="main-content" className="flex-1 max-w-4xl mx-auto w-full">
         <Link to="/hub" className="inline-flex items-center gap-2 font-black uppercase text-xs mb-8 text-gray-500 hover:text-black dark:hover:text-white">
             <ChevronLeft size={16} /> {cur.back || "Back"}
         </Link>

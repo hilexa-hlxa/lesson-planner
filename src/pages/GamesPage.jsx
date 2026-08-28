@@ -11,7 +11,7 @@ const GamesPage = ({ lang, setLang, user, setUser, ...accessProps }) => {
       {/* ХЕДЕР */}
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
+      <main id="main-content" className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10">
         <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl">
                 <Gamepad2 size={32} />

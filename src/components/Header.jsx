@@ -12,6 +12,7 @@ import CommandPalette from "./CommandPalette";
 import { I18N as t } from "../lib/i18n";
 
 const SEARCH_LABEL = { RU: "Поиск", KZ: "Іздеу", EN: "Search" };
+const SKIP_LABEL = { RU: "Перейти к содержимому", KZ: "Мазмұнға өту", EN: "Skip to content" };
 
 // Панель доступности — используется и в десктопной строке, и в мобильном меню
 function AccessibilityPanel({ dark, setDark, highContrast, setHighContrast, fontSize, setFontSize, stacked = false }) {
@@ -112,6 +113,16 @@ export default function Header({
 
   return (
     <>
+    {/* Скип-линк: до этого клавиатурный пользователь на каждой странице
+        проходил табом весь хедер — логотип, тёмная тема/контраст/шрифт,
+        поиск, язык, аккаунт — прежде чем добраться до самого контента.
+        Спрятан визуально, появляется по фокусу (первый Tab на странице). */}
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300] focus:px-4 focus:py-2.5 focus:bg-emerald-600 focus:text-white focus:rounded-xl focus:font-black focus:uppercase focus:text-[11px] focus:tracking-widest focus:shadow-lg"
+    >
+      {SKIP_LABEL[lang] || SKIP_LABEL.RU}
+    </a>
     <nav className={`fixed ${announcementBar ? 'top-9' : 'top-0'} left-0 right-0 z-[100] flex justify-between items-center gap-3 px-4 sm:px-8 lg:px-12 py-4 lg:py-6 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/10 dark:border-white/10 transition-all`}>
 
       {/* 1. ЛОГОТИП С УМНОЙ НАВИГАЦИЕЙ */}

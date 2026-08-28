@@ -135,7 +135,7 @@ export default function HangmanPage({ lang, setLang, user, setUser, grantAchieve
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} grantAchievement={grantAchievement} {...accessProps} />
 
-      <main className="max-w-xl mx-auto px-6">
+      <main id="main-content" className="max-w-xl mx-auto px-6">
         <div className="flex items-center gap-4 mb-8">
           <button onClick={gameState || mode ? reset : () => navigate(-1)}
             className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">

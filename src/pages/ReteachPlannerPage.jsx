@@ -140,7 +140,7 @@ export default function ReteachPlannerPage({ lang, setLang, user, setUser, ...ac
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px] pb-20">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-3xl mx-auto px-5 sm:px-6">
+      <main id="main-content" className="max-w-3xl mx-auto px-5 sm:px-6">
         <div className="flex items-center gap-4 mb-10">
           <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
             <ArrowLeft size={24} />

@@ -11,7 +11,7 @@ export default function StaticPage({ lang, setLang, user, setUser, title, subtit
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px]">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-3xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
+      <main id="main-content" className="max-w-3xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter italic leading-[0.95] mb-4 break-words">
           {title}
         </h1>

@@ -82,7 +82,7 @@ export default function HubPage({ lang, setLang, user, setUser, ...accessProps }
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-white font-sans pt-[100px] lg:pt-[120px]">
       <Header lang={lang} setLang={setLang} user={user} setUser={setUser} {...accessProps} />
 
-      <main className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10 py-10 sm:py-16 lg:py-20 text-center">
+      <main id="main-content" className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10 py-10 sm:py-16 lg:py-20 text-center">
 
         {/* ── ОНБОРДИНГ ПЕРВОГО ВХОДА ── */}
         {showOnboarding && (
