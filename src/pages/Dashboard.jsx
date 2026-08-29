@@ -359,7 +359,7 @@ export default function Dashboard({
             </button>
           </div>
         </section>
-        <section className="flex-1 min-w-0 p-6 sm:p-10 xl:p-14 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl rounded-[32px] sm:rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto min-h-[360px]">
+        <section aria-live="polite" className="flex-1 min-w-0 p-6 sm:p-10 xl:p-14 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-3xl rounded-[32px] sm:rounded-[40px] shadow-2xl border border-white/20 overflow-y-auto min-h-[360px]">
           {planOutput ? (
             <div className="prose prose-emerald dark:prose-invert max-w-none break-words prose-headings:font-black prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-strong:text-slate-900 dark:prose-strong:text-white"><ReactMarkdown>{planOutput}</ReactMarkdown></div>
           ) : loading ? (
