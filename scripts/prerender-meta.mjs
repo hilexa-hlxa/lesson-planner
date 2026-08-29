@@ -26,7 +26,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { resolveMeta, PRERENDER_ROUTES } from "../src/lib/seoMeta.js";
 
-const SITE_URL = "https://lessonplanner.kz";
+const SITE_URL = "https://lessonlab-frontend.onrender.com";
 const DIST = new URL("../dist/", import.meta.url);
 
 function replaceOnce(html, pattern, replacement, label) {

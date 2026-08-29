@@ -200,7 +200,7 @@ export default function App() {
     // Canonical должен указывать на текущий путь, а не всегда на "/" — иначе
     // поисковик считает канонической только главную и может не индексировать
     // /pricing, /privacy и /terms отдельно.
-    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://lessonplanner.kz${location.pathname}`);
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://lessonlab-frontend.onrender.com${location.pathname}`);
 
     localStorage.setItem("app_lang", lang);
   }, [lang, location.pathname]);

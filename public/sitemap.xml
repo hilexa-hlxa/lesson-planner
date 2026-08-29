@@ -7,27 +7,27 @@
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lessonplanner.kz/</loc>
+    <loc>https://lessonlab-frontend.onrender.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://lessonplanner.kz/pricing</loc>
+    <loc>https://lessonlab-frontend.onrender.com/pricing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://lessonplanner.kz/join-test</loc>
+    <loc>https://lessonlab-frontend.onrender.com/join-test</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://lessonplanner.kz/privacy</loc>
+    <loc>https://lessonlab-frontend.onrender.com/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://lessonplanner.kz/terms</loc>
+    <loc>https://lessonlab-frontend.onrender.com/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

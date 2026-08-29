@@ -319,7 +319,7 @@ function scoreGuess(guess, answer) {
 }
 
 // ─── Browser shell ─────────────────────────────────────────────────────────────
-function BrowserShell({ children, url = "lessonplanner.kz", tall = false }) {
+function BrowserShell({ children, url = "/", tall = false }) {
   return (
     <div className="rounded-2xl border-[3px] border-black dark:border-zinc-600 overflow-hidden shadow-[12px_12px_0_0_#000] dark:shadow-[12px_12px_0_0_rgba(255,255,255,0.06)]">
       <div className="bg-zinc-800 px-3 py-2.5 flex items-center gap-2 border-b-2 border-black/20">
@@ -344,7 +344,7 @@ function BrowserShell({ children, url = "lessonplanner.kz", tall = false }) {
 function DashboardPreview({ lang }) {
   const m = mock(lang);
   return (
-    <BrowserShell url="lessonplanner.kz/dashboard" tall>
+    <BrowserShell url="/dashboard" tall>
       <div className="flex h-full bg-[#f0f4f8]">
         <div className="w-[80px] bg-white/60 border-r border-black/5 p-2 shrink-0 flex flex-col gap-1">
           <div className="text-[5px] font-black text-black/25 tracking-widest mb-2 px-1">{m.history}</div>
@@ -395,7 +395,7 @@ function DashboardPreview({ lang }) {
 function PlanVisual({ lang }) {
   const m = mock(lang);
   return (
-    <BrowserShell url="lessonplanner.kz/dashboard">
+    <BrowserShell url="/dashboard">
       <div className="flex h-full bg-[#f0f4f8]">
         <div className="w-[90px] bg-white/60 border-r border-black/5 p-2 flex flex-col gap-1 shrink-0">
           <div className="text-[5px] font-black text-black/25 tracking-widest mb-2">{m.history}</div>
@@ -429,7 +429,7 @@ function TestVisual({ lang }) {
   const m = mock(lang);
   const students = MOCK_STUDENTS[lang] || MOCK_STUDENTS.RU;
   return (
-    <BrowserShell url="lessonplanner.kz/create-test">
+    <BrowserShell url="/create-test">
       <div className="flex h-full bg-[#faf7f2] gap-2 p-2">
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           <div className="bg-white rounded-xl border-[1.5px] border-black shadow-[2px_2px_0_0_#000] p-2">
@@ -484,7 +484,7 @@ function SummaryVisual({ lang }) {
   const struggling = MOCK_STRUGGLING[lang] || MOCK_STRUGGLING.RU;
   const [coveredPre, coveredPct, coveredPost] = m.summaryCovered;
   return (
-    <BrowserShell url="lessonplanner.kz/lesson-summary">
+    <BrowserShell url="/lesson-summary">
       <div className="flex h-full bg-[#faf7f2] gap-2 p-2">
         <div className="flex-1 min-w-0 bg-white rounded-xl border-[1.5px] border-black shadow-[2px_2px_0_0_#000] p-3 flex flex-col gap-2">
           <div className="text-[6px] font-black text-emerald-600 uppercase tracking-wider truncate">{m.summaryTitle}</div>
@@ -525,7 +525,7 @@ function WordleVisual({ lang }) {
 
   const bg = {c:'bg-green-500 border-green-600 text-white',p:'bg-yellow-400 border-yellow-500 text-black',a:'bg-slate-600 border-slate-700 text-white',e:'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-600 text-transparent'};
   return (
-    <BrowserShell url="lessonplanner.kz/wordle">
+    <BrowserShell url="/wordle">
       <div className="flex h-full bg-[#faf7f2] flex-col items-center justify-center gap-2 py-3">
         <div className="text-[7px] font-black uppercase tracking-widest text-slate-500 mb-1">{m.wordleTitle}</div>
         <div className="flex flex-col gap-1.5">

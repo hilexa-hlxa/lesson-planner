@@ -122,40 +122,27 @@
   Migration `004` adds `generations.type` (defaulting to `lesson_plan`, backfilling rows that
   have an access code to `test`), the insert stores it, and `GET /api/generations?type=` filters
   in the database — so each page asks for its own kind and no client-side filtering is left.
+- **SEO was pointing at a domain we don't own** — canonical URLs, Open Graph tags, JSON-LD, the
+  sitemap and `robots.txt` all hardcoded `lessonplanner.kz`, which was never registered (confirmed
+  `NXDOMAIN`). Decided to stick with the Render domain instead of buying one — every one of those
+  now points at `https://lessonlab-frontend.onrender.com`, including the prerendered public routes.
+  The decorative browser-mockup address bars on the landing page (`LandingPage.jsx`) dropped the
+  fake domain too and just show the path (`/dashboard`, `/create-test`, …). `og-image.svg`'s domain
+  watermark was removed and `og-image.png` regenerated to match. `CONTACT_EMAIL` moved off the
+  dead `hello@lessonplanner.kz` to your Gmail as a stopgap (see Open, below).
 
 ## Needs you
 
-- **Rotate the Supabase database password.** It was committed in plaintext in `docker-compose.yml`
-  and is in git history from commit `24b8e5a` onward, including current `origin/main`. The value
-  is out of the tracked file now (`.env`, gitignored, with `.env.example` alongside) — but that
-  does not remove it from history. Rotation in Supabase → Project Settings → Database is the only
-  real fix, then update your local `.env`. The GitHub API returns 404 unauthenticated, so the repo
-  is private or does not exist under that name; either way a committed credential should be
-  treated as burned.
-
-- **Both AI generation providers are dead on production right now.** Confirmed live on 2026-08-28
-  by calling `/api/generate/stream` directly: `{"message":"All generation providers unavailable
-  (Groq: HTTP 401; Gemini: GEMINI_API_KEY not configured)"}`. Concretely:
-  - `GROQ_API_KEY` (Render → `lessonlab-backend` → Environment) is set but invalid/expired — Groq
-    rejects every request with HTTP 401. Get a fresh key from console.groq.com and update it there.
-  - `GEMINI_API_KEY` isn't set at all, so there's no working fallback either. Every teacher-facing
-    generation feature (Dashboard, CreateTestPage, LessonSummaryPage, ParentMessagePage,
-    ReteachPlannerPage, RubricBuilderPage, TranslateMaterialsPage, WorksheetGeneratorPage,
-    DifferentiatedWorksheetPage) is currently unable to produce real output — it fails with a clear
-    error message instead of silently serving demo/fake content, but nothing generates. The code
-    itself already does the right thing once either key works: Groq first, Gemini as fallback, demo
-    mode only when neither is configured at all (see `backend/src/GenerateStream.php`). This is a
-    credentials-only fix — no code change needed once a valid key is in place on Render.
-
-- **`lessonplanner.kz` isn't a real, resolvable domain yet.** Every canonical URL, Open Graph tag,
-  JSON-LD block, the sitemap, and `scripts/prerender-meta.mjs` point at `https://lessonplanner.kz`,
-  but the domain returns `NXDOMAIN` — it isn't registered, or at least isn't pointed at anything.
-  The live site is really only reachable at `https://lessonlab-frontend.onrender.com` today. This
-  doesn't break the app (nothing 404s, nothing crashes), but search engines and social-media link
-  previews are currently being told the canonical home of the site is a domain that doesn't
-  resolve. Once you register the domain, add it as a custom domain on the `lessonlab-frontend`
-  Render service and point its DNS per Render's instructions — no code changes needed, the SEO
-  plumbing is already built assuming that exact hostname.
+- **AI generation is paused on purpose.** Both `GROQ_API_KEY` (invalid, HTTP 401) and
+  `GEMINI_API_KEY` (unset) are still dead on the live backend — confirmed 2026-08-28 by calling
+  `/api/generate/stream` directly. Deliberately not being chased right now (no key on hand). Every
+  teacher-facing generation feature (Dashboard, CreateTestPage, LessonSummaryPage,
+  ParentMessagePage, ReteachPlannerPage, RubricBuilderPage, TranslateMaterialsPage,
+  WorksheetGeneratorPage, DifferentiatedWorksheetPage) fails with a clear error message instead of
+  silently serving fake content, but nothing generates until this is fixed. The code already does
+  the right thing once either key works (Groq first, Gemini as fallback, demo mode only when
+  neither is configured — see `backend/src/GenerateStream.php`). Purely a credentials swap on
+  Render (`lessonlab-backend` → Environment) once a key is available — no code change needed.
 
 ## Open
 
@@ -168,6 +155,7 @@
 
 - **Real testimonials** — the landing still uses invented teachers. Replace the entries in
   `TESTIMONIALS` (`LandingPage.jsx`) with real quotes once teachers are using the product.
-- **Contact address and socials** — `CONTACT_EMAIL` and `SOCIALS` now live in
-  `src/siteConfig.js`, the only file to edit. The address is still the placeholder
-  `hello@lessonplanner.kz` and both social URLs are empty (empty ones render nothing).
+- **Contact address and socials** — `CONTACT_EMAIL` and `SOCIALS` live in `src/siteConfig.js`, the
+  only file to edit. `CONTACT_EMAIL` is currently your personal Gmail (a deliberate stopgap, not
+  necessarily where you want teacher support requests landing long-term) — swap it for a dedicated
+  address whenever you set one up. Both social URLs are still empty (empty ones render nothing).
