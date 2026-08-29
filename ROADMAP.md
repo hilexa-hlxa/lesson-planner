@@ -131,7 +131,19 @@
   watermark was removed and `og-image.png` regenerated to match. `CONTACT_EMAIL` moved off the
   dead `hello@lessonplanner.kz` to your Gmail as a stopgap (see Open, below).
 
+- **Admin dashboard** — a separate service (`admin/`, deployed as `lessonlab-admin`, its own URL,
+  its own login) for monitoring users/teachers/classes/generations on the live database. Not linked
+  from or reachable through the main site. See `admin/README.md` for the full page list and how the
+  auth model works. Read-only except one reversible "disable/enable user" toggle.
+
 ## Needs you
+
+- **Wire up the new admin dashboard's database access.** `lessonlab-admin` is deployed but can't
+  connect to the database yet — it needs `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` set on
+  its Render service (Environment tab), copied from `lessonlab-backend`'s `DB_DSN`/`DB_USER`/
+  `DB_PASS` (split the DSN's `host=`/`port=`/`dbname=` into the first three). I can't do this step —
+  those are `sync: false` secrets, readable only from the Render dashboard by someone with access to
+  it. Full instructions in `admin/README.md`.
 
 - **AI generation is paused on purpose.** Both `GROQ_API_KEY` (invalid, HTTP 401) and
   `GEMINI_API_KEY` (unset) are still dead on the live backend — confirmed 2026-08-28 by calling
@@ -146,16 +158,21 @@
 
 ## Open
 
-- **PRO tariff is a placeholder** — the plans block on the landing and `/pricing` render PRO as
-  "coming soon" with no price, because none exists yet. The planned differentiators (generation
-  quotas, class and student limits, school accounts) are **not enforced anywhere in the code** —
-  free is genuinely unlimited today. Before PRO can be sold, those limits have to exist, and the
-  copy in `src/lib/plans.js`, `/pricing` and `/terms` has to change together.
-
-
-- **Real testimonials** — the landing still uses invented teachers. Replace the entries in
-  `TESTIMONIALS` (`LandingPage.jsx`) with real quotes once teachers are using the product.
+- **PRO tariff is still a placeholder — deliberately, not by oversight.** `/pricing` still shows PRO
+  as "coming soon" with no price. I didn't invent numbers to fill this in: a real price and real
+  limits (generation quotas, class/student caps) are a business decision, and actually selling PRO
+  needs a payment provider account (Stripe or similar) — account creation isn't something I do on
+  your behalf. What I *can* build once you have the numbers: the quota-tracking and enforcement
+  code itself, and an upgrade flow that hands off to whatever payment provider you pick. Tell me the
+  limits and provider whenever you're ready and I'll build the enforcement side.
+- **Testimonials were removed, not replaced.** The landing page had three quotes attributed to named
+  "real teachers" (Aigerim Seitkali, Marat Dzhaksybekov, Zarina Nurlanova) who don't exist —
+  invented people presented as genuine reviews. I won't write new fake ones to replace them; that's
+  the same problem with different names. Removed the whole section (`TESTIMONIALS` and the
+  "Teachers say" block in `LandingPage.jsx`) rather than leave it empty-but-present. Bring it back
+  with real quotes once real teachers are using the product.
 - **Contact address and socials** — `CONTACT_EMAIL` and `SOCIALS` live in `src/siteConfig.js`, the
   only file to edit. `CONTACT_EMAIL` is currently your personal Gmail (a deliberate stopgap, not
   necessarily where you want teacher support requests landing long-term) — swap it for a dedicated
-  address whenever you set one up. Both social URLs are still empty (empty ones render nothing).
+  address whenever you set one up. Both social URLs are still empty (empty ones render nothing) —
+  I don't have real accounts to link.

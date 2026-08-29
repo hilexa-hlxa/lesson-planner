@@ -13,7 +13,12 @@ export default defineConfig([
   // flat-config default; backend/vendor has no equivalent default.
   globalIgnores(['dist', 'backend/**']),
   {
+    // admin/ is its own Node/CommonJS service (see admin/README.md), not
+    // part of the Vite/React app — excluded here so it doesn't get the
+    // browser-globals block below (require/module/process/Buffer aren't
+    // browser globals) and gets its own Node-flavored block instead.
     files: ['**/*.{js,jsx}'],
+    ignores: ['admin/**'],
     extends: [
       js.configs.recommended,
       reactHooks.configs.flat.recommended,
@@ -41,6 +46,18 @@ export default defineConfig([
         // а имя ошибки часто не нужно
         caughtErrors: 'none',
       }],
+    },
+  },
+  {
+    files: ['admin/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.node,
+      sourceType: 'commonjs',
+    },
+    rules: {
+      'no-unused-vars': ['error', { caughtErrors: 'none' }],
     },
   },
 ])

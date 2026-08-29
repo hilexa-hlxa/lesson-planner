@@ -182,25 +182,6 @@ const HEADLINES = {
   ],
 };
 
-// ─── Testimonials data ────────────────────────────────────────────────────────
-const TESTIMONIALS = {
-  RU: [
-    { quote: "Каждое воскресенье я теряла 3–4 часа на планы на неделю. Теперь делаю это за обед в понедельник. Муж уже интересуется, куда пропали «учительские вечера».", name: "Айгерим Сейткали", role: "Учитель математики · Алматы" },
-    { quote: "Честно — ожидал, что ученики найдут способ списать. Но они соревновались, кто быстрее ответит. Про телефоны я вообще забыл.", name: "Марат Джаксыбеков", role: "Учитель русского языка · Астана" },
-    { quote: "Долго не решалась — думала, опять что-то сложное. Попробовала на одном уроке. Теперь сама объясняю коллегам, как это работает.", name: "Зарина Нурланова", role: "Учитель биологии · Шымкент" },
-  ],
-  KZ: [
-    { quote: "Жексенбі кешін жоспарлар жазумен өткізетінмін. Енді дүйсенбіде түскі үзілісте жасаймын. Ерім не болды деп таңданады.", name: "Айгерим Сейткали", role: "Математика мұғалімі · Алматы" },
-    { quote: "Оқушыларым кім жылдам жауап береді деп жарысты. Телефон туралы ойды ұмытып кеттім.", name: "Марат Джаксыбеков", role: "Орыс тілі мұғалімі · Астана" },
-    { quote: "Бір сабақта байқап көрдім деп едім. Енді өзім әріптестеріме түсіндіріп жүрмін.", name: "Зарина Нурланова", role: "Биология мұғалімі · Шымкент" },
-  ],
-  EN: [
-    { quote: "Every Sunday I lost 3–4 hours writing plans for the week. Now I do it on Monday during lunch. My husband keeps asking what happened to the 'teacher evenings'.", name: "Aigerim Seitkali", role: "Math teacher · Almaty" },
-    { quote: "Honestly expected the kids to find a way to cheat. But they were racing to answer faster. I completely forgot to worry about their phones.", name: "Marat Dzhaksybekov", role: "Russian language teacher · Astana" },
-    { quote: "I kept putting it off — figured it'd be another complicated thing. Tried it once. Now I'm the one explaining it to my colleagues.", name: "Zarina Nurlanova", role: "Biology teacher · Shymkent" },
-  ],
-};
-
 // ─── Mockup copy ──────────────────────────────────────────────────────────────
 // Тексты внутри превью-скриншотов. Переключаются вместе с языком интерфейса.
 const MOCK = {
@@ -768,33 +749,6 @@ export default function LandingPage({ lang, setLang, setIsAuthOpen, setAuthMode,
                   <div className="w-10 h-10 rounded-xl bg-emerald-600 border-2 border-black flex items-center justify-center font-black text-white text-base mx-auto mb-4">{n}</div>
                   <div className="font-black text-sm uppercase tracking-tight mb-2">{title}</div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section className="border-t border-slate-100 dark:border-zinc-800">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
-          <motion.div {...fadeUp(0)} className="mb-12 text-center">
-            <div className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-600 mb-3">
-              {lang === "KZ" ? "МҰҒАЛІМДЕР АЙТАДЫ" : lang === "EN" ? "TEACHERS SAY" : "ГОВОРЯТ УЧИТЕЛЯ"}
-            </div>
-            <h2 className="text-3xl font-black uppercase tracking-tighter">
-              {lang === "KZ" ? "Нақты пайдаланушылар." : lang === "EN" ? "Real teachers. Real results." : "Реальные учителя."}
-            </h2>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {(TESTIMONIALS[lang] || TESTIMONIALS.RU).map((t, i) => (
-              <motion.div key={i} {...fadeUp(i * 0.08)}
-                className="bg-white dark:bg-zinc-900 rounded-2xl border-[2px] border-black p-7 shadow-[4px_4px_0_0_#000] dark:shadow-[4px_4px_0_0_rgba(255,255,255,0.06)] flex flex-col">
-                <div className="text-4xl font-black text-emerald-600 leading-none mb-4 select-none">"</div>
-                <p className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed flex-1 mb-6">{t.quote}</p>
-                <div className="border-t border-slate-100 dark:border-zinc-800 pt-4">
-                  <div className="font-black text-[13px] text-slate-900 dark:text-white">{t.name}</div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t.role}</div>
                 </div>
               </motion.div>
             ))}

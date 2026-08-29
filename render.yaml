@@ -1,4 +1,35 @@
 services:
+  # ── Admin dashboard (Node/Express) ─────────────────────────────────────────
+  # Separate service, separate URL, separate login — NOT part of the public
+  # site and not linked from it. Reads the same Supabase database as
+  # lessonlab-backend (read-mostly; the one write path is a user active/
+  # inactive toggle). See admin/README.md for the full env var list and what
+  # each page shows.
+  - type: web
+    name: lessonlab-admin
+    runtime: node
+    buildCommand: cd admin && npm install
+    startCommand: cd admin && npm start
+    plan: free
+    buildFilter:
+      paths:
+        - admin/**
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false          # set manually in Render dashboard — long random value
+      - key: SESSION_SECRET
+        sync: false          # set manually in Render dashboard — long random value
+      - key: PGHOST
+        sync: false          # host portion of lessonlab-backend's DB_DSN
+      - key: PGPORT
+        sync: false          # port portion of lessonlab-backend's DB_DSN (usually 5432)
+      - key: PGDATABASE
+        sync: false          # dbname portion of lessonlab-backend's DB_DSN
+      - key: PGUSER
+        sync: false          # same value as lessonlab-backend's DB_USER
+      - key: PGPASSWORD
+        sync: false          # same value as lessonlab-backend's DB_PASS
+
   # ── Backend (PHP 8.2 + Apache via Docker) ─────────────────────────────────
   - type: web
     name: lessonlab-backend
@@ -51,6 +82,7 @@ services:
     buildFilter:
       ignoredPaths:
         - backend/**
+        - admin/**
         - docs/**
         - '*.md'
         - docker-compose.yml
