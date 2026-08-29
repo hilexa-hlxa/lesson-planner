@@ -49,7 +49,15 @@ app.use((req, res, next) => {
 // Простая защита от подбора пароля: 5 неудач — блокировка на 5 минут по IP.
 // In-memory достаточно (один процесс, один инстанс, перезапуск сбрасывает —
 // не критично для внутреннего инструмента с одним настоящим паролем).
-const loginAttempts = new Map(); // ip -> { count, lockedUntil }
+//
+// lastAttemptAt + периодический sweep — без них Map растёт на каждый новый
+// IP, который хоть раз ошибся паролем, и никогда не уменьшается за всё
+// время жизни процесса. Для внутреннего инструмента это далёкая от
+// катастрофы, но настоящая утечка памяти — 30 минут простоя достаточно,
+// чтобы понять, что IP больше не пытается.
+const loginAttempts = new Map(); // ip -> { count, lockedUntil, lastAttemptAt }
+const LOGIN_ATTEMPT_IDLE_MS = 30 * 60 * 1000;
+
 function checkLoginRateLimit(ip) {
   const rec = loginAttempts.get(ip);
   if (!rec) return { blocked: false };
@@ -65,11 +73,18 @@ function recordLoginFailure(ip) {
     rec.lockedUntil = Date.now() + 5 * 60 * 1000;
     rec.count = 0;
   }
+  rec.lastAttemptAt = Date.now();
   loginAttempts.set(ip, rec);
 }
 function recordLoginSuccess(ip) {
   loginAttempts.delete(ip);
 }
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, rec] of loginAttempts) {
+    if (now - (rec.lastAttemptAt || 0) > LOGIN_ATTEMPT_IDLE_MS) loginAttempts.delete(ip);
+  }
+}, 10 * 60 * 1000).unref(); // .unref() — этот таймер не должен держать процесс живым сам по себе
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(String(a));
@@ -242,7 +257,7 @@ app.get("/users", async (req, res, next) => {
       .map((u) => {
         const roleBadges = (u.roles || []).map((r) => `<span class="badge ${esc(r)}">${esc(r)}</span>`).join(" ");
         return `<tr>
-          <td>${esc(u.email)}</td>
+          <td><a href="/users/${u.id}">${esc(u.email)}</a></td>
           <td>${esc(u.display_name || "—")}</td>
           <td>${roleBadges || '<span class="muted">—</span>'}</td>
           <td>${esc(u.coins)}</td>
@@ -251,6 +266,7 @@ app.get("/users", async (req, res, next) => {
           <td class="muted">${fmtDate(u.created_at)}</td>
           <td>
             <form method="post" action="/users/${u.id}/toggle-active" style="display:inline">
+              <input type="hidden" name="redirect_to" value="/users" />
               <button class="btn ${u.is_active ? "danger" : ""}" type="submit"
                 onclick="return confirm('${u.is_active ? "Disable" : "Re-enable"} ${esc(u.email)}?')">
                 ${u.is_active ? "Disable" : "Enable"}
@@ -281,12 +297,133 @@ app.get("/users", async (req, res, next) => {
   }
 });
 
+// ── User detail ─────────────────────────────────────────────────────────────
+app.get("/users/:id", async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(404).send(
+      layout({ title: "Not found", active: "/users", body: "<h1>404</h1>" })
+    );
+
+    const [userRes, classesOwnedRes, classesJoinedRes, gensRes, quizResultsRes, achievementsRes] =
+      await Promise.all([
+        pool.query(
+          `SELECT u.*, COALESCE(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS roles
+             FROM users u
+             LEFT JOIN user_roles ur ON ur.user_id = u.id
+             LEFT JOIN roles r ON r.id = ur.role_id
+            WHERE u.id = $1
+            GROUP BY u.id`,
+          [id]
+        ),
+        pool.query(
+          `SELECT c.id, c.name, c.join_code,
+                  COUNT(cm.id) FILTER (WHERE cm.status = 'approved')::int AS approved_count
+             FROM classes c LEFT JOIN class_members cm ON cm.class_id = c.id
+            WHERE c.teacher_id = $1 GROUP BY c.id ORDER BY c.created_at DESC`,
+          [id]
+        ),
+        pool.query(
+          `SELECT c.id, c.name, cm.status, u.email AS teacher_email
+             FROM class_members cm
+             JOIN classes c ON c.id = cm.class_id
+             JOIN users u ON u.id = c.teacher_id
+            WHERE cm.student_id = $1 ORDER BY cm.applied_at DESC`,
+          [id]
+        ),
+        pool.query(
+          `SELECT id, subject, topic, type, status, created_at
+             FROM generations WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20`,
+          [id]
+        ),
+        pool.query(
+          `SELECT qr.id, qr.percentage, qr.score, qr.total_questions, qr.created_at, g.topic
+             FROM quiz_results qr JOIN generations g ON g.id = qr.quiz_id
+            WHERE qr.student_id = $1 ORDER BY qr.created_at DESC LIMIT 20`,
+          [id]
+        ),
+        pool.query(
+          `SELECT achievement_key, granted_at FROM user_achievements
+            WHERE user_id = $1 ORDER BY granted_at DESC`,
+          [id]
+        ),
+      ]);
+
+    const u = userRes.rows[0];
+    if (!u) return res.status(404).send(
+      layout({ title: "Not found", active: "/users", body: "<h1>404</h1><p class='sub'>No such user.</p>" })
+    );
+
+    const roleBadges = (u.roles || []).map((r) => `<span class="badge ${esc(r)}">${esc(r)}</span>`).join(" ") || "—";
+
+    const classesOwnedRows = classesOwnedRes.rows
+      .map((c) => `<tr><td><a href="/classes">${esc(c.name)}</a></td><td class="mono">${esc(c.join_code)}</td><td>${esc(c.approved_count)}</td></tr>`)
+      .join("");
+    const classesJoinedRows = classesJoinedRes.rows
+      .map((c) => `<tr><td>${esc(c.name)}</td><td>${esc(c.teacher_email)}</td><td><span class="badge ${c.status === "approved" ? "done" : "pending"}">${esc(c.status)}</span></td></tr>`)
+      .join("");
+    const gensRows = gensRes.rows
+      .map((g) => `<tr><td>${esc(g.subject)} — ${esc(g.topic)}</td><td>${esc(g.type)}</td><td><span class="badge ${esc(g.status)}">${esc(g.status)}</span></td><td class="muted">${fmtDate(g.created_at)}</td></tr>`)
+      .join("");
+    const quizRows = quizResultsRes.rows
+      .map((r) => `<tr><td>${esc(r.topic)}</td><td>${esc(r.score)}/${esc(r.total_questions)} (${esc(r.percentage)}%)</td><td class="muted">${fmtDate(r.created_at)}</td></tr>`)
+      .join("");
+    const achievementRows = achievementsRes.rows
+      .map((a) => `<tr><td class="mono">${esc(a.achievement_key)}</td><td class="muted">${fmtDate(a.granted_at)}</td></tr>`)
+      .join("");
+
+    const section = (title, rows, headers) =>
+      rows
+        ? `<h2 class="section-title">${esc(title)}</h2>
+           <table><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+           <tbody>${rows}</tbody></table>`
+        : "";
+
+    const body = `
+      <a class="back-link" href="/users">← Back to Users</a>
+      <h1>${esc(u.display_name || u.email)}</h1>
+      <p class="sub">${roleBadges}</p>
+      <dl class="kv">
+        <dt>Email</dt><dd>${esc(u.email)}</dd>
+        <dt>Name</dt><dd>${esc([u.first_name, u.last_name].filter(Boolean).join(" ") || "—")}</dd>
+        <dt>Phone</dt><dd>${esc(u.phone || "—")}</dd>
+        <dt>Coins</dt><dd>${esc(u.coins)}</dd>
+        <dt>Status</dt><dd>${u.is_active ? "Active" : '<span class="badge inactive">Disabled</span>'}</dd>
+        <dt>Failed logins</dt><dd>${esc(u.failed_login_count)}${u.lock_until && new Date(u.lock_until) > new Date() ? ` <span class="badge error">locked until ${fmtDate(u.lock_until)}</span>` : ""}</dd>
+        <dt>Last login</dt><dd>${fmtDate(u.last_login_at)}</dd>
+        <dt>Joined</dt><dd>${fmtDate(u.created_at)}</dd>
+      </dl>
+      <form method="post" action="/users/${u.id}/toggle-active" style="margin-bottom:24px">
+        <input type="hidden" name="redirect_to" value="/users/${u.id}" />
+        <button class="btn ${u.is_active ? "danger" : ""}" type="submit"
+          onclick="return confirm('${u.is_active ? "Disable" : "Re-enable"} ${esc(u.email)}?')">
+          ${u.is_active ? "Disable this user" : "Enable this user"}
+        </button>
+      </form>
+      ${section("Classes taught", classesOwnedRows, ["Class", "Join code", "Students"])}
+      ${section("Classes joined", classesJoinedRows, ["Class", "Teacher", "Status"])}
+      ${section("Generations (latest 20)", gensRows, ["Subject / Topic", "Type", "Status", "When"])}
+      ${section("Quiz results (latest 20)", quizRows, ["Quiz", "Score", "When"])}
+      ${section("Achievements", achievementRows, ["Key", "Granted"])}
+    `;
+    res.send(layout({ title: u.email, active: "/users", body }));
+  } catch (e) {
+    next(e);
+  }
+});
+
 app.post("/users/:id/toggle-active", async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!Number.isFinite(id)) return res.redirect("/users");
     await pool.query("UPDATE users SET is_active = NOT is_active WHERE id = $1", [id]);
-    res.redirect("/users");
+    // redirect_to is form-controlled by us, not user-supplied query/header —
+    // still validated against an allow-list pattern rather than trusted
+    // outright, so a modified form (or anything else posting here) can't
+    // turn this into an open redirect.
+    const to = req.body.redirect_to;
+    const safe = typeof to === "string" && /^\/users(\/\d+)?$/.test(to);
+    res.redirect(safe ? to : "/users");
   } catch (e) {
     next(e);
   }

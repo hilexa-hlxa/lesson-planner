@@ -77,6 +77,7 @@ function layout({ title, active, body }) {
   }
   .card .n { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
   .card .l { color: #64748b; font-size: 12px; margin-top: 2px; }
+  a { color: #059669; }
   table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
   th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
   th { background: #f8fafc; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
@@ -103,6 +104,12 @@ function layout({ title, active, body }) {
   .pager { display: flex; gap: 8px; margin-top: 14px; }
   .muted { color: #94a3b8; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .kv { display: grid; grid-template-columns: 140px 1fr; gap: 8px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; }
+  .kv dt { color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; align-self: center; }
+  .kv dd { margin: 0; align-self: center; }
+  .section-title { font-size: 14px; margin: 0 0 10px; font-weight: 800; }
+  .back-link { display: inline-block; margin-bottom: 12px; font-size: 13px; font-weight: 600; color: #64748b; text-decoration: none; }
+  .back-link:hover { color: #059669; }
   .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; }
   .login-box {
     background: #fff; border-radius: 16px; padding: 32px; width: 320px; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
