@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   GraduationCap, User, LogOut, Sun,
-  Moon, Type, Contrast, Settings2, Search
+  Moon, Type, Contrast, Settings2, Search, Ticket
 } from 'lucide-react';
 
 import api from "../api";
@@ -13,6 +13,9 @@ import { I18N as t } from "../lib/i18n";
 
 const SEARCH_LABEL = { RU: "Поиск", KZ: "Іздеу", EN: "Search" };
 const SKIP_LABEL = { RU: "Перейти к содержимому", KZ: "Мазмұнға өту", EN: "Skip to content" };
+// Те же формулировки, что в футере (Footer.jsx: joinTest) — один и тот же
+// маршрут не должен называться в шапке иначе, чем внизу страницы.
+const JOIN_TEST_LABEL = { RU: "Войти в тест", KZ: "Тестке кіру", EN: "Join a quiz" };
 
 // Панель доступности — используется и в десктопной строке, и в мобильном меню
 function AccessibilityPanel({ dark, setDark, highContrast, setHighContrast, fontSize, setFontSize, stacked = false }) {
@@ -191,7 +194,29 @@ export default function Header({
             </button>
           </div>
         ) : isLanding && (
-          <div className="flex gap-2 sm:gap-4 items-center">
+          <div className="flex gap-2 sm:gap-3 lg:gap-4 items-center">
+            {/* Ученику, которого учитель прислал с 4-значным кодом, аккаунт не
+                нужен вообще — но до этого попасть на /join-test из шапки было
+                нельзя: там стояли только «Войти» и «Регистрация», то есть
+                ровно те два действия, которых он и хочет избежать (ссылка была
+                только в футере, куда надо доскроллить весь лендинг).
+                Ссылка, а не кнопка: это переход по маршруту — работает средний
+                клик, «открыть в новой вкладке», адрес виден в статусбаре.
+                Обводка, а не заливка — не конкурирует с основным CTA
+                «Регистрация» справа: аудитория разная. Текст прячем ниже sm,
+                чтобы на телефоне в строку помещались меню, эта кнопка и CTA;
+                aria-label остаётся, поэтому в иконочном состоянии кнопка
+                по-прежнему подписана для скринридера.
+                Скрывать её на самом /join-test не нужно: StudentJoinPage —
+                отдельный экран без Header вообще (только стрелка «назад»). */}
+            <Link
+              to="/join-test"
+              aria-label={JOIN_TEST_LABEL[lang] || JOIN_TEST_LABEL.RU}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-black/15 dark:border-white/20 font-black uppercase text-[10px] sm:text-[11px] tracking-widest hover:border-black dark:hover:border-white hover:text-emerald-600 transition-all whitespace-nowrap shrink-0"
+            >
+              <Ticket size={16} className="shrink-0" />
+              <span className="hidden sm:inline">{JOIN_TEST_LABEL[lang] || JOIN_TEST_LABEL.RU}</span>
+            </Link>
             <button onClick={() => { resetAuthFields?.(); setAuthMode?.("login"); setIsAuthOpen(true); }} className="hidden sm:block font-black uppercase text-[12px] tracking-widest hover:text-emerald-600 transition">
               {curAuth.login}
             </button>
