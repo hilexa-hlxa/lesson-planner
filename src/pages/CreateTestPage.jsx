@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { I18N as t } from '../lib/i18n';
 import { buildPrompt } from '../lib/prompt';
 import api from '../api';
+import { quotaMessage, bumpUsage, usageFromQuotaError } from '../lib/quotaMessage';
 import Header from "../components/Header";
 import useEscapeKey from "../hooks/useEscapeKey";
 
@@ -43,6 +44,7 @@ const T = {
     errNetwork: "Нет связи с сервером. Проверьте интернет и повторите.",
     errNoResults: "Пока нет данных. Отчёт можно собрать после того, как ученики завершат тест.",
     errReport: "Не удалось сформировать отчёт. Попробуйте ещё раз.",
+    usageLabel: "В этом месяце", usageUpgrade: "PRO",
   },
   KZ: {
     title: "AI тест құрастырғыш",
@@ -75,6 +77,7 @@ const T = {
     errNetwork: "Сервермен байланыс жоқ. Интернетті тексеріп, қайталаңыз.",
     errNoResults: "Әзірге дерек жоқ. Есепті оқушылар тестті аяқтаған соң жасауға болады.",
     errReport: "Есепті құру мүмкін болмады. Қайталап көріңіз.",
+    usageLabel: "Осы айда", usageUpgrade: "PRO",
   },
   EN: {
     title: "AI Quiz Creator",
@@ -107,13 +110,14 @@ const T = {
     errNetwork: "No connection to the server. Check your internet and retry.",
     errNoResults: "No data yet. The report can be built once students finish the quiz.",
     errReport: "Could not generate the report. Try again.",
+    usageLabel: "This month", usageUpgrade: "Upgrade",
   },
 };
 
 // На каком языке модель должна писать отчёт
 const REPORT_LANGUAGE = { RU: "Russian", KZ: "Kazakh", EN: "English" };
 
-const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }) => {
+const CreateTestPage = ({ lang, promptConfig, grantAchievement, usage, setUsage, ...accessProps }) => {
   const navigate = useNavigate();
 
   // --- State Management ---
@@ -200,6 +204,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
       await api.tests.update(test.id, { status: "done", result_md: accumulatedText });
       setActiveTest({ id: test.id, result_md: accumulatedText, topic, subject, access_code: null });
       loadSavedTests();
+      bumpUsage(setUsage);
 
     } catch (e) {
       console.error(e);
@@ -207,7 +212,9 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
       // сервера (например, что оба AI-провайдера сейчас недоступны), а
       // tr.errGenerate — общая фраза "попробуйте через минуту". Раньше
       // показывался только второй вариант, и настоящая причина терялась.
-      setError(e?.message ? `${tr.errGenerate} (${e.message})` : tr.errGenerate);
+      setError(quotaMessage(lang, e) || (e?.message ? `${tr.errGenerate} (${e.message})` : tr.errGenerate));
+      const quotaUsage = usageFromQuotaError(e);
+      if (quotaUsage) setUsage(quotaUsage);
       if (createdTestId) {
         api.tests.update(createdTestId, { status: "error" }).catch(() => {});
         loadSavedTests();
@@ -353,7 +360,7 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
 
     } catch (e) {
       console.error(e);
-      setReportError(e?.message ? `${tr.errReport} (${e.message})` : tr.errReport);
+      setReportError(quotaMessage(lang, e) || (e?.message ? `${tr.errReport} (${e.message})` : tr.errReport));
     } finally {
       setIsGeneratingReport(false);
     }
@@ -395,7 +402,19 @@ const CreateTestPage = ({ lang, promptConfig, grantAchievement, ...accessProps }
            </div>
            <label className="font-bold block mb-2 opacity-60 text-xs uppercase tracking-widest">{tr.topic}</label>
            <input value={topic} onChange={e => setTopic(e.target.value)} placeholder={tr.topicPh} aria-label={tr.topic} className="w-full p-4 bg-slate-100 dark:bg-zinc-800 rounded-xl font-bold outline-none mb-6 focus:ring-2 focus:ring-emerald-500/40" />
-           
+
+           {usage && (
+             <div className="flex items-center justify-between px-1 mb-4 text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+               <span>{tr.usageLabel}</span>
+               <span className={usage.remaining <= 0 ? "text-red-500" : usage.remaining <= 3 ? "text-amber-500" : ""}>
+                 {usage.used}/{usage.limit}
+                 {usage.plan === "free" && usage.remaining <= 3 && (
+                   <> · <Link to="/pricing" className="text-emerald-600 hover:underline">{tr.usageUpgrade}</Link></>
+                 )}
+               </span>
+             </div>
+           )}
+
            <button
                 onClick={handleGenerate}
                 disabled={loading || !topic}

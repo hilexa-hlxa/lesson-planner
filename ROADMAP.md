@@ -155,21 +155,24 @@
 
 ## Open
 
-- **PRO tariff is still a placeholder — deliberately, not by oversight.** `/pricing` still shows PRO
-  as "coming soon" with no price. I didn't invent numbers to fill this in: a real price and real
-  limits (generation quotas, class/student caps) are a business decision, and actually selling PRO
-  needs a payment provider account (Stripe or similar) — account creation isn't something I do on
-  your behalf. What I *can* build once you have the numbers: the quota-tracking and enforcement
-  code itself, and an upgrade flow that hands off to whatever payment provider you pick. Tell me the
-  limits and provider whenever you're ready and I'll build the enforcement side.
-- **Testimonials were removed, not replaced.** The landing page had three quotes attributed to named
-  "real teachers" (Aigerim Seitkali, Marat Dzhaksybekov, Zarina Nurlanova) who don't exist —
-  invented people presented as genuine reviews. I won't write new fake ones to replace them; that's
-  the same problem with different names. Removed the whole section (`TESTIMONIALS` and the
-  "Teachers say" block in `LandingPage.jsx`) rather than leave it empty-but-present. Bring it back
-  with real quotes once real teachers are using the product.
-- **Contact address and socials** — `CONTACT_EMAIL` and `SOCIALS` live in `src/siteConfig.js`, the
-  only file to edit. `CONTACT_EMAIL` is currently your personal Gmail (a deliberate stopgap, not
-  necessarily where you want teacher support requests landing long-term) — swap it for a dedicated
-  address whenever you set one up. Both social URLs are still empty (empty ones render nothing) —
-  I don't have real accounts to link.
+- **PRO tariff is real and enforced** (2026-08-30) — Free: 15 AI generations/month. PRO: 150/month,
+  $25/month, billed manually (no payment provider connected — see below). Enforcement lives on the
+  backend (`backend/src/Plans.php`, checked in `POST /api/generate/stream` before the request even
+  reaches Groq — a blocked request costs nothing), not just the UI, so it can't be bypassed by
+  calling the API directly. `users.plan` (migration `008_user_plan.sql`) defaults every existing and
+  new account to `free`. Counts only `status = 'done'` generations in the current calendar month —
+  a failure caused by our infrastructure (an expired Groq key, a provider outage) doesn't burn a
+  teacher's quota. `/api/me` now also returns `usage` (`plan`/`limit`/`used`/`remaining`) so the UI
+  can show "12/15" before anyone hits the wall, not just after.
+  - The one-time step this still needs from you: **run `008_user_plan.sql` against production.**
+    I can't run DDL against the live database myself (same boundary as the DB-credential step
+    earlier — a safety classifier blocks it, correctly). Paste the file's contents into Supabase's
+    SQL editor, same as every migration before it. Full context, why, and the exact SQL: see
+    `PLAN_MIGRATION.md` in the repo root.
+  - Upgrading a teacher to PRO is manual, on purpose: no payment provider is connected, so the PRO
+    card's CTA is a `mailto:`, not a checkout. Once someone pays you (however — bank transfer, cash,
+    whatever works), flip their plan in the admin panel: `lessonlab-admin` → that user's page →
+    "Move to PRO". Reversible the same way.
+- **Testimonials and contact email — deprioritized, not tracked as open items anymore** (per your
+  call 2026-08-30). Testimonials stay removed rather than filled with new invented names; contact
+  email stays your Gmail. Nothing broken either way — revisit whenever it's actually useful to you.

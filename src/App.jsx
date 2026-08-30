@@ -79,6 +79,11 @@ export default function App() {
   // --- 1. СТЕЙТЫ ---
   const [lang, setLang] = useState(() => localStorage.getItem("app_lang") || "RU");
   const [user, setUser] = useState(null);
+  // Квота генераций текущего месяца — { plan, limit, used, remaining },
+  // отдаётся GET /api/me вместе с user (см. backend/src/Plans.php::usage).
+  // Отдельно от user, потому что обновляется не только оттуда: см.
+  // bumpUsage/usageFromQuotaError в src/lib/quotaMessage.js.
+  const [usage, setUsage] = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
@@ -148,11 +153,12 @@ export default function App() {
     let cancelled = false;
     (async () => {
       try {
-        const r = await meCached(300_000); 
+        const r = await meCached(300_000);
         if (cancelled) return;
         setUser(r?.user || null);
+        setUsage(r?.usage || null);
       } catch {
-        if (!cancelled) setUser(null);
+        if (!cancelled) { setUser(null); setUsage(null); }
       } finally {
         if (!cancelled) setAuthReady(true);
       }
@@ -220,7 +226,7 @@ export default function App() {
   }, [dark, fontSize, highContrast, grantAchievement]);
 
   // --- 4. ПРОПСЫ ---
-  const accessProps = { grantAchievement, dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, lang, setLang, user, setUser };
+  const accessProps = { grantAchievement, dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, lang, setLang, user, setUser, usage, setUsage };
 
   const activeRoutes = ["/hub", "/tools", "/games", "/classes"];
   const isWidgetVisible = user && user.role === 'teacher' && activeRoutes.includes(location.pathname);

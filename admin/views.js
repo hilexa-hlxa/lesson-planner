@@ -92,6 +92,8 @@ function layout({ title, active, body }) {
   .badge.error { background: #fee2e2; color: #991b1b; }
   .badge.running, .badge.pending { background: #fef3c7; color: #92400e; }
   .badge.inactive { background: #f1f5f9; color: #64748b; }
+  .badge.pro { background: #059669; color: #fff; }
+  .badge.free { background: #f1f5f9; color: #475569; }
   .toolbar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
   .toolbar input[type=text] {
     padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; min-width: 220px;

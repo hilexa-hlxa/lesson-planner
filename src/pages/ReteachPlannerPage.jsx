@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Check, Sparkles, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 import api from '../api';
+import { quotaMessage } from '../lib/quotaMessage';
 
 const T = {
   RU: {
@@ -121,7 +122,7 @@ export default function ReteachPlannerPage({ lang, setLang, user, setUser, ...ac
         setOutput(text);
       }
     } catch (e) {
-      setOutput('Error: ' + (e.message || 'Generation failed'));
+      setOutput(quotaMessage(lang, e) || ('Error: ' + (e.message || 'Generation failed')));
     } finally {
       setGenerating(false);
     }

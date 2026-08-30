@@ -251,7 +251,7 @@ final class AuthService {
 
     // 1. ДОБАВИЛ first_name, last_name, coins В ЗАПРОС
     $st = $this->pdo->prepare("
-      select u.id, u.email, u.display_name, u.first_name, u.last_name, u.coins
+      select u.id, u.email, u.display_name, u.first_name, u.last_name, u.coins, u.plan
       from sessions s
       join users u on u.id = s.user_id
       where s.session_token_hash = :h

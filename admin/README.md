@@ -54,9 +54,15 @@ Then open `http://localhost:10000/login` (or whatever `$PORT` you set).
 - **Overview** — live counts (users, teachers, students, classes, generations,
   generations today/this week, errors today) plus recent signups and recent
   generations.
-- **Users** — searchable list (email/name), roles, coin balance, active
-  status, last login. "Disable" flips `users.is_active` to `false` — blocks
-  login without deleting anything, and is reversible from the same button.
+- **Users** — searchable list (email/name), roles, plan (free/PRO), coin
+  balance, active status, last login. Click through to a user's page for
+  their full profile plus classes/generations/quiz results/achievements.
+  "Disable" flips `users.is_active` to `false` — blocks login without
+  deleting anything, reversible from the same button. "Move to PRO" /
+  "Move to Free" flips `users.plan` — **this is the only way anyone actually
+  becomes PRO**: there's no payment provider connected (see
+  `src/lib/plans.js`), so a teacher pays you outside the site and you flip
+  their plan here. Also reversible.
 - **Teachers** — teachers ranked by generations created, with their class and
   (approved) student counts.
 - **Classes** — every class, its teacher, join code, and approved/pending
@@ -69,6 +75,6 @@ Then open `http://localhost:10000/login` (or whatever `$PORT` you set).
   abuse or a misbehaving client (see `backend/src/RateLimiter.php` for how
   buckets are named).
 
-Everything past login is read-only except the one "Disable/Enable" toggle on
-Users — deliberately: this is a monitoring tool, not a second copy of the main
-app's admin surface.
+Everything past login is read-only except the "Disable/Enable" and
+"Move to PRO/Free" toggles on Users — deliberately: this is a monitoring
+tool, not a second copy of the main app's admin surface.

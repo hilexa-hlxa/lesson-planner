@@ -101,6 +101,23 @@ if ($method === 'POST' && preg_match('#^/api/generate/stream/?$#', $path)) {
   // аккаунту, чтобы один пользователь не выбрал лимит на всех.
   \App\RateLimiter::enforce($db->pdo(), 'generate:' . (int)$streamUser['id'], 60, 3600);
 
+  // Тарифный лимит генераций (см. backend/src/Plans.php). Проверяем ДО
+  // GenerateStream::handle() — иначе списали бы вызов к Groq на генерацию,
+  // которую всё равно не покажем. 402 (Payment Required) — этой семантике
+  // как раз соответствует HTTP-код: не "вы не авторизованы", а "нужен
+  // апгрейд, чтобы продолжить". Поле code — чтобы фронт мог показать именно
+  // предложение перейти на PRO, а не универсальный текст ошибки.
+  require __DIR__ . '/../src/Plans.php';
+  $plan  = (string)($streamUser['plan'] ?? 'free');
+  $usage = \App\Plans::usage($db->pdo(), (int)$streamUser['id'], $plan);
+  if ($usage['remaining'] <= 0) {
+    Response::error(
+      "Monthly generation limit reached ({$usage['used']}/{$usage['limit']} on the {$plan} plan).",
+      402,
+      ['code' => 'quota_exceeded', 'plan' => $plan, 'limit' => $usage['limit'], 'used' => $usage['used']]
+    );
+  }
+
   require __DIR__ . '/../src/GenerateStream.php';
   \App\GenerateStream::handle($config, $body);
   exit;
@@ -560,7 +577,14 @@ try {
   if ($method === 'GET' && $path === '/api/me') {
     $u = $auth->currentUser();
     if (!$u) Response::error('Unauthorized', 401);
-    Response::ok(['user' => $u]);
+
+    // Отдаём остаток квоты сразу с профилем — так фронт может показать
+    // "12/15" ДО того, как учитель упрётся в лимит на самой генерации,
+    // а не только в момент отказа.
+    require __DIR__ . '/../src/Plans.php';
+    $usage = \App\Plans::usage($db->pdo(), (int)$u['id'], (string)($u['plan'] ?? 'free'));
+
+    Response::ok(['user' => $u, 'usage' => $usage]);
   }
 
   // Обновление собственного профиля (имя и фамилия)

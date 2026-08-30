@@ -239,7 +239,7 @@ app.get("/users", async (req, res, next) => {
     const offsetIdx = params.length;
 
     const { rows } = await pool.query(
-      `SELECT u.id, u.email, u.display_name, u.coins, u.is_active, u.last_login_at, u.created_at,
+      `SELECT u.id, u.email, u.display_name, u.coins, u.plan, u.is_active, u.last_login_at, u.created_at,
               COALESCE(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS roles
          FROM users u
          LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -260,6 +260,7 @@ app.get("/users", async (req, res, next) => {
           <td><a href="/users/${u.id}">${esc(u.email)}</a></td>
           <td>${esc(u.display_name || "—")}</td>
           <td>${roleBadges || '<span class="muted">—</span>'}</td>
+          <td><span class="badge ${u.plan === "pro" ? "pro" : "free"}">${esc(u.plan || "free")}</span></td>
           <td>${esc(u.coins)}</td>
           <td>${u.is_active ? "Active" : '<span class="badge inactive">Disabled</span>'}</td>
           <td class="muted">${fmtDate(u.last_login_at)}</td>
@@ -286,7 +287,7 @@ app.get("/users", async (req, res, next) => {
         ${q ? `<a class="btn" href="/users">Clear</a>` : ""}
       </form>
       <table>
-        <thead><tr><th>Email</th><th>Name</th><th>Roles</th><th>Coins</th><th>Status</th><th>Last login</th><th>Joined</th><th></th></tr></thead>
+        <thead><tr><th>Email</th><th>Name</th><th>Roles</th><th>Plan</th><th>Coins</th><th>Status</th><th>Last login</th><th>Joined</th><th></th></tr></thead>
         <tbody>${trs || `<tr><td colspan="8" class="muted">No users found.</td></tr>`}</tbody>
       </table>
       ${pager(`/users${q ? `?q=${encodeURIComponent(q)}` : ""}`, page, hasMore)}
@@ -305,7 +306,7 @@ app.get("/users/:id", async (req, res, next) => {
       layout({ title: "Not found", active: "/users", body: "<h1>404</h1>" })
     );
 
-    const [userRes, classesOwnedRes, classesJoinedRes, gensRes, quizResultsRes, achievementsRes] =
+    const [userRes, classesOwnedRes, classesJoinedRes, gensRes, quizResultsRes, achievementsRes, usageRes] =
       await Promise.all([
         pool.query(
           `SELECT u.*, COALESCE(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS roles
@@ -347,6 +348,15 @@ app.get("/users/:id", async (req, res, next) => {
             WHERE user_id = $1 ORDER BY granted_at DESC`,
           [id]
         ),
+        // Тот же счёт, что backend/src/Plans.php::usedThisMonth — только
+        // 'done', только текущий календарный месяц. Дублирование запроса
+        // (не общий код) осознанное: это отдельный сервис на Node, у него
+        // нет доступа к PHP-классам backend/.
+        pool.query(
+          `SELECT COUNT(*)::int AS n FROM generations
+            WHERE user_id = $1 AND status = 'done' AND created_at >= date_trunc('month', now())`,
+          [id]
+        ),
       ]);
 
     const u = userRes.rows[0];
@@ -355,6 +365,9 @@ app.get("/users/:id", async (req, res, next) => {
     );
 
     const roleBadges = (u.roles || []).map((r) => `<span class="badge ${esc(r)}">${esc(r)}</span>`).join(" ") || "—";
+    const plan = u.plan === "pro" ? "pro" : "free";
+    const planLimit = plan === "pro" ? 150 : 15; // см. backend/src/Plans.php::LIMITS
+    const usedThisMonth = usageRes.rows[0]?.n ?? 0;
 
     const classesOwnedRows = classesOwnedRes.rows
       .map((c) => `<tr><td><a href="/classes">${esc(c.name)}</a></td><td class="mono">${esc(c.join_code)}</td><td>${esc(c.approved_count)}</td></tr>`)
@@ -388,18 +401,29 @@ app.get("/users/:id", async (req, res, next) => {
         <dt>Name</dt><dd>${esc([u.first_name, u.last_name].filter(Boolean).join(" ") || "—")}</dd>
         <dt>Phone</dt><dd>${esc(u.phone || "—")}</dd>
         <dt>Coins</dt><dd>${esc(u.coins)}</dd>
+        <dt>Plan</dt><dd><span class="badge ${plan}">${plan}</span> — ${esc(usedThisMonth)}/${esc(planLimit)} generations used this month</dd>
         <dt>Status</dt><dd>${u.is_active ? "Active" : '<span class="badge inactive">Disabled</span>'}</dd>
         <dt>Failed logins</dt><dd>${esc(u.failed_login_count)}${u.lock_until && new Date(u.lock_until) > new Date() ? ` <span class="badge error">locked until ${fmtDate(u.lock_until)}</span>` : ""}</dd>
         <dt>Last login</dt><dd>${fmtDate(u.last_login_at)}</dd>
         <dt>Joined</dt><dd>${fmtDate(u.created_at)}</dd>
       </dl>
-      <form method="post" action="/users/${u.id}/toggle-active" style="margin-bottom:24px">
-        <input type="hidden" name="redirect_to" value="/users/${u.id}" />
-        <button class="btn ${u.is_active ? "danger" : ""}" type="submit"
-          onclick="return confirm('${u.is_active ? "Disable" : "Re-enable"} ${esc(u.email)}?')">
-          ${u.is_active ? "Disable this user" : "Enable this user"}
-        </button>
-      </form>
+      <div class="toolbar" style="margin-bottom:24px">
+        <form method="post" action="/users/${u.id}/toggle-active">
+          <input type="hidden" name="redirect_to" value="/users/${u.id}" />
+          <button class="btn ${u.is_active ? "danger" : ""}" type="submit"
+            onclick="return confirm('${u.is_active ? "Disable" : "Re-enable"} ${esc(u.email)}?')">
+            ${u.is_active ? "Disable this user" : "Enable this user"}
+          </button>
+        </form>
+        <form method="post" action="/users/${u.id}/set-plan">
+          <input type="hidden" name="plan" value="${plan === "pro" ? "free" : "pro"}" />
+          <input type="hidden" name="redirect_to" value="/users/${u.id}" />
+          <button class="btn primary" type="submit"
+            onclick="return confirm('${plan === "pro" ? "Move to Free (15/mo)" : "Move to PRO (150/mo)"}: ${esc(u.email)}?')">
+            ${plan === "pro" ? "Move to Free" : "Move to PRO"}
+          </button>
+        </form>
+      </div>
       ${section("Classes taught", classesOwnedRows, ["Class", "Join code", "Students"])}
       ${section("Classes joined", classesJoinedRows, ["Class", "Teacher", "Status"])}
       ${section("Generations (latest 20)", gensRows, ["Subject / Topic", "Type", "Status", "When"])}
@@ -412,18 +436,37 @@ app.get("/users/:id", async (req, res, next) => {
   }
 });
 
+// redirect_to is form-controlled by us, not user-supplied query/header —
+// still validated against an allow-list pattern rather than trusted
+// outright, so a modified form (or anything else posting to these routes)
+// can't turn this into an open redirect.
+function safeUserRedirect(res, body) {
+  const to = body.redirect_to;
+  const safe = typeof to === "string" && /^\/users(\/\d+)?$/.test(to);
+  res.redirect(safe ? to : "/users");
+}
+
 app.post("/users/:id/toggle-active", async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!Number.isFinite(id)) return res.redirect("/users");
     await pool.query("UPDATE users SET is_active = NOT is_active WHERE id = $1", [id]);
-    // redirect_to is form-controlled by us, not user-supplied query/header —
-    // still validated against an allow-list pattern rather than trusted
-    // outright, so a modified form (or anything else posting here) can't
-    // turn this into an open redirect.
-    const to = req.body.redirect_to;
-    const safe = typeof to === "string" && /^\/users(\/\d+)?$/.test(to);
-    res.redirect(safe ? to : "/users");
+    safeUserRedirect(res, req.body);
+  } catch (e) {
+    next(e);
+  }
+});
+
+// Единственный способ реально стать PRO — оплата не автоматизирована (нет
+// платёжного провайдера, см. src/lib/plans.js). Учитель платит вне сайта,
+// админ переключает план здесь вручную.
+app.post("/users/:id/set-plan", async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const plan = req.body.plan === "pro" ? "pro" : "free";
+    if (!Number.isFinite(id)) return res.redirect("/users");
+    await pool.query("UPDATE users SET plan = $1 WHERE id = $2", [plan, id]);
+    safeUserRedirect(res, req.body);
   } catch (e) {
     next(e);
   }

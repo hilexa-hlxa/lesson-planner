@@ -36,3 +36,9 @@ dist-ssr
 # PHP Composer
 vendor/
 backend/vendor/
+
+# Ruflo local secrets and runtime data
+.env.*.local
+.claude-flow/data/
+.claude-flow/logs/
+.claude-flow/sessions/

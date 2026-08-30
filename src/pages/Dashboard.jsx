@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 import ReactMarkdown from "react-markdown";
 import { MoreVertical, Trash2, History, Sparkles, Loader2, AlertCircle } from "lucide-react";
@@ -6,6 +7,7 @@ import { MoreVertical, Trash2, History, Sparkles, Loader2, AlertCircle } from "l
 import api from "../api";
 // Оставили только ОДИН чистый импорт
 import { cached, invalidatePrefixRaw, lessonPlansListCached } from "../apiCache";
+import { quotaMessage, bumpUsage, usageFromQuotaError } from "../lib/quotaMessage";
 import Header from "../components/Header";
 import useEscapeKey from "../hooks/useEscapeKey";
 import { Skeleton } from "../components/Skeleton";
@@ -22,6 +24,7 @@ const GEN = {
     edit: "Редактировать", del: "Удалить",
     errParse: "Не удалось разобрать ответ модели. Попробуйте сгенерировать ещё раз.",
     errGeneric: "Ошибка генерации. Проверьте соединение и попробуйте снова.",
+    usageLabel: "В этом месяце", usageUpgrade: "PRO",
   },
   KZ: {
     generating: "ЖАСАЛУДА...",
@@ -30,6 +33,7 @@ const GEN = {
     edit: "Өңдеу", del: "Жою",
     errParse: "Модельдің жауабын талдау мүмкін болмады. Қайта жасап көріңіз.",
     errGeneric: "Генерация қатесі. Байланысты тексеріп, қайталаңыз.",
+    usageLabel: "Осы айда", usageUpgrade: "PRO",
   },
   EN: {
     generating: "GENERATING...",
@@ -38,6 +42,7 @@ const GEN = {
     edit: "Edit", del: "Delete",
     errParse: "Could not parse the model's response. Try generating again.",
     errGeneric: "Generation failed. Check your connection and try again.",
+    usageLabel: "This month", usageUpgrade: "Upgrade",
   },
 };
 
@@ -51,8 +56,8 @@ function extractJsonObject(s) {
 }
 
 export default function Dashboard({
-  dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, 
-  lang, setLang, user, setUser, promptConfig, grantAchievement
+  dark, setDark, fontSize, setFontSize, highContrast, setHighContrast,
+  lang, setLang, user, setUser, usage, setUsage, promptConfig, grantAchievement
 }) {
   const accessProps = { dark, setDark, fontSize, setFontSize, highContrast, setHighContrast, lang, setLang, user, setUser };
 
@@ -189,6 +194,7 @@ export default function Dashboard({
         template_key: "kmj_kazakh_january"
       });
       setPlanStatus(plan.id, "done");
+      bumpUsage(setUsage);
 
       invalidatePrefixRaw("lessonPlans.list");
 
@@ -210,7 +216,9 @@ export default function Dashboard({
       // на самом деле на сервере. Остальные 7 из 9 страниц с generateStream
       // (ParentMessagePage и др.) уже показывают e.message — здесь та же
       // логика, тем же способом.
-      setPlanOutput(e?.message ? `${GEN_T.errGeneric} (${e.message})` : GEN_T.errGeneric);
+      setPlanOutput(quotaMessage(lang, e) || (e?.message ? `${GEN_T.errGeneric} (${e.message})` : GEN_T.errGeneric));
+      const quotaUsage = usageFromQuotaError(e);
+      if (quotaUsage) setUsage(quotaUsage);
       if (createdPlanId) {
         setPlanStatus(createdPlanId, "error");
         api.lessonPlans.update(createdPlanId, { status: "error" }).catch(() => {});
@@ -354,6 +362,17 @@ export default function Dashboard({
             <input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder={cur.s} aria-label={cur.s} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
             <input value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} placeholder={cur.t} aria-label={cur.t} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold focus:ring-4 ring-emerald-500/10 transition-all" />
             <textarea value={form.details} onChange={e => setForm({...form, details: e.target.value})} placeholder={cur.d} aria-label={cur.d} className="w-full p-5 sm:p-6 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl outline-none text-sm font-bold h-40 sm:h-52 resize-none focus:ring-4 ring-emerald-500/10 transition-all" />
+            {usage && (
+              <div className="flex items-center justify-between px-1 text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <span>{GEN_T.usageLabel}</span>
+                <span className={usage.remaining <= 0 ? "text-red-500" : usage.remaining <= 3 ? "text-amber-500" : ""}>
+                  {usage.used}/{usage.limit}
+                  {usage.plan === "free" && usage.remaining <= 3 && (
+                    <> · <Link to="/pricing" className="text-emerald-600 hover:underline">{GEN_T.usageUpgrade}</Link></>
+                  )}
+                </span>
+              </div>
+            )}
             <button onClick={handleGenerate} disabled={loading} className={`w-full py-5 sm:py-7 rounded-[24px] sm:rounded-[28px] text-[13px] sm:text-[15px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] transition-all border-[4px] border-black dark:border-white shadow-2xl ${loading ? 'bg-slate-200 dark:bg-zinc-800 text-slate-500' : 'bg-emerald-600 text-white hover:scale-[1.02]'}`}>
                 {loading ? GEN_T.generating : tr(lang,"doc.createPlan","СОЗДАТЬ ПЛАН")}
             </button>

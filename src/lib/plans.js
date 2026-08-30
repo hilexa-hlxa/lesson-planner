@@ -1,144 +1,139 @@
 // Тарифы — один источник для лендинга и страницы /pricing.
 //
-// ВАЖНО про честность формулировок: сегодня в продукте нет ни квот, ни лимитов
-// на классы — всё перечисленное во «Бесплатном» работает без ограничений. Поэтому
-// колонка PRO описана как БУДУЩЕЕ («скоро»), без цены и без намёка, что бесплатный
-// план уже чем-то урезан. Когда лимиты появятся в коде, правки нужны здесь и в
-// текстах /pricing и /terms одновременно.
+// PRO запущен (см. backend/src/Plans.php — лимиты применяются по-настоящему
+// на бэкенде, 402 при превышении). Оплата НЕ автоматизирована: платёжного
+// провайдера нет, поэтому кнопка PRO — mailto, а не чекаут. Апгрейд делается
+// вручную через admin-панель после оплаты вне сайта (перевод, наличные и т.д.
+// — что подойдёт). Цифры здесь ДОЛЖНЫ совпадать с backend/src/Plans.php::LIMITS
+// — если лимит меняется, править нужно оба места.
 
-export const PRO_LAUNCHED = false;
+export const PRO_LAUNCHED = true;
 
 export const PLANS = {
   RU: {
     sectionTag: "Тарифы",
-    sectionTitle: "Что входит сейчас и что появится",
-    sectionSub: "Всё, чем можно пользоваться сегодня, — бесплатно. Платный тариф появится позже и ничего из этого не заберёт.",
+    sectionTitle: "Бесплатно для начала, PRO — когда нужно больше",
+    sectionSub: "15 генераций в месяц хватает, чтобы попробовать. Нужно больше — переходите на PRO.",
 
     free: {
       name: "Бесплатный",
       price: "0 ₸",
-      period: "навсегда для того, что есть сейчас",
+      period: "навсегда",
       note: "Без карты. Без пробного периода, который заканчивается.",
       cta: "Начать бесплатно",
       ctaAuthed: "Перейти в хаб",
       features: [
-        "Планы уроков — без ограничения по количеству",
+        "15 AI-генераций в месяц (планы, тесты, отчёты — всё вместе)",
         "AI-тесты с кодом доступа для класса",
-        "Итог урока и AI-отчёт по классу",
-        "Классы и списки учеников",
+        "Классы и списки учеников без ограничений",
         "Вордл и игры для урока",
         "Экспорт в DOCX",
         "Три языка: RU, KZ, EN",
       ],
-      limits: "Скорость генерации зависит от квоты AI-провайдера: в час пик запрос может выполняться дольше.",
+      limits: "15 генераций считаются в календарный месяц и обнуляются 1-го числа. Не хватает — переходите на PRO.",
     },
 
     pro: {
       name: "PRO",
-      badge: "Скоро",
-      price: "—",
-      period: "цена будет объявлена заранее",
-      note: "Пока не запущен. Всё, что сейчас бесплатно, останется бесплатным.",
-      cta: "Сообщить о запуске",
+      badge: "",
+      price: "$25",
+      period: "в месяц",
+      note: "Оплата вручную, без автосписаний — напишите нам, договоримся об оплате и включим PRO на вашем аккаунте.",
+      cta: "Перейти на PRO",
       inherits: "Всё из бесплатного, плюс:",
       features: [
-        "Повышенные квоты генерации в часы пик",
-        "Больше классов и учеников в классе",
-        "Аккаунты для всей школы и общий доступ для методиста",
-        "Обучение коллектива и приоритетная поддержка",
+        "150 AI-генераций в месяц вместо 15",
+        "Тот же набор инструментов — без урезаний",
+        "Приоритет при высокой нагрузке",
       ],
-      planned: "Это план развития, а не действующее предложение — сроки и состав могут измениться.",
+      planned: "",
     },
 
-    schoolsNote: "Нужны аккаунты для школы уже сейчас? Напишите — сделаем бесплатно.",
+    schoolsNote: "Нужны аккаунты для школы или свои условия? Напишите — обсудим.",
   },
 
   KZ: {
     sectionTag: "Тарифтер",
-    sectionTitle: "Қазір не бар және не қосылады",
-    sectionSub: "Бүгін қолжетімнің бәрі — тегін. Ақылы тариф кейін шығады және бұның ешқайсысын алып қоймайды.",
+    sectionTitle: "Бастау үшін тегін, көбірек керек болса — PRO",
+    sectionSub: "Айына 15 генерация — байқап көруге жеткілікті. Көбірек керек пе — PRO-ға өтіңіз.",
 
     free: {
       name: "Тегін",
       price: "0 ₸",
-      period: "қазір бар нәрсеге — мәңгі",
+      period: "мәңгі",
       note: "Картасыз. Аяқталатын сынақ мерзімі жоқ.",
       cta: "Тегін бастау",
       ctaAuthed: "Хабқа өту",
       features: [
-        "Сабақ жоспарлары — саны шектелмейді",
+        "Айына 15 AI-генерация (жоспар, тест, есеп — бәрі бірге)",
         "Сынып үшін код арқылы кіретін AI тесттер",
-        "Сабақ қорытындысы және сынып бойынша AI есеп",
-        "Сыныптар мен оқушылар тізімі",
+        "Сыныптар мен оқушылар тізімі — шектеусіз",
         "Вордл және сабаққа арналған ойындар",
         "DOCX экспорты",
         "Үш тіл: RU, KZ, EN",
       ],
-      limits: "Генерация жылдамдығы AI провайдерінің квотасына байланысты: жүктеме көп кезде ұзағырақ орындалуы мүмкін.",
+      limits: "15 генерация күнтізбелік ай бойынша есептеледі және айдың 1-інде нөлденеді. Жетпей жатса — PRO-ға өтіңіз.",
     },
 
     pro: {
       name: "PRO",
-      badge: "Жақында",
-      price: "—",
-      period: "баға алдын ала жарияланады",
-      note: "Әзірге іске қосылған жоқ. Қазір тегін нәрсенің бәрі тегін болып қалады.",
-      cta: "Іске қосылғанда хабарлау",
+      badge: "",
+      price: "$25",
+      period: "айына",
+      note: "Төлем қолмен, автосписание жоқ — жазыңыз, төлем туралы келісеміз де аккаунтыңызда PRO қосамыз.",
+      cta: "PRO-ға өту",
       inherits: "Тегіндегінің бәрі, оған қоса:",
       features: [
-        "Жүктеме көп кезде жоғары генерация квотасы",
-        "Көбірек сынып және сыныптағы оқушы",
-        "Бүкіл мектепке аккаунт және әдіскерге ортақ қолжетімділік",
-        "Ұжымды оқыту және басым қолдау",
+        "Айына 150 AI-генерация (15-тің орнына)",
+        "Сол құралдар жинағы — кесусіз",
+        "Жүктеме көп кезде басымдық",
       ],
-      planned: "Бұл — даму жоспары, қолданыстағы ұсыныс емес: мерзімі мен құрамы өзгеруі мүмкін.",
+      planned: "",
     },
 
-    schoolsNote: "Мектепке аккаунт қазір керек пе? Жазыңыз — тегін жасаймыз.",
+    schoolsNote: "Мектепке аккаунт немесе өз шарттарыңыз керек пе? Жазыңыз — талқылайық.",
   },
 
   EN: {
     sectionTag: "Plans",
-    sectionTitle: "What you get now, and what's coming",
-    sectionSub: "Everything you can use today is free. A paid plan comes later and takes none of it away.",
+    sectionTitle: "Free to start, PRO when you need more",
+    sectionSub: "15 generations a month is enough to try it out. Need more? Move to PRO.",
 
     free: {
       name: "Free",
       price: "0 ₸",
-      period: "forever, for what exists today",
+      period: "forever",
       note: "No card. No trial that runs out.",
       cta: "Start for free",
       ctaAuthed: "Go to hub",
       features: [
-        "Unlimited lesson plans",
+        "15 AI generations a month (plans, quizzes, reports — combined)",
         "AI quizzes with an access code for the class",
-        "Lesson summary and AI class report",
-        "Classes and student rosters",
+        "Unlimited classes and student rosters",
         "Wordle and in-lesson games",
         "DOCX export",
         "Three languages: RU, KZ, EN",
       ],
-      limits: "Generation speed depends on the AI provider's quota — at peak times a request may take longer.",
+      limits: "The 15 generations count per calendar month and reset on the 1st. Need more — move to PRO.",
     },
 
     pro: {
       name: "PRO",
-      badge: "Coming soon",
-      price: "—",
-      period: "pricing announced in advance",
-      note: "Not launched yet. Everything free today stays free.",
-      cta: "Tell me when it launches",
+      badge: "",
+      price: "$25",
+      period: "per month",
+      note: "Billed manually, no auto-charges — email us, we'll sort out payment and switch your account to PRO.",
+      cta: "Move to PRO",
       inherits: "Everything in Free, plus:",
       features: [
-        "Higher generation quotas at peak times",
-        "More classes, and more students per class",
-        "Accounts for a whole school and shared access for a lead teacher",
-        "Staff training and priority support",
+        "150 AI generations a month instead of 15",
+        "Same toolset — nothing cut down",
+        "Priority when load is high",
       ],
-      planned: "This is a roadmap, not an offer — timing and contents may change.",
+      planned: "",
     },
 
-    schoolsNote: "Need school accounts today? Email us — we'll sort it out, free.",
+    schoolsNote: "Need school accounts or your own terms? Email us — let's talk.",
   },
 };
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Check, Sparkles, Download } from 'lucide-react';
 import Header from '../components/Header';
 import api from '../api';
+import { quotaMessage } from '../lib/quotaMessage';
 import { downloadDocx } from '../lib/docxExport';
 
 const T = {
@@ -69,7 +70,7 @@ export default function RubricBuilderPage({ lang, setLang, user, setUser, ...acc
         setOutput(text);
       }
     } catch (e) {
-      setOutput('Error: ' + (e.message || 'Generation failed'));
+      setOutput(quotaMessage(lang, e) || ('Error: ' + (e.message || 'Generation failed')));
     } finally {
       setGenerating(false);
     }

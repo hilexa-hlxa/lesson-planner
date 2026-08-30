@@ -123,7 +123,21 @@ const api = {
 
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
-      throw new Error(txt || `HTTP ${res.status}`);
+      // Backend errors are JSON ({ok:false, error, code?, ...}) via
+      // Response::error() — parse it so callers see a clean message instead
+      // of the raw "{"ok":false,"error":"..."}" string, and can branch on
+      // err.code (e.g. "quota_exceeded") without string-matching the text.
+      let parsed = null;
+      try { parsed = JSON.parse(txt); } catch { /* not JSON — e.g. the plain-text 400 for a missing prompt */ }
+      const err = new Error((parsed && parsed.error) || txt || `HTTP ${res.status}`);
+      err.status = res.status;
+      if (parsed) {
+        err.code = parsed.code;
+        err.plan = parsed.plan;
+        err.limit = parsed.limit;
+        err.used = parsed.used;
+      }
+      throw err;
     }
     if (!res.body) throw new Error("No response body");
 
