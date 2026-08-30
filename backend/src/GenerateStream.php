@@ -171,6 +171,14 @@ final class GenerateStream
 
     $buf = '';
     $sentAny = false;
+    // Захват сырого тела ответа отдельно от $buf: строчный парсер ниже
+    // консьюмит $buf по каждому "\n" независимо от того, начинается ли
+    // строка с "data:" — если тело ошибки Groq заканчивается переводом
+    // строки (как обычно и бывает у JSON-ответов), к моменту завершения
+    // curl_exec() в $buf уже пусто, и подставлять его в failReason было бы
+    // подставлять пустую строку. rawTail собирается независимо и обрезан,
+    // чтобы не раздувать память на успешном стриме в сотни КБ текста.
+    $rawTail = '';
     $ch = curl_init($url);
 
     $opts = [
@@ -183,7 +191,8 @@ final class GenerateStream
       CURLOPT_RETURNTRANSFER => false,
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_TIMEOUT        => 0,
-      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf, &$finishReason, &$sentAny): int {
+      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf, &$finishReason, &$sentAny, &$rawTail): int {
+        if (strlen($rawTail) < 2000) $rawTail .= $chunk;
         $buf .= $chunk;
         while (($pos = strpos($buf, "\n")) !== false) {
           $line = trim(substr($buf, 0, $pos));
@@ -231,8 +240,14 @@ final class GenerateStream
 
     $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     if ($code >= 400) {
-      if (!$sentAny) { $failReason = "HTTP {$code}"; return false; } // caller may retry another provider
-      self::sendEvent(['type' => 'error', 'message' => "Groq HTTP {$code}"]);
+      // "HTTP 401" само по себе не говорит, ключ ли невалиден, отозван, не
+      // той организации и т.д. — тело ответа обычно говорит прямо
+      // ({"error":{"message":"Invalid API Key",...}}). rawTail — сырые байты
+      // независимо от построчного парсера выше (см. его объявление).
+      $bodySnippet = mb_substr(trim($rawTail), 0, 300);
+      $reason = "HTTP {$code}" . ($bodySnippet !== '' ? ": {$bodySnippet}" : '');
+      if (!$sentAny) { $failReason = $reason; return false; } // caller may retry another provider
+      self::sendEvent(['type' => 'error', 'message' => "Groq {$reason}"]);
       self::sendEvent(['type' => 'done']);
       self::flushNow();
       return true;
@@ -277,6 +292,10 @@ final class GenerateStream
 
     $buf = '';
     $sentAny = false;
+    // См. комментарий у аналогичной переменной в streamGroq(): построчный
+    // (тут — по фигурным скобкам) парсер ниже консьюмит $buf по мере разбора,
+    // так что к моменту ошибки тело ответа там может уже не остаться.
+    $rawTail = '';
     $ch = curl_init($url);
 
     $opts = [
@@ -286,7 +305,8 @@ final class GenerateStream
       CURLOPT_RETURNTRANSFER => false,
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_TIMEOUT        => 0,
-      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf, &$sentAny): int {
+      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf, &$sentAny, &$rawTail): int {
+        if (strlen($rawTail) < 2000) $rawTail .= $chunk;
         $buf .= $chunk;
         while (true) {
           $start = strpos($buf, '{');
@@ -356,8 +376,10 @@ final class GenerateStream
 
     $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     if ($code >= 400) {
-      if (!$sentAny) { $failReason = "HTTP {$code}"; return false; }
-      self::sendEvent(['type' => 'error', 'message' => "Gemini HTTP {$code}"]);
+      $bodySnippet = mb_substr(trim($rawTail), 0, 300);
+      $reason = "HTTP {$code}" . ($bodySnippet !== '' ? ": {$bodySnippet}" : '');
+      if (!$sentAny) { $failReason = $reason; return false; }
+      self::sendEvent(['type' => 'error', 'message' => "Gemini {$reason}"]);
       self::sendEvent(['type' => 'done']);
       self::flushNow();
       return true;
