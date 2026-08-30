@@ -90,14 +90,14 @@ $body = in_array($method, ['POST','PUT','PATCH'], true) ? readJsonBodyOrFail() :
 
 // ---------------- SSE Stream Route ----------------
 // Обязательно требуем сессию: без этой проверки эндпоинт был открытым прокси
-// к Gemini — любой мог слать произвольные промпты за счёт нашего API-ключа.
+// к Groq — любой мог слать произвольные промпты за счёт нашего API-ключа.
 if ($method === 'POST' && preg_match('#^/api/generate/stream/?$#', $path)) {
   $streamUser = $auth->currentUser();
   if (!$streamUser) {
     Response::error('Unauthorized', 401);
   }
 
-  // Каждый запрос стоит нам квоты Gemini, поэтому считаем их все — и по
+  // Каждый запрос стоит нам квоты Groq, поэтому считаем их все — и по
   // аккаунту, чтобы один пользователь не выбрал лимит на всех.
   \App\RateLimiter::enforce($db->pdo(), 'generate:' . (int)$streamUser['id'], 60, 3600);
 

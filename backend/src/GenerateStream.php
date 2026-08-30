@@ -9,8 +9,6 @@ final class GenerateStream
   {
     $groqKey    = (string)($config['groq']['api_key'] ?? '');
     $groqModel  = (string)($config['groq']['model'] ?? 'openai/gpt-oss-120b');
-    $geminiKey  = (string)($config['gemini']['api_key'] ?? '');
-    $geminiModel = (string)($config['gemini']['model'] ?? 'gemini-2.0-flash');
 
     // Body: либо передали из index.php, либо читаем сами
     $data = is_array($body) ? $body : [];
@@ -32,50 +30,20 @@ final class GenerateStream
     self::sseHeaders();
     header('X-Accel-Buffering: no');
 
-    // Провайдер выбирается по наличию ключа: Groq в приоритете (быстрее и
-    // дешевле для наших промптов), Gemini — запасной, демо-режим — если не
-    // настроено вообще ничего.
+    // Groq — единственный провайдер (см. GenerateStream в ROADMAP.md): решили
+    // осознанно работать только на бесплатных ключах Groq, без Gemini как
+    // запасного варианта. Демо-режим — если ключ вообще не настроен.
     //
-    // До этого места Gemini был запасным ТОЛЬКО когда Groq-ключ вообще не
-    // задан — а не когда он задан, но не работает (просрочен/отозван/невалиден).
-    // Обнаружили вживую на проде: Groq отвечал 401 на каждый запрос, а
-    // работающий Gemini-ключ рядом простаивал — вся генерация в приложении
-    // была недоступна, хотя реальный запасной провайдер существовал.
-    //
-    // streamGroq()/streamGemini() возвращают bool: true, если клиенту ушёл
-    // хоть один дельта-чанк (успех ИЛИ обрыв на середине — тут откатываться
-    // на другого провайдера нельзя, SSE-поток не "переиграть" с начала,
-    // второй провайдер задублировал бы уже показанный текст). false — сорвался
-    // ДО первого чанка (типично — мгновенная HTTP-ошибка вроде 401/429/5xx) и
-    // ничего клиенту ещё не отправил, значит можно безопасно попробовать
-    // другого провайдера как ни в чём не бывало.
+    // streamGroq() возвращает bool: true, если клиенту ушёл хоть один
+    // дельта-чанк (успех ИЛИ обрыв на середине — SSE-поток не "переиграть" с
+    // начала). false — сорвался ДО первого чанка (типично — мгновенная
+    // HTTP-ошибка вроде 401/429/5xx) и ничего клиенту ещё не отправил; тогда
+    // handle() сам шлёт 'error'/'done' с точной причиной сбоя.
     if ($groqKey !== '') {
       $groqReason = null;
       if (self::streamGroq($groqKey, $groqModel, $prompt, $config, $groqReason)) return;
 
-      $geminiReason = $geminiKey === '' ? 'GEMINI_API_KEY not configured' : null;
-      if ($geminiKey !== '') {
-        if (self::streamGemini($geminiKey, $geminiModel, $prompt, $config, $geminiReason)) return;
-      }
-
-      // Ни один провайдер не выдал ни байта — единственный случай, где
-      // handle() сам шлёт 'error'/'done': оба streamXxx() специально молчат,
-      // если сорвались ДО первого чанка, чтобы решение "фолбэкнуться или
-      // сдаться" принималось в одном месте, а не дублировалось в каждом.
-      // Обе причины — в одном сообщении: без этого узнать, что именно сломано
-      // (просроченный Groq-ключ? отсутствующий Gemini-ключ? оба ключа мертвы?),
-      // можно было только перечитав логи сервера.
-      self::sendEvent(['type' => 'error', 'message' => "All generation providers unavailable (Groq: {$groqReason}; Gemini: {$geminiReason})"]);
-      self::sendEvent(['type' => 'done']);
-      self::flushNow();
-      return;
-    }
-
-    if ($geminiKey !== '') {
-      $geminiReason = null;
-      if (self::streamGemini($geminiKey, $geminiModel, $prompt, $config, $geminiReason)) return;
-
-      self::sendEvent(['type' => 'error', 'message' => "Generation provider unavailable (Gemini: {$geminiReason})"]);
+      self::sendEvent(['type' => 'error', 'message' => "Generation provider unavailable (Groq: {$groqReason})"]);
       self::sendEvent(['type' => 'done']);
       self::flushNow();
       return;
@@ -268,124 +236,6 @@ final class GenerateStream
     if ($finishReason === 'length') {
       self::sendEvent(['type' => 'error', 'message' => 'Groq response truncated (finish_reason=length) — try a shorter prompt or lower detail level']);
     }
-
-    self::sendEvent(['type' => 'done']);
-    self::flushNow();
-    return true;
-  }
-
-  // @return bool — см. docblock streamGroq(), то же соглашение.
-  private static function streamGemini(string $apiKey, string $model, string $prompt, array $config, ?string &$failReason = null): bool
-  {
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
-      . rawurlencode($model)
-      . ':streamGenerateContent?key='
-      . rawurlencode($apiKey);
-
-    $payload = json_encode([
-      'contents' => [
-        ['parts' => [['text' => $prompt]]]
-      ]
-    ], JSON_UNESCAPED_UNICODE);
-
-    $cafile = (string)($config['ssl']['cafile'] ?? '');
-
-    $buf = '';
-    $sentAny = false;
-    // См. комментарий у аналогичной переменной в streamGroq(): построчный
-    // (тут — по фигурным скобкам) парсер ниже консьюмит $buf по мере разбора,
-    // так что к моменту ошибки тело ответа там может уже не остаться.
-    $rawTail = '';
-    $ch = curl_init($url);
-
-    $opts = [
-      CURLOPT_POST           => true,
-      CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-      CURLOPT_POSTFIELDS     => $payload,
-      CURLOPT_RETURNTRANSFER => false,
-      CURLOPT_FOLLOWLOCATION => true,
-      CURLOPT_TIMEOUT        => 0,
-      CURLOPT_WRITEFUNCTION  => function ($ch, string $chunk) use (&$buf, &$sentAny, &$rawTail): int {
-        if (strlen($rawTail) < 2000) $rawTail .= $chunk;
-        $buf .= $chunk;
-        while (true) {
-          $start = strpos($buf, '{');
-          if ($start === false) {
-            $buf = '';
-            break;
-          }
-
-          $level = 0;
-          $inStr = false;
-          $esc = false;
-          $endPos = null;
-
-          $len = strlen($buf);
-          for ($i = $start; $i < $len; $i++) {
-            $c = $buf[$i];
-            if ($inStr) {
-              if ($esc) { $esc = false; continue; }
-              if ($c === '\\') { $esc = true; continue; }
-              if ($c === '"') { $inStr = false; continue; }
-              continue;
-            } else {
-              if ($c === '"') { $inStr = true; continue; }
-              if ($c === '{') $level++;
-              if ($c === '}') {
-                $level--;
-                if ($level === 0) { $endPos = $i; break; }
-              }
-            }
-          }
-
-          if ($endPos === null) break;
-
-          $jsonStr = substr($buf, $start, $endPos - $start + 1);
-          $buf = substr($buf, $endPos + 1);
-
-          $obj = json_decode($jsonStr, true);
-          if (!is_array($obj)) continue;
-
-          $text = $obj['candidates'][0]['content']['parts'][0]['text'] ?? null;
-          if (is_string($text) && $text !== '') {
-            self::sendEvent(['type' => 'delta', 'text' => $text]);
-            self::flushNow();
-            $sentAny = true;
-          }
-        }
-        return strlen($chunk);
-      },
-    ];
-
-    if ($cafile !== '' && is_file($cafile)) {
-      $opts[CURLOPT_CAINFO] = $cafile;
-      @putenv('SSL_CERT_FILE=' . $cafile);
-    }
-
-    curl_setopt_array($ch, $opts);
-
-    $ok = curl_exec($ch);
-    if ($ok === false) {
-      $err = curl_error($ch);
-      if (!$sentAny) { $failReason = $err ?: 'curl_exec failed'; return false; }
-      self::sendEvent(['type' => 'error', 'message' => $err ?: 'curl_exec failed']);
-      self::sendEvent(['type' => 'done']);
-      self::flushNow();
-      return true;
-    }
-
-    $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    if ($code >= 400) {
-      $bodySnippet = mb_substr(trim($rawTail), 0, 300);
-      $reason = "HTTP {$code}" . ($bodySnippet !== '' ? ": {$bodySnippet}" : '');
-      if (!$sentAny) { $failReason = $reason; return false; }
-      self::sendEvent(['type' => 'error', 'message' => "Gemini {$reason}"]);
-      self::sendEvent(['type' => 'done']);
-      self::flushNow();
-      return true;
-    }
-
-    if (!$sentAny) { $failReason = 'empty/unexpected response format'; return false; }
 
     self::sendEvent(['type' => 'done']);
     self::flushNow();

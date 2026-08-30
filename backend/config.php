@@ -14,14 +14,9 @@ $cfg = [
     'cookie_secure' => null,
     'cookie_samesite' => 'Lax',
   ],
-  'gemini' => [
-    'api_key' => null,
-    'model'   => 'gemini-2.0-flash',
-  ],
-  // Groq — предпочитаемый провайдер (см. GenerateStream::handle): если ключ
-  // задан, генерация идёт через него, а не через Gemini. Оставляем оба блока
-  // конфига независимыми, чтобы можно было держать оба ключа и переключаться
-  // без правки кода.
+  // Groq — единственный провайдер генерации (осознанное решение: работаем
+  // только на бесплатных ключах Groq, без Gemini как запасного — см.
+  // GenerateStream::handle и ROADMAP.md).
   'groq' => [
     'api_key' => null,
     'model'   => 'openai/gpt-oss-120b',
@@ -44,9 +39,6 @@ if (is_file($local)) {
 $cfg['db']['dsn']  = $cfg['db']['dsn']  ?: (getenv('DB_DSN')  ?: null);
 $cfg['db']['user'] = $cfg['db']['user'] ?: (getenv('DB_USER') ?: null);
 $cfg['db']['pass'] = $cfg['db']['pass'] ?: (getenv('DB_PASS') ?: null);
-
-$cfg['gemini']['api_key'] = $cfg['gemini']['api_key'] ?: (getenv('GEMINI_API_KEY') ?: null);
-$cfg['gemini']['model']   = $cfg['gemini']['model']   ?: (getenv('GEMINI_MODEL') ?: 'gemini-2.0-flash');
 
 $cfg['groq']['api_key'] = $cfg['groq']['api_key'] ?: (getenv('GROQ_API_KEY') ?: null);
 $cfg['groq']['model']   = $cfg['groq']['model']   ?: (getenv('GROQ_MODEL') ?: 'openai/gpt-oss-120b');

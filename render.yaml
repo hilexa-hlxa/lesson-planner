@@ -53,12 +53,8 @@ services:
         sync: false
       - key: DB_PASS
         sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GEMINI_MODEL
-        value: gemini-2.0-flash
       - key: GROQ_API_KEY
-        sync: false          # preferred provider — set this and generation uses Groq, not Gemini
+        sync: false          # sole generation provider — see GenerateStream::handle()
       - key: GROQ_MODEL
         value: openai/gpt-oss-120b
       - key: ALLOWED_ORIGIN

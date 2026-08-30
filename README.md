@@ -31,9 +31,9 @@ AI-платформа для казахстанских учителей. Ген
 |---|---|
 | Frontend | React 18 + Vite (Rolldown) |
 | Styling | Tailwind CSS v4 |
-| Backend | PHP 8.5 |
+| Backend | PHP 8.2 |
 | Database | PostgreSQL (Supabase) |
-| AI | Google Gemini 2.0 Flash (streaming) |
+| AI | Groq (streaming) |
 | Auth | Session-based (cookie) |
 | Export | PHPWord (DOCX) |
 

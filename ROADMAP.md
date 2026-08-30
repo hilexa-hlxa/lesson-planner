@@ -141,15 +141,20 @@
   and passed it (`{"error":{"code":"expired_api_key"}}`, not "the free plan expired" — that's not a
   real thing). New key generated and set 2026-08-30, verified by actually generating a full lesson
   plan end-to-end through the real UI (Chemistry / periodic table, 5th grade), not just a raw API
-  call. `GEMINI_API_KEY` is still unset, so Groq is a single point of failure again — see Open.
+  call.
+- **Gemini removed entirely, not just left unconfigured** — a deliberate decision (2026-08-30) to
+  run on free Groq keys only, no second provider. `streamGemini()` and the whole
+  fallback-orchestration branch are gone from `GenerateStream.php` (down to a single `if ($groqKey
+  !== '')` / demo-mode path), along with the `gemini` config block, `GEMINI_API_KEY`/`GEMINI_MODEL`
+  everywhere they appeared (`render.yaml`, `.env.example`, `backend/config.php`), and the stack
+  table in `README.md`. Also caught and fixed in the same pass: `PrivacyPage.jsx` (RU/KZ/EN) was
+  telling users their prompts get sent to "Google Gemini API" — a live, factually wrong statement
+  in the actual privacy policy, not just a stale code comment — now says Groq. If Groq becomes
+  unreliable again, the fix is either a fresh key (same as this time) or deliberately re-adding a
+  second provider — not assumed as a standing gap anymore.
 
 ## Open
 
-- **Gemini isn't set up as a fallback.** `GEMINI_API_KEY` is unset on `lessonlab-backend`, so Groq
-  going down again (expired key, outage, rate limit) means generation stops entirely rather than
-  quietly falling back — the fallback code already works, it just has nothing to fall back to. A
-  free Gemini key from aistudio.google.com would close this gap; not urgent since Groq works now,
-  but worth doing before it's the reason generation is down again.
 - **PRO tariff is still a placeholder — deliberately, not by oversight.** `/pricing` still shows PRO
   as "coming soon" with no price. I didn't invent numbers to fill this in: a real price and real
   limits (generation quotas, class/student caps) are a business decision, and actually selling PRO

@@ -46,7 +46,7 @@ final class SimpleDocxExport
       }
 
       // **bold** внутри строки — грубая замена без вложенного парсинга, но
-      // достаточно для текста, который выдаёт Gemini
+      // достаточно для текста, который выдаёт Groq
       $section->addText(self::clean(preg_replace('/\*\*(.+?)\*\*/', '$1', $trimmed)));
     }
 
