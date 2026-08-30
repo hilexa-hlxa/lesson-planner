@@ -250,8 +250,20 @@ final class AuthService {
     $hash = $this->tokenHash($raw);
 
     // 1. ДОБАВИЛ first_name, last_name, coins В ЗАПРОС
+    //
+    // u.plan ВРЕМЕННО убран отсюда: добавление колонки в SELECT раньше, чем
+    // применена миграция 008_user_plan.sql на проде, обрушило currentUser()
+    // на каждом аутентифицированном запросе — "column users.plan does not
+    // exist" ловится тут же, до какой-либо проверки, что миграция вообще
+    // накатана. GET /api/me отвечал 500 всем залогиненным пользователям.
+    // Плохо: это единственная функция, которую вызывает буквально каждый
+    // защищённый роут — ошибка здесь останавливает не только PRO-тариф, а
+    // приложение целиком. Как только миграция применена на проде (см.
+    // PLAN_MIGRATION.md), u.plan возвращается сюда — до тех пор все
+    // Plans::usage()/$streamUser['plan'] уже безопасно откатываются на
+    // 'free' через ?? 'free', так что деградация контролируемая.
     $st = $this->pdo->prepare("
-      select u.id, u.email, u.display_name, u.first_name, u.last_name, u.coins, u.plan
+      select u.id, u.email, u.display_name, u.first_name, u.last_name, u.coins
       from sessions s
       join users u on u.id = s.user_id
       where s.session_token_hash = :h
