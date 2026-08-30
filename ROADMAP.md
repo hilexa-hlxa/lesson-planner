@@ -134,33 +134,22 @@
 - **Admin dashboard** — a separate service (`admin/`, deployed as `lessonlab-admin`, its own URL,
   its own login) for monitoring users/teachers/classes/generations on the live database. Not linked
   from or reachable through the main site. See `admin/README.md` for the full page list and how the
-  auth model works. Read-only except one reversible "disable/enable user" toggle.
-
-## Needs you
-
-- **Wire up the new admin dashboard's database access.** `lessonlab-admin` is deployed but can't
-  connect to the database yet — it needs `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` set on
-  its Render service (Environment tab), copied from `lessonlab-backend`'s `DB_DSN`/`DB_USER`/
-  `DB_PASS` (split the DSN's `host=`/`port=`/`dbname=` into the first three). I can't do this step —
-  those are `sync: false` secrets, readable only from the Render dashboard by someone with access to
-  it. Full instructions in `admin/README.md`.
-
-- **AI generation is paused on purpose.** Root cause is now precisely known (2026-08-30): Groq
-  itself returns `{"error":{"message":"Invalid API Key","code":"expired_api_key"}}` — not "Groq's
-  free plan expired" (there's no such thing to expire; the free tier is ongoing, just rate-limited),
-  specifically **this one API key** has an expiration date that's passed. `GEMINI_API_KEY` is
-  separately just never set at all. Deliberately not being chased right now (no key on hand). Every
-  teacher-facing generation feature (Dashboard, CreateTestPage, LessonSummaryPage,
-  ParentMessagePage, ReteachPlannerPage, RubricBuilderPage, TranslateMaterialsPage,
-  WorksheetGeneratorPage, DifferentiatedWorksheetPage) fails with a clear error message instead of
-  silently serving fake content, but nothing generates until this is fixed. The code already does
-  the right thing once either key works (Groq first, Gemini as fallback, demo mode only when
-  neither is configured — see `backend/src/GenerateStream.php`). Fix: console.groq.com → generate a
-  new key (skip setting an expiration this time, or set it further out) → Render
-  (`lessonlab-backend` → Environment → `GROQ_API_KEY`). No code change needed.
+  auth model works. Read-only except one reversible "disable/enable user" toggle. Connected to the
+  live database 2026-08-30 — verified against real production data (Users, Teachers, and the
+  per-user detail page all confirmed showing correct real rows, not just "the page loaded").
+- **AI generation is working again** — root cause was a Groq API key that had an expiration date set
+  and passed it (`{"error":{"code":"expired_api_key"}}`, not "the free plan expired" — that's not a
+  real thing). New key generated and set 2026-08-30, verified by actually generating a full lesson
+  plan end-to-end through the real UI (Chemistry / periodic table, 5th grade), not just a raw API
+  call. `GEMINI_API_KEY` is still unset, so Groq is a single point of failure again — see Open.
 
 ## Open
 
+- **Gemini isn't set up as a fallback.** `GEMINI_API_KEY` is unset on `lessonlab-backend`, so Groq
+  going down again (expired key, outage, rate limit) means generation stops entirely rather than
+  quietly falling back — the fallback code already works, it just has nothing to fall back to. A
+  free Gemini key from aistudio.google.com would close this gap; not urgent since Groq works now,
+  but worth doing before it's the reason generation is down again.
 - **PRO tariff is still a placeholder — deliberately, not by oversight.** `/pricing` still shows PRO
   as "coming soon" with no price. I didn't invent numbers to fill this in: a real price and real
   limits (generation quotas, class/student caps) are a business decision, and actually selling PRO
