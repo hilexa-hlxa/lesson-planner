@@ -145,16 +145,19 @@
   those are `sync: false` secrets, readable only from the Render dashboard by someone with access to
   it. Full instructions in `admin/README.md`.
 
-- **AI generation is paused on purpose.** Both `GROQ_API_KEY` (invalid, HTTP 401) and
-  `GEMINI_API_KEY` (unset) are still dead on the live backend — confirmed 2026-08-28 by calling
-  `/api/generate/stream` directly. Deliberately not being chased right now (no key on hand). Every
+- **AI generation is paused on purpose.** Root cause is now precisely known (2026-08-30): Groq
+  itself returns `{"error":{"message":"Invalid API Key","code":"expired_api_key"}}` — not "Groq's
+  free plan expired" (there's no such thing to expire; the free tier is ongoing, just rate-limited),
+  specifically **this one API key** has an expiration date that's passed. `GEMINI_API_KEY` is
+  separately just never set at all. Deliberately not being chased right now (no key on hand). Every
   teacher-facing generation feature (Dashboard, CreateTestPage, LessonSummaryPage,
   ParentMessagePage, ReteachPlannerPage, RubricBuilderPage, TranslateMaterialsPage,
   WorksheetGeneratorPage, DifferentiatedWorksheetPage) fails with a clear error message instead of
   silently serving fake content, but nothing generates until this is fixed. The code already does
   the right thing once either key works (Groq first, Gemini as fallback, demo mode only when
-  neither is configured — see `backend/src/GenerateStream.php`). Purely a credentials swap on
-  Render (`lessonlab-backend` → Environment) once a key is available — no code change needed.
+  neither is configured — see `backend/src/GenerateStream.php`). Fix: console.groq.com → generate a
+  new key (skip setting an expiration this time, or set it further out) → Render
+  (`lessonlab-backend` → Environment → `GROQ_API_KEY`). No code change needed.
 
 ## Open
 
