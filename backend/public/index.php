@@ -53,14 +53,21 @@ if ($method === 'OPTIONS') {
   exit;
 }
 
+// Автозагрузка (PSR-4, "App\" => backend/src/ — см. backend/composer.json).
+// Стоит ПОСЛЕ выхода по OPTIONS выше: preflight не должен платить за загрузку
+// автолоадера, ровно по той же причине, по которой выше подняли CORS.
+//
+// Классы с `namespace App;` (QuizParser, RateLimiter, MathProblemGenerator,
+// Plans, GenerateStream, DocxExport, SimpleDocxExport) больше не требуют
+// ручного require — их находит автолоадер. DB/AuthService/Response пока в
+// глобальном пространстве имён, поэтому подключаются по-старому.
+require __DIR__ . '/../vendor/autoload.php';
+
 $config = require __DIR__ . '/../config.php';
 
 require __DIR__ . '/../src/DB.php';
 require __DIR__ . '/../src/AuthService.php';
 require __DIR__ . '/../src/Response.php';
-require __DIR__ . '/../src/QuizParser.php';
-require __DIR__ . '/../src/RateLimiter.php';
-require __DIR__ . '/../src/MathProblemGenerator.php';
 
 try {
   $db   = new DB($config['db']);
@@ -107,7 +114,6 @@ if ($method === 'POST' && preg_match('#^/api/generate/stream/?$#', $path)) {
   // как раз соответствует HTTP-код: не "вы не авторизованы", а "нужен
   // апгрейд, чтобы продолжить". Поле code — чтобы фронт мог показать именно
   // предложение перейти на PRO, а не универсальный текст ошибки.
-  require __DIR__ . '/../src/Plans.php';
   $plan  = (string)($streamUser['plan'] ?? 'free');
   $usage = \App\Plans::usage($db->pdo(), (int)$streamUser['id'], $plan);
   if ($usage['remaining'] <= 0) {
@@ -118,7 +124,6 @@ if ($method === 'POST' && preg_match('#^/api/generate/stream/?$#', $path)) {
     );
   }
 
-  require __DIR__ . '/../src/GenerateStream.php';
   \App\GenerateStream::handle($config, $body);
   exit;
 }
@@ -581,7 +586,6 @@ try {
     // Отдаём остаток квоты сразу с профилем — так фронт может показать
     // "12/15" ДО того, как учитель упрётся в лимит на самой генерации,
     // а не только в момент отказа.
-    require __DIR__ . '/../src/Plans.php';
     $usage = \App\Plans::usage($db->pdo(), (int)$u['id'], (string)($u['plan'] ?? 'free'));
 
     Response::ok(['user' => $u, 'usage' => $usage]);
@@ -924,9 +928,6 @@ try {
 
     if (!$row) Response::error('Not found', 404);
 
-    require __DIR__ . '/../vendor/autoload.php';
-    require __DIR__ . '/../src/DocxExport.php';
-
     \App\DocxExport::exportKmj($row);
     exit;
   }
@@ -941,9 +942,6 @@ try {
     $title = trim((string)($body['title'] ?? 'export'));
     $content = (string)($body['content'] ?? '');
     if ($content === '') Response::error('Nothing to export', 400);
-
-    require __DIR__ . '/../vendor/autoload.php';
-    require __DIR__ . '/../src/SimpleDocxExport.php';
 
     \App\SimpleDocxExport::export($title, $content);
     exit;
