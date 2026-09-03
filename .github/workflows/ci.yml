@@ -1,0 +1,74 @@
+# Линт, тесты и сборка на каждый push и pull request.
+#
+# Чего этот workflow ПОКА не делает: он не блокирует деплой. Render сейчас
+# настроен на autoDeploy — он выкатывает каждый push в main независимо от
+# того, что здесь произошло, так что красный CI виден, но ничего не
+# останавливает. Чтобы гейт заработал, нужны два шага, и оба требуют доступа
+# к дашборду Render:
+#   1) autoDeploy: false у всех трёх сервисов в render.yaml;
+#   2) Deploy Hook каждого сервиса — в секреты репозитория, и отдельная
+#      job, дергающая их только на зелёном main.
+# Пока это не сделано, autoDeploy НЕ выключаем: выключить его без
+# работающего хука — значит просто перестать деплоить.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Пуш поверх ещё бегущего прогона отменяет предыдущий: на публичном репозитории
+# минуты бесплатны, но ждать очередь из устаревших прогонов всё равно незачем.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: lint · test · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'      # как на машине разработчика (node -v)
+          cache: npm
+
+      # npm ci, а не npm install: ставит ровно то, что в package-lock.json, и
+      # падает при рассинхроне lock и package.json вместо тихого обновления.
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm test
+
+      # Сборка проверяется отдельным шагом, потому что она ловит не то же
+      # самое, что линт и тесты: scripts/check-env.mjs, prerender-meta.mjs и
+      # сам vite build падают на вещах, которых не видит ни один тест.
+      #
+      # VITE_API_BASE_URL здесь не секрет — это публичный origin бэкенда, он
+      # уже открытым текстом лежит в render.yaml (connect-src в CSP). Нужен
+      # он потому, что scripts/check-env.mjs теперь роняет сборку без него —
+      # см. коммит «Fail the build when VITE_API_BASE_URL is missing».
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: https://lessonlab-backend.onrender.com
+
+  backend-php:
+    name: php -l
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Тот же образ, что и в проде (backend/Dockerfile: php:8.2-apache),
+      # только cli-вариант. Так проверка идёт на той же мажорной версии PHP,
+      # которая реально исполняет код, а не на той, что оказалась
+      # предустановлена на раннере (там 8.3) — иначе гейт врёт о том, что
+      # проверяет. Официальный образ php с Docker Hub — тот же источник, что
+      # уже используется в backend/Dockerfile, так что нового доверенного
+      # третьего лица здесь не появляется.
+      - name: php -l (PHP 8.2, как в backend/Dockerfile)
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo php:8.2-cli \
+            sh scripts/lint-php.sh
