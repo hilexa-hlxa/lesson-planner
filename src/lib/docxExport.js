@@ -3,6 +3,9 @@
 // чем разумно пихать в query string. Ответ — сырые байты .docx, поэтому
 // напрямую через api.js (там везде res.json()) не пройдёт — читаем как blob
 // и скачиваем через временный <a>.
+// `?? ''` — только для dev, где переменной нет и /api подхватывает прокси
+// Vite. В прод-сборке она обязана быть: scripts/check-env.mjs роняет
+// `npm run build` без неё (см. тот же комментарий в src/api.js).
 const API_PREFIX = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api`;
 
 export async function downloadDocx(title, content) {

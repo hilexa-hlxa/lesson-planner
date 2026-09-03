@@ -1,6 +1,14 @@
 // In production the backend is on a different origin (Render).
 // Set VITE_API_BASE_URL=https://lessonlab-backend.onrender.com in Render's
 // environment variables for the frontend service.
+//
+// The `?? ''` fallback is for `npm run dev` ONLY, where the variable is
+// absent on purpose and Vite's proxy forwards /api to localhost:8000
+// (vite.config.js). It is not a production fallback: an empty base there
+// points every request at the static frontend itself, which answers with an
+// empty 200 instead of throwing — a silent failure that shipped twice.
+// scripts/check-env.mjs now fails `npm run build` when the variable is
+// missing, so a production bundle can no longer reach this fallback.
 const API_PREFIX = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api`;
 
 // Utility helper for delay (Exponential Backoff)
