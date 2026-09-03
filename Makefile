@@ -8,7 +8,7 @@
 # или наоборот — они разойдутся.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup dev dev-backend admin lint lint-js lint-php test build clean
+.PHONY: help setup dev dev-backend admin lint lint-js lint-php test build canary clean
 
 # Origin бэкенда для локальной сборки. В проде значение задаётся в Render
 # (см. render.yaml), здесь — умолчание под docker-compose (backend на :8000).
@@ -46,6 +46,10 @@ test: ## Юнит-тесты (vitest)
 
 build: ## Прод-сборка. Падает, если API_BASE пустой или кривой
 	VITE_API_BASE_URL=$(API_BASE) npm run build
+
+canary: ## Прогнать канарейку по проду локально (без отправки в Telegram)
+	@CANARY_BASE_URL=$${CANARY_BASE_URL:-https://lessonlab-backend.onrender.com} \
+		node scripts/canary.mjs --dry-run
 
 clean: ## Убрать артефакты сборки
 	rm -rf dist

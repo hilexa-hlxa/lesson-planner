@@ -1,0 +1,66 @@
+# Канарейка: проверяет критический путь учителя на живом проде.
+# Скрипт и обоснование каждого шага — в scripts/canary.mjs.
+#
+# Два расписания в одном файле, потому что у шагов разная цена:
+#   - каждый час: логин → сессия → чтение. Бесплатно, ловит 95% поломок.
+#   - раз в сутки: то же самое + реальная генерация через Groq. Стоит квоты
+#     (15/мес на free, 150/мес на PRO), поэтому раз в день, а не раз в час:
+#     ежечасно это ~720 запусков в месяц и мгновенно исчерпанный лимит.
+#
+# Побочный эффект, скорее полезный: на бесплатном тарифе Render усыпляет
+# сервис после ~15 минут простоя, а ежечасный запрос его будит. Первый
+# пользователь за день реже попадает на 14-секундный холодный старт.
+
+name: Canary
+
+on:
+  schedule:
+    - cron: '17 * * * *'    # ежечасно; 17 минут, а не 0 — в начале часа
+                            # очередь GitHub Actions самая длинная
+    - cron: '17 6 * * *'    # ежесуточно 06:17 UTC — с генерацией
+  workflow_dispatch:        # чтобы можно было запустить руками и проверить
+    inputs:
+      with_generation:
+        description: 'Проверить и генерацию (тратит квоту Groq)'
+        type: boolean
+        default: false
+
+# Параллельно бегущие канарейки только мешают друг другу и путают ленту
+# уведомлений; при наложении достаточно последней.
+concurrency:
+  group: canary
+  cancel-in-progress: false
+
+jobs:
+  critical-path:
+    name: Критический путь учителя
+    runs-on: ubuntu-latest
+    # Скрипт сам ждёт до 90 с на запрос и до 120 с на генерацию; 15 минут —
+    # аварийный потолок на случай, если зависнет сам раннер.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Зависимостей у канарейки нет намеренно: fetch и AbortSignal.timeout
+      # есть в node 22 из коробки. npm ci здесь только замедлил бы проверку
+      # доступности и добавил ей собственных причин упасть.
+      - name: Прогон
+        env:
+          CANARY_BASE_URL: https://lessonlab-backend.onrender.com
+          CANARY_EMAIL: ${{ secrets.CANARY_EMAIL }}
+          CANARY_PASSWORD: ${{ secrets.CANARY_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ "${{ github.event.schedule }}" = "17 6 * * *" ] \
+            || [ "${{ inputs.with_generation }}" = "true" ]; then
+            echo "Прогон с генерацией"
+            node scripts/canary.mjs --with-generation
+          else
+            echo "Быстрый прогон (без генерации)"
+            node scripts/canary.mjs
+          fi
