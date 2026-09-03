@@ -11,7 +11,13 @@ export default defineConfig([
   // swept in and failing lint on undefined browser globals it never
   // declares (it's not ours to fix). node_modules is ignored by ESLint's
   // flat-config default; backend/vendor has no equivalent default.
-  globalIgnores(['dist', 'backend/**']),
+  // .claude/ — локальный инструментарий Claude Code, а не код проекта: он в
+  // .gitignore, в репозиторий не попадает и в CI его нет. Без этого игнора
+  // `npm run lint` падал с 46 ошибками (no-undef на require/__dirname/process
+  // в .claude/helpers/*.js) ЛОКАЛЬНО и проходил в CI — то есть проверка
+  // говорила разное в двух местах, и локально ей нельзя было пользоваться
+  // вообще. Линт должен видеть ровно то, что лежит в репозитории.
+  globalIgnores(['dist', 'backend/**', '.claude/**']),
   {
     // admin/ is its own Node/CommonJS service (see admin/README.md), not
     // part of the Vite/React app — excluded here so it doesn't get the
